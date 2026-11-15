@@ -308,7 +308,16 @@ private struct ViewerPage: View {
                 }
             }
 
-            // The controls and their scrims move and tilt with the page, as on Android.
+            // Laid out full screen outside the tilt, like the media: under a rotation SwiftUI drops the safe area,
+            // so an `ignoresSafeArea` inside it stops reaching the screen edge and the scrim comes up short.
+            ViewerScrim()
+                .opacity(controlsVisible ? 1 : 0)
+                .scaleEffect(scale)
+                .rotationEffect(.degrees(offset.width / 24))
+                .offset(offset)
+                .ignoresSafeArea()
+
+            // The controls move and tilt with the page, as on Android.
             ViewerControls(
                 asset: asset,
                 isFavorite: model.isFavorite(asset),
@@ -437,7 +446,6 @@ private struct ViewerControls: View {
             bottomBar
         }
         .foregroundStyle(.white)
-        .background { ViewerScrim() }
     }
 
     private var topBar: some View {

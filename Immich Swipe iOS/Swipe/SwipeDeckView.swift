@@ -291,7 +291,7 @@ private struct CardStack: View {
                 .id(current.id)
                 .opacity(motion.fade)
                 .offset(motion.offset)
-                .rotationEffect(.degrees(motion.offset.width / 25))
+                .rotationEffect(tilt)
                 .gesture(drag)
                 .background {
                     CardPinchGesture(onBegan: beginPinch, onChanged: pinch, onEnded: endTouches)
@@ -365,7 +365,7 @@ private struct CardStack: View {
                     .id(current.id)
                     .opacity(motion.fade)
                     .offset(motion.offset)
-                    .rotationEffect(.degrees(motion.offset.width / 25))
+                    .rotationEffect(tilt)
                     .transition(.identity)
 
                 // Over the controls, as on Android, and dragged by the same gesture as the card.
@@ -385,7 +385,7 @@ private struct CardStack: View {
                 .id(current.id)
                 .opacity(motion.fade)
                 .offset(motion.offset)
-                .rotationEffect(.degrees(motion.offset.width / 25))
+                .rotationEffect(tilt)
                 .transition(.identity)
                 .task(id: panelProgress > 0 ? current.id : nil) {
                     guard panelProgress > 0, albums?.assetID != current.id else { return }
@@ -453,6 +453,12 @@ private struct CardStack: View {
         actions.video = nil
         actions.sizeText = nil
         return actions
+    }
+
+    /// The top card's lean while dragged: a degree per 25 points on a phone. A wider card (iPad) leans per
+    /// share of its width instead, so it slides sideways rather than swinging its far larger corners around.
+    private var tilt: Angle {
+        .degrees(motion.offset.width / max(25, cardSize.width / 15))
     }
 
     /// 0 at rest, 1 once the top card is 320 points aside (Android's 800 px).

@@ -543,6 +543,112 @@
         }
       }
     },
+    "^[%lld photo](inflect: true) (%@) will be moved to the Immich trash." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%#@photos@ (%2$@) will be moved to the Immich trash."
+          },
+          "substitutions" : {
+            "photos" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg photo"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg photos"
+                    }
+                  },
+                  "zero" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg photos"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%#@photos@ a la papelera de Immich."
+          },
+          "substitutions" : {
+            "photos" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg foto (%2$@) se moverá"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg fotos (%2$@) se moverán"
+                    }
+                  },
+                  "zero" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg fotos (%2$@) se moverán"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%#@photos@ dans la corbeille d’Immich."
+          },
+          "substitutions" : {
+            "photos" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg photo (%2$@) sera placée"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg photos (%2$@) seront placées"
+                    }
+                  },
+                  "zero" : {
+                    "stringUnit" : {
+                      "state" : "machine_translated",
+                      "value" : "%arg photo (%2$@) sera placée"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "^[%lld photo](inflect: true) already edited in Immich won't be rotated, so an existing crop isn't lost." : {
       "localizations" : {
         "en" : {
@@ -612,6 +718,82 @@
                 "stringUnit" : {
                   "state" : "machine_translated",
                   "value" : "%lld photo déjà modifiée dans Immich ne sera pas pivotée, pour ne pas perdre un recadrage existant."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "^[%lld photo](inflect: true) will be moved to the Immich trash." : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld photo will be moved to the Immich trash."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld photos will be moved to the Immich trash."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld photos will be moved to the Immich trash."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld foto se moverá a la papelera de Immich."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld fotos se moverán a la papelera de Immich."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld fotos se moverán a la papelera de Immich."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld photo sera placée dans la corbeille d’Immich."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld photos seront placées dans la corbeille d’Immich."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "machine_translated",
+                  "value" : "%lld photo sera placée dans la corbeille d’Immich."
                 }
               }
             }
@@ -1268,6 +1450,7 @@
       }
     },
     "Archive %lld." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -1588,6 +1771,7 @@
       }
     },
     "Change %lld favorites." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -2917,6 +3101,22 @@
         }
       }
     },
+    "Full-res" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Res. máx."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rés. max."
+          }
+        }
+      }
+    },
     "Fullscreen" : {
       "localizations" : {
         "es" : {
@@ -3549,22 +3749,6 @@
         }
       }
     },
-    "Full-res" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Res. máx."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rés. max."
-          }
-        }
-      }
-    },
     "Loading album metadata… %lld / %lld" : {
       "localizations" : {
         "en" : {
@@ -3780,6 +3964,7 @@
       }
     },
     "Mark %lld as kept." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -3828,6 +4013,7 @@
       }
     },
     "Move %lld to the Immich trash%@." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3850,6 +4036,7 @@
       }
     },
     "Move %lld to the locked folder." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5002,6 +5189,7 @@
       }
     },
     "Rotate %lld." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5829,22 +6017,6 @@
         }
       }
     },
-    "View the open source repository on GitHub" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ver el repositorio de código abierto en GitHub"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Consulter le dépôt open source sur GitHub"
-          }
-        }
-      }
-    },
     "The server rejected this API key. Check that it was copied in full and hasn't been deleted." : {
       "localizations" : {
         "es" : {
@@ -6423,6 +6595,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Consulter ou exporter les événements système en cas de problème"
+          }
+        }
+      }
+    },
+    "View the open source repository on GitHub" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver el repositorio de código abierto en GitHub"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consulter le dépôt open source sur GitHub"
           }
         }
       }

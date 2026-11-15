@@ -56,7 +56,8 @@ struct DeckReviewSheet: View {
                 }
             }
             // Pinned under the list so Apply is always in reach, like the Android summary's bottom button.
-            .safeAreaInset(edge: .bottom) { ApplyButton(model: model) }
+            // A bar rather than a plain inset, so the list fades out under it instead of showing through the disabled button.
+            .safeAreaBar(edge: .bottom) { ApplyButton(model: model) }
             // Presented from here rather than from the grid's section, which a List applies to each of its rows.
             .fullScreenCover(item: $viewerAsset) { asset in
                 DeletedAssetViewer(model: model, startingAt: asset.id)
@@ -169,23 +170,15 @@ private struct ApplyButton: View {
                 Task { await model.apply() }
             }
         } message: {
-            Text(Self.confirmation(for: plan))
+            // The full breakdown is already listed under Apply to Server, so only the deletion is called out.
+            if !plan.delete.isEmpty {
+                if plan.bytesToFree > 0 {
+                    Text("^[\(plan.delete.count) photo](inflect: true) (\(plan.bytesToFree.formatted(.byteCount(style: .file)))) will be moved to the Immich trash.")
+                } else {
+                    Text("^[\(plan.delete.count) photo](inflect: true) will be moved to the Immich trash.")
+                }
+            }
         }
-    }
-
-    private static func confirmation(for plan: ApplyPlan) -> String {
-        var lines: [String] = []
-        if !plan.delete.isEmpty {
-            let size = plan.bytesToFree > 0 ? " (\(plan.bytesToFree.formatted(.byteCount(style: .file))))" : ""
-            lines.append(String(localized: "Move \(plan.delete.count) to the Immich trash\(size)."))
-        }
-        if !plan.archive.isEmpty { lines.append(String(localized: "Archive \(plan.archive.count).")) }
-        if !plan.lock.isEmpty { lines.append(String(localized: "Move \(plan.lock.count) to the locked folder.")) }
-        let favorites = plan.favoritesOn.count + plan.favoritesOff.count
-        if favorites > 0 { lines.append(String(localized: "Change \(favorites) favorites.")) }
-        if !plan.rotations.isEmpty { lines.append(String(localized: "Rotate \(plan.rotations.count).")) }
-        if !plan.keep.isEmpty { lines.append(String(localized: "Mark \(plan.keep.count) as kept.")) }
-        return lines.joined(separator: "\n")
     }
 }
 
