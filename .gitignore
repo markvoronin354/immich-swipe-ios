@@ -1,0 +1,27 @@
+# --- XCODE ---
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.xcresult
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# --- SWIFT PACKAGE MANAGER ---
+.swiftpm/
+.build/
+
+# --- APP SIGNING ---
+*.p12
+*.mobileprovision
+*.cer
+
+# --- ANDROID REFERENCE (separate repo: github.com/markvoronin354/immich-swipe-apk) ---
+reference/
+
+# --- OPERATING SYSTEM ---
+.DS_Store
+
+# --- AI ASSISTANT INSTRUCTIONS ---
+CLAUDE.md
