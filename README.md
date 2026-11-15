@@ -15,6 +15,18 @@ fork of [Minos2020/immich-swipe-android](https://github.com/Minos2020/immich-swi
 
 > **Disclaimer**: This is an independent project and is not affiliated in any way with the official Immich project.
 
+## 📸 Overview
+
+|                      Home Screen                       |                      Sorting Stack                      |                         Swipe to Delete                          |
+|:------------------------------------------------------:|:-------------------------------------------------------:|:----------------------------------------------------------------:|
+| <img src="screenshots/01_home.png" width="200">        | <img src="screenshots/02_swipe.png" width="200">        | <img src="screenshots/03_swipe_delete.png" width="200">          |
+|                 *Browse your albums*                   |                   *Swipe to decide*                     |                    *Left to delete, right to keep*               |
+
+|                       Full Screen                       |                      Review Mode                       |                       Settings                        |
+|:-------------------------------------------------------:|:------------------------------------------------------:|:-----------------------------------------------------:|
+| <img src="screenshots/04_fullscreen.png" width="200">   | <img src="screenshots/05_review.png" width="200">      | <img src="screenshots/06_settings.png" width="200">   |
+|                   *Zoom in on details*                  |                *Check before deleting*                 |                 *Make it your own*                    |
+
 ## ✨ Features
 
 - **🚀 Fast Sorting Stack**: Swipe right to keep, left to delete, or up for customizable actions (Archive, Favorite, Lock, Add to Album).

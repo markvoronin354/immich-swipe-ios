@@ -5829,18 +5829,18 @@
         }
       }
     },
-    "The original Android app on GitHub" : {
+    "View the open source repository on GitHub" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "La app original de Android en GitHub"
+            "state" : "translated",
+            "value" : "Ver el repositorio de código abierto en GitHub"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "L’application Android d’origine sur GitHub"
+            "state" : "translated",
+            "value" : "Consulter le dépôt open source sur GitHub"
           }
         }
       }

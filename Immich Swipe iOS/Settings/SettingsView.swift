@@ -228,8 +228,8 @@ struct SettingsView: View {
     private var about: some View {
         Section("About & Legal") {
             LabeledContent("Version", value: Self.versionText)
-            Link(destination: URL(string: "https://github.com/markvoronin354/immich-swipe-apk")!) {
-                SettingsRow(title: "Source code", subtitle: "The original Android app on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+            Link(destination: URL(string: "https://github.com/markvoronin354/immich-swipe-ios")!) {
+                SettingsRow(title: "Source code", subtitle: "View the open source repository on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
             }
             Link(destination: URL(string: "https://github.com/markvoronin354/immich-swipe-ios/blob/HEAD/PRIVACY_POLICY.md")!) {
                 SettingsRow(title: "Privacy policy", subtitle: "Read the privacy policy regarding data and permissions", systemImage: "hand.raised")

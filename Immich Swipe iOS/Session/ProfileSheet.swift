@@ -132,7 +132,7 @@ struct ProfileSheet: View {
                     Section {
                         VStack(spacing: 6) {
                             Button("Source Code", systemImage: "chevron.left.forwardslash.chevron.right") {
-                                openURL(URL(string: "https://github.com/markvoronin354/immich-swipe-apk")!)
+                                openURL(URL(string: "https://github.com/markvoronin354/immich-swipe-ios")!)
                             }
                             .font(.subheadline.weight(.semibold))
                             Text(Self.versionText)
