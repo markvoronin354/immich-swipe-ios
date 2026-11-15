@@ -143,7 +143,7 @@ final class VideoDiagnostics {
         request.setValue("bytes=0-1", forHTTPHeaderField: "Range")
         let begin = Date()
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await URLSession.shared.data(for: request, delegate: APIKeyRedirectGuard.shared)
             guard let http = response as? HTTPURLResponse else { return }
             let range = http.value(forHTTPHeaderField: "Content-Range") ?? "-"
             let total = range.split(separator: "/").last.flatMap { Int64($0) }

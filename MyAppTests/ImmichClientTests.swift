@@ -178,3 +178,73 @@ struct ImmichClientTests {
         #expect(client.authorizedRequest(for: .videoPlayback(assetID: "a1")).value(forHTTPHeaderField: "x-api-key") == "KEY")
     }
 }
+
+/// Redirects `/api/...` to the URL in `target`, then records what reaches the redirected request.
+final class RedirectingServer: URLProtocol, @unchecked Sendable {
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var target = ""
+    nonisolated(unsafe) private static var keys: [String: String?] = [:]
+
+    static func reset(redirectTo url: String) {
+        lock.withLock { target = url; keys = [:] }
+    }
+
+    /// The API key each host received, `.some(nil)` when it got none.
+    static var keysByHost: [String: String?] { lock.withLock { keys } }
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func stopLoading() {}
+
+    override func startLoading() {
+        let url = request.url!
+        let target = Self.lock.withLock {
+            Self.keys[url.host() ?? ""] = request.value(forHTTPHeaderField: "x-api-key")
+            return Self.target
+        }
+        if url.path().hasPrefix("/api/") {
+            let response = HTTPURLResponse(url: url, statusCode: 302, httpVersion: nil, headerFields: ["Location": target])!
+            // Carry the headers over, as URLSession does for a real redirect.
+            var next = request
+            next.url = URL(string: target)!
+            client?.urlProtocol(self, wasRedirectedTo: next, redirectResponse: response)
+            return
+        }
+        let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(#"{"id":"u1","email":"me@example.com"}"#.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+}
+
+@Suite(.serialized)
+struct APIKeyRedirectGuardTests {
+    let client: ImmichClient
+
+    init() {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RedirectingServer.self]
+        client = ImmichClient(serverURL: URL(string: "https://photos.example.com")!, apiKey: "KEY", session: URLSession(configuration: configuration), retry: .none)
+    }
+
+    @Test func keyIsDroppedOnRedirectToAnotherHost() async throws {
+        RedirectingServer.reset(redirectTo: "https://evil.example.net/steal")
+        _ = try await client.getMyUser()
+        #expect(RedirectingServer.keysByHost["photos.example.com"] == .some("KEY"))
+        #expect(RedirectingServer.keysByHost["evil.example.net"] == .some(nil))
+    }
+
+    @Test func keyIsKeptOnRedirectWithinTheServer() async throws {
+        RedirectingServer.reset(redirectTo: "https://photos.example.com:443/moved")
+        _ = try await client.getMyUser()
+        #expect(RedirectingServer.keysByHost["photos.example.com"] == .some("KEY"))
+    }
+
+    @Test func sameOriginNeedsSchemeHostAndPort() {
+        let base = URL(string: "https://photos.example.com/api")!
+        #expect(APIKeyRedirectGuard.isSameOrigin(URL(string: "https://Photos.Example.com:443/x")!, base))
+        #expect(!APIKeyRedirectGuard.isSameOrigin(URL(string: "http://photos.example.com/x")!, base))
+        #expect(!APIKeyRedirectGuard.isSameOrigin(URL(string: "https://photos.example.com:8443/x")!, base))
+        #expect(!APIKeyRedirectGuard.isSameOrigin(URL(string: "https://photos.example.com.evil.net/x")!, base))
+    }
+}

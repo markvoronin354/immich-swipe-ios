@@ -231,7 +231,7 @@ nonisolated struct ImmichClient: Sendable {
     /// Downloads the original file into a temporary folder, under its own file name, and returns where it is.
     /// The caller owns the file and should delete it when done.
     func downloadOriginal(of asset: Asset) async throws -> URL {
-        let (downloaded, response) = try await session.download(for: authorizedRequest(for: .original(assetID: asset.id)))
+        let (downloaded, response) = try await session.download(for: authorizedRequest(for: .original(assetID: asset.id)), delegate: APIKeyRedirectGuard.shared)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             try? FileManager.default.removeItem(at: downloaded)
             throw ImmichError.http(status: http.statusCode, message: nil)
@@ -307,7 +307,7 @@ nonisolated struct ImmichClient: Sendable {
 
         while true {
             do {
-                let (data, response) = try await session.data(for: request)
+                let (data, response) = try await session.data(for: request, delegate: APIKeyRedirectGuard.shared)
                 let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                 report(status: status)
                 Self.log(status: status, on: urlPath)
@@ -377,6 +377,32 @@ nonisolated struct ImmichClient: Sendable {
         if let message = object["message"] as? String { return message }
         if let messages = object["message"] as? [String] { return messages.joined(separator: "; ") }
         return nil
+    }
+}
+
+/// Keeps the API key on its own server, like Android's `ImmichAuthInterceptor`. URLSession copies every
+/// header onto a redirect, so without this a redirect to another host would receive the key. Pass it as
+/// the per-request delegate of any request that carries `x-api-key`.
+nonisolated final class APIKeyRedirectGuard: NSObject, URLSessionTaskDelegate, Sendable {
+    static let shared = APIKeyRedirectGuard()
+
+    // The completion-handler form, because the async one crashes the Swift compiler.
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void) {
+        guard let original = task.originalRequest?.url, let target = request.url,
+              !Self.isSameOrigin(target, original) else { return completionHandler(request) }
+        var stripped = request
+        stripped.setValue(nil, forHTTPHeaderField: "x-api-key")
+        completionHandler(stripped)
+    }
+
+    /// Same scheme, host and port, with default ports filled in, as Android's `isSameOrigin`.
+    static func isSameOrigin(_ a: URL, _ b: URL) -> Bool {
+        func origin(_ url: URL) -> (String?, String?, Int?) {
+            let scheme = url.scheme?.lowercased()
+            let port = url.port ?? (scheme == "https" ? 443 : scheme == "http" ? 80 : nil)
+            return (scheme, url.host(percentEncoded: false)?.lowercased(), port)
+        }
+        return origin(a) == origin(b)
     }
 }
 

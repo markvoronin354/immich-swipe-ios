@@ -49,7 +49,7 @@ actor ThumbnailLoader {
 
         let session = session
         let task = Task<CGImage, Error> {
-            let (data, response) = try await session.data(for: request)
+            let (data, response) = try await session.data(for: request, delegate: APIKeyRedirectGuard.shared)
             if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
                 throw ImmichError.http(status: http.statusCode, message: nil)
             }
