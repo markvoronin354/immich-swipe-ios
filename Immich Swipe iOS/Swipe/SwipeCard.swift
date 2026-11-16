@@ -533,8 +533,9 @@ struct MetadataPanel: View {
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
         .frame(maxWidth: .infinity)
-        // Top corners match the card's 28 pt bottom corners, which the deck's clip already rounds.
-        .background(.regularMaterial, in: .rect(topLeadingRadius: 28, topTrailingRadius: 28))
+        // All corners match the card's 28 pt corners. The deck's rounded clip doesn't round the material,
+        // so its bottom corners have to be rounded here too or they poke out past the card's.
+        .background(.regularMaterial, in: .rect(cornerRadius: 28))
         .sheet(isPresented: $isEditingDescription) {
             DescriptionEditor(initial: asset.exifInfo?.description ?? "", save: saveDescription)
         }
@@ -625,21 +626,24 @@ private struct DescriptionRow: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Image(systemName: "text.alignleft")
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24)
-                Text(description ?? String(localized: "Add a description"))
-                    .foregroundStyle(description == nil ? .secondary : .primary)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .font(.subheadline)
-            .padding(.vertical, 10)
-            .contentShape(.rect)
+        // A tap gesture rather than a Button: a Button holds on to the touch, so a drag starting here
+        // wouldn't move the panel until the finger lifted.
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Image(systemName: "text.alignleft")
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+            Text(description ?? String(localized: "Add a description"))
+                .foregroundStyle(description == nil ? .secondary : .primary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.plain)
+        .font(.subheadline)
+        .padding(.vertical, 10)
+        .contentShape(.rect)
+        .onTapGesture(perform: action)
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
         .accessibilityLabel("Description")
         .accessibilityValue(description ?? "")
         .accessibilityHint("Add a description")

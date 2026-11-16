@@ -248,6 +248,9 @@ private struct CardStack: View {
     @State private var panelStartProgress: CGFloat = 0
     /// What the current drag moves, locked when it starts.
     @State private var dragMode = DragMode.undecided
+    /// True while the card drag runs. SwiftUI resets it even when the system cancels the drag (say, the
+    /// phone is locked mid-swipe), which never calls `onEnded`.
+    @GestureState private var isDragActive = false
     /// Albums holding the current card, fetched the first time its panel opens.
     @State private var albums: (assetID: Asset.ID, names: [String])?
     /// Hidden by a long press until the next tap, and kept hidden from card to card, as on Android.
@@ -297,6 +300,10 @@ private struct CardStack: View {
                     CardPinchGesture(onBegan: beginPinch, onChanged: pinch, onEnded: endTouches)
                 }
                 .onGeometryChange(for: CGSize.self) { $0.size } action: { cardSize = $0 }
+                // A drag that finished normally has already cleared `isDragging` in `onEnded`.
+                .onChange(of: isDragActive) { _, active in
+                    if !active { cancelDrag() }
+                }
                 .onChange(of: current.id) {
                     resetZoom()
                     panelProgress = 0
@@ -486,7 +493,10 @@ private struct CardStack: View {
     }
 
     private var drag: some Gesture {
-        DragGesture(minimumDistance: 12)
+        // Measured on screen: the panel carries this gesture inside the card's offset and tilt, so in its own
+        // space each move of the card would change the translation and the card would jitter.
+        DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .updating($isDragActive) { _, active, _ in active = true }
             .onChanged { value in
                 guard !motion.isFlying else { return }
                 isDragging = true
@@ -522,6 +532,24 @@ private struct CardStack: View {
                     motion.release(translation: value.translation, velocity: value.velocity, in: model)
                 }
             }
+    }
+
+    /// The system cancelled the drag before `onEnded`, as Android's `onDragCancel`: the panel settles to the
+    /// nearer end and the card springs back to the middle.
+    private func cancelDrag() {
+        guard isDragging else { return }
+        isDragging = false
+        let mode = dragMode
+        dragMode = .undecided
+        if isZoomSession {
+            if !isTouching { isZoomSession = false }
+            return
+        }
+        if mode == .panel {
+            releasePanel(velocity: 0)
+        } else {
+            withAnimation(.bouncy) { motion.offset = .zero }
+        }
     }
 
     private func beginPinch() {
