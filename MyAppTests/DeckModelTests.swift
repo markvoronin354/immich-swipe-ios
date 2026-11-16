@@ -311,6 +311,32 @@ struct DeckModelTests {
         }
     }
 
+    @Test func albumsLastAddedToComeFirst() async throws {
+        RoutingServer.route { path, body in
+            switch path {
+            case "/api/albums" where body["albumName"] != nil:
+                return (201, #"{"id":"new","albumName":"New","assetCount":1}"#)
+            case "/api/albums":
+                return (200, #"[{"id":"c","albumName":"Cats","assetCount":0},{"id":"a","albumName":"Art","assetCount":0},{"id":"new","albumName":"New","assetCount":1},{"id":"b","albumName":"Beach","assetCount":0}]"#)
+            case "/api/albums/c/assets":
+                return (200, #"[{"id":"p","success":true}]"#)
+            default:
+                return (404, "{}")
+            }
+        }
+        let model = makeModel(.all)
+        let asset = Asset(id: "p", ownerId: "u", fileCreatedAt: "", type: .image)
+        #expect(try await model.loadAlbums().map(\.id) == ["a", "b", "c", "new"])
+
+        try await model.add(asset, to: Album(id: "c", albumName: "Cats", assetCount: 0))
+        _ = try await model.createAlbum(named: "New", with: asset)
+        #expect(try await model.loadAlbums().map(\.id) == ["new", "c", "a", "b"])
+
+        // Using an album again moves it back to the front instead of listing it twice.
+        try await model.add(asset, to: Album(id: "c", albumName: "Cats", assetCount: 0))
+        #expect(defaults.string(forKey: DeckModel.recentAlbumIDsKey) == "c,new")
+    }
+
     @Test func failureBeforeAnyPageIsReported() async {
         RoutingServer.route { _, _ in (500, #"{"message":"boom"}"#) }
         let model = makeModel(.all)

@@ -33,6 +33,7 @@ final class DeckModel {
     private let shuffleSeed: Int64
     private let photoSaver: PhotoSaving
     private let listingCache: AssetListCache
+    private let defaults: UserDefaults
 
     /// Everything stored for this user, read once when the deck opens.
     private var stored: [String: StoredDecision] = [:]
@@ -50,6 +51,9 @@ final class DeckModel {
     private var pendingJump = true
 
     static let sortOrderKey = "sort_order"
+    /// Albums last added to, most recent first, comma-separated as on Android.
+    static let recentAlbumIDsKey = "recent_album_ids"
+    private static let maxRecentAlbums = 50
     /// Android stops paging past this many assets.
     private static let maxListingSize = 500_000
 
@@ -62,6 +66,7 @@ final class DeckModel {
         self.shuffleSeed = shuffleSeed
         self.photoSaver = photoSaver ?? PhotoLibrarySaver()
         self.listingCache = listingCache
+        self.defaults = defaults
         sortOrder = defaults.string(forKey: Self.sortOrderKey).flatMap(DeckSortOrder.init(rawValue:)) ?? .default
         includeArchived = defaults.object(forKey: Setting.Key.includeArchived) as? Bool ?? Setting.Default.includeArchived
     }
@@ -441,11 +446,27 @@ final class DeckModel {
 
     // MARK: Albums
 
-    /// Real albums, alphabetical, for the "Add to album" sheet.
+    /// Real albums for the "Add to album" sheet: the ones last added to first, as on Android, then the rest
+    /// alphabetically.
     func loadAlbums() async throws -> [Album] {
-        try await client.getAllAlbums()
+        let recentRank = Dictionary(recentAlbumIDs.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+        return try await client.getAllAlbums()
             .filter { !$0.isVirtual }
-            .sorted { $0.albumName.localizedStandardCompare($1.albumName) == .orderedAscending }
+            .sorted {
+                let lhs = recentRank[$0.id] ?? .max, rhs = recentRank[$1.id] ?? .max
+                if lhs != rhs { return lhs < rhs }
+                return $0.albumName.localizedStandardCompare($1.albumName) == .orderedAscending
+            }
+    }
+
+    private var recentAlbumIDs: [String] {
+        (defaults.string(forKey: Self.recentAlbumIDsKey) ?? "").split(separator: ",").map(String.init)
+    }
+
+    /// Moves the album to the front of the recent list, keeping the newest 50.
+    private func rememberRecentAlbum(_ id: String) {
+        let ids = [id] + recentAlbumIDs.filter { $0 != id }
+        defaults.set(ids.prefix(Self.maxRecentAlbums).joined(separator: ","), forKey: Self.recentAlbumIDsKey)
     }
 
     /// Names of the real albums holding the photo, for the metadata panel. Empty if the request fails, as on Android.
@@ -468,6 +489,7 @@ final class DeckModel {
             if let failure = results.first(where: { !$0.success }), failure.error != "duplicate" {
                 throw ImmichError.http(status: 400, message: failure.error)
             }
+            rememberRecentAlbum(album.id)
         } catch {
             AppLog.e("SwipeViewModel", "Error adding asset to album \(album.albumName)", error)
             throw error
@@ -476,7 +498,9 @@ final class DeckModel {
 
     func createAlbum(named name: String, with asset: Asset) async throws -> Album {
         do {
-            return try await client.createAlbum(name: name, assetIDs: [asset.id])
+            let album = try await client.createAlbum(name: name, assetIDs: [asset.id])
+            rememberRecentAlbum(album.id)
+            return album
         } catch {
             AppLog.e("SwipeViewModel", "Error creating album \(name)", error)
             throw error
