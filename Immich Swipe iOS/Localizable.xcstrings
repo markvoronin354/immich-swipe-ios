@@ -4580,6 +4580,22 @@
         }
       }
     },
+    "Open an issue on GitHub" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir una incidencia en GitHub"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir un ticket sur GitHub"
+          }
+        }
+      }
+    },
     "Open in Immich" : {
       "localizations" : {
         "es" : {
@@ -4992,6 +5008,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Tout remplacer"
+          }
+        }
+      }
+    },
+    "Report a bug" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un error"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un bug"
           }
         }
       }
