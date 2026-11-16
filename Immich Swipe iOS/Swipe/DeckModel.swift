@@ -352,6 +352,7 @@ final class DeckModel {
     func decide(_ decision: SwipeDecision) {
         guard let asset = deck.decideCurrent(decision) else { return }
         AppLog.d("SwipeViewModel", "Swiped asset \(asset.id): \(decision)")
+        swipeFavorites[asset.id] = nil
         pendingJump = false
         lastOutcome = nil
         syncedIDs.remove(asset.id) // a new decision is waiting to be applied, even if the old one was
@@ -360,16 +361,48 @@ final class DeckModel {
         }
     }
 
+    /// Carries out what a swipe is set to do (Android's `performSwipeAction`).
+    func swipe(_ action: SwipeAction) {
+        switch action {
+        case .keep, .delete, .archive, .lock:
+            if let decision = action.decision { decide(decision) }
+        case .undo:
+            undo()
+        case .details:
+            // The panel belongs to the card, which opens it itself.
+            break
+        case .favorite:
+            guard let asset = deck.current else { return }
+            // Sets rather than toggles, so swiping a photo that is already a favourite doesn't take it away.
+            let newlyFavorited = !isFavorite(asset)
+            let before = favoriteOverrides[asset.id]
+            if newlyFavorited { toggleFavoriteForCurrent() }
+            decide(.keep)
+            if newlyFavorited { swipeFavorites[asset.id] = .some(before) }
+        }
+    }
+
     func undo() {
         guard let assetID = deck.undo() else { return }
         lastOutcome = nil
+        undoSwipeFavorite(assetID)
         persist { try decisions.remove(assetIDs: [assetID], userID: userID) }
+    }
+
+    /// Photos a Favorite swipe favourited, with the favourite override they had before (nil: none), so undoing
+    /// the swipe can take the heart back, as on Android.
+    private var swipeFavorites: [String: Bool?] = [:]
+
+    private func undoSwipeFavorite(_ assetID: String) {
+        guard let before = swipeFavorites.removeValue(forKey: assetID) else { return }
+        favoriteOverrides[assetID] = before
     }
 
     /// Forgets every decision for the photos in this deck.
     func resetDecisions() {
         let ids = Set(deck.assets.map(\.id))
         deck.reset()
+        swipeFavorites = [:]
         lastOutcome = nil
         persist { try decisions.removeAll(userID: userID, albumID: source.albumID, albumAssetIDs: ids) }
         for id in ids { stored[id] = nil }
@@ -420,6 +453,7 @@ final class DeckModel {
     /// Removes one decision from the review list without moving the deck.
     func removeDecision(for assetID: String) {
         deck.removeDecision(for: assetID)
+        undoSwipeFavorite(assetID)
         lastOutcome = nil
         persist { try decisions.remove(assetIDs: [assetID], userID: userID) }
     }
@@ -578,6 +612,7 @@ final class DeckModel {
 
         // Applied decisions can't be undone, and the deck returns to the first photo still to sort.
         deck.clearHistory()
+        swipeFavorites = [:]
         deck.replaceAssets(deck.assets, keepPosition: false)
     }
 

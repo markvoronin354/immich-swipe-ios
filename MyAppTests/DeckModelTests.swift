@@ -252,6 +252,56 @@ struct DeckModelTests {
         #expect(model.rotations.isEmpty)
     }
 
+    @Test func favoriteSwipeFavoritesAndKeepsAndUndoTakesItBack() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+
+        model.swipe(.favorite) // e
+        #expect(model.deck.decision(for: "e") == .keep)
+        #expect(model.favoriteOverrides == ["e": true])
+        #expect(model.deck.current?.id == "d")
+
+        model.undo()
+        #expect(model.deck.current?.id == "e")
+        #expect(model.deck.decision(for: "e") == nil)
+        #expect(model.favoriteOverrides.isEmpty, "the heart the swipe added goes with it")
+    }
+
+    @Test func favoriteSwipeOnAFavoriteLeavesItAlone() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        model.toggleFavoriteForCurrent() // e was already a favourite before the swipe
+
+        model.swipe(.favorite)
+        #expect(model.favoriteOverrides == ["e": true], "sets rather than toggles")
+        model.undo()
+        #expect(model.favoriteOverrides == ["e": true], "undo doesn't take away a heart the swipe didn't add")
+    }
+
+    @Test func favoriteSwipeRemovedFromReviewTakesTheHeartBack() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        model.swipe(.favorite) // e
+        model.removeDecision(for: "e")
+        #expect(model.favoriteOverrides.isEmpty)
+    }
+
+    @Test func undoAndDetailsSwipesRecordNothing() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        model.swipe(.archive) // e
+        #expect(model.deck.decision(for: "e") == .archive)
+
+        model.swipe(.details)
+        #expect(model.deck.current?.id == "d" && model.decidedCount == 1)
+        model.swipe(.undo)
+        #expect(model.deck.current?.id == "e" && model.decidedCount == 0)
+    }
+
     @Test func countsAndStripNavigation() async {
         serveThreePages()
         let model = makeModel(.all)

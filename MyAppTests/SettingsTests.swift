@@ -70,8 +70,8 @@ struct CardButtonLayoutTests {
             layout.show[button] = true
             layout.position[button] = .bottomRight
         }
-        #expect(layout.buttons(in: .bottomRight) == [.fullscreen, .rotate, .immich, .download, .share, .fullResolution])
-        #expect(layout.buttons(in: .bottomRight, isVideo: true) == [.fullscreen, .immich, .mute, .download, .share])
+        #expect(layout.buttons(in: .bottomRight) == [.fullscreen, .info, .rotate, .immich, .download, .share, .fullResolution])
+        #expect(layout.buttons(in: .bottomRight, isVideo: true) == [.fullscreen, .info, .immich, .mute, .download, .share])
     }
 
     @Test func buttonsSharingACornerKeepAFixedOrder() {
@@ -83,6 +83,46 @@ struct CardButtonLayoutTests {
         #expect(layout.buttons(in: .topRight).isEmpty)
     }
 
+    /// Every photo button on, in one corner's row.
+    private func row(of count: Int, in corner: IconPosition = .topLeft) -> CardButtonLayout {
+        var layout = CardButtonLayout.default
+        let photoButtons = CardButton.allCases.filter { CardButtonLayout.applies($0, toVideo: false) }
+        for button in CardButton.allCases {
+            layout.show[button] = photoButtons.prefix(count).contains(button)
+            layout.position[button] = corner
+        }
+        layout.orientation = .horizontal
+        return layout
+    }
+
+    @Test func buttonsThatFitKeepTheirSizeAndGap() {
+        #expect(CardButtonLayout.default.metrics(fitting: CGSize(width: 345, height: 500)) == CardButtonLayout.fullMetrics)
+    }
+
+    @Test func aCrowdedRowClosesItsGapFirst() {
+        // Six 48 pt buttons in 345 pt leave 57 pt for five gaps.
+        let metrics = row(of: 6).metrics(fitting: CGSize(width: 345, height: 500))
+        #expect(metrics.size == 48 && abs(metrics.spacing - 11.4) < 0.01)
+    }
+
+    @Test func aRowTooLongForAnyGapShrinksItsButtons() {
+        // Seven buttons on an iPhone 17's card, as in the screenshot: 8 pt gaps, and buttons of (345 - 48) / 7.
+        let metrics = row(of: 7).metrics(fitting: CGSize(width: 345, height: 500))
+        #expect(metrics.spacing == 8 && abs(metrics.size - 297.0 / 7) < 0.01)
+    }
+
+    @Test func buttonsNeverShrinkBelowTheTightestSize() {
+        #expect(row(of: 7).metrics(fitting: CGSize(width: 200, height: 500)) == CardButtonLayout.tightestMetrics)
+    }
+
+    @Test func twoCornersOnOneEdgeShareItsRoom() {
+        var layout = row(of: 7)
+        for button in [CardButton.download, .share, .fullResolution] { layout.position[button] = .topRight }
+        // Four and three along the top, with a gap between the corners: the same as one row of seven.
+        #expect(layout.metrics(fitting: CGSize(width: 345, height: 500)) == row(of: 7).metrics(fitting: CGSize(width: 345, height: 500)))
+        #expect(layout.metrics(fitting: CGSize(width: 500, height: 345)) == CardButtonLayout.fullMetrics, "a row only needs the card's width")
+    }
+
     @Test func hiddenButtonsTakeNoSpace() {
         var layout = CardButtonLayout.default
         layout.show[.rotate] = false
@@ -92,20 +132,53 @@ struct CardButtonLayoutTests {
 
 struct CardTapRulesTests {
     @Test(arguments: [
-        (10.0, SwipeDecision.delete), (89.0, .delete),
+        (10.0, Edge.leading), (89.0, .leading),
         (150.0, nil), (90.0, nil), (210.0, nil),
-        (211.0, .keep), (299.0, .keep),
-    ] as [(Double, SwipeDecision?)])
-    func edgesDecideAndTheMiddleDoesNot(x: Double, expected: SwipeDecision?) {
-        #expect(CardTapRules.decision(atX: x, width: 300, tapToSwipe: true) == expected)
+        (211.0, .trailing), (299.0, .trailing),
+    ] as [(Double, Edge?)])
+    func edgesSwipeAndTheMiddleDoesNot(x: Double, expected: Edge?) {
+        #expect(CardTapRules.edge(atX: x, width: 300, tapToSwipe: true) == expected)
     }
 
     @Test func nothingHappensWhenTheSettingIsOff() {
-        #expect(CardTapRules.decision(atX: 10, width: 300, tapToSwipe: false) == nil)
+        #expect(CardTapRules.edge(atX: 10, width: 300, tapToSwipe: false) == nil)
     }
 
     @Test func zeroWidthIsIgnored() {
-        #expect(CardTapRules.decision(atX: 0, width: 0, tapToSwipe: true) == nil)
+        #expect(CardTapRules.edge(atX: 0, width: 0, tapToSwipe: true) == nil)
+    }
+}
+
+struct SwipeMappingTests {
+    @Test func defaultsMatchAndroid() {
+        let mapping = SwipeMapping.default
+        #expect(mapping == SwipeMapping(left: .delete, right: .keep, up: .details, down: .undo))
+        #expect(mapping.action(toward: .leading) == .delete && mapping.action(toward: .trailing) == .keep)
+    }
+
+    @Test func pickingTheOtherSidesActionSwapsTheSides() {
+        let mapping = SwipeMapping.default.settingLeft(.keep)
+        #expect(mapping.left == .keep && mapping.right == .delete)
+        let back = mapping.settingRight(.keep)
+        #expect(back.left == .delete && back.right == .keep)
+    }
+
+    @Test func pickingAFreeActionLeavesTheOtherSide() {
+        let mapping = SwipeMapping.default.settingRight(.favorite)
+        #expect(mapping.left == .delete && mapping.right == .favorite)
+    }
+
+    @Test func upAndDownMayRepeatASidesAction() {
+        var mapping = SwipeMapping.default
+        mapping.down = .delete
+        #expect(mapping.contains(.delete) && !mapping.contains(.archive))
+    }
+
+    @Test func eachDirectionOffersAndroidsChoices() {
+        #expect(!SwipeAction.sideChoices.contains(.undo) && !SwipeAction.sideChoices.contains(.details))
+        #expect(SwipeAction.downChoices.contains(.undo) && !SwipeAction.downChoices.contains(.details))
+        #expect(SwipeAction.upChoices.contains(.details) && !SwipeAction.upChoices.contains(.undo))
+        #expect(SwipeAction.favorite.decision == .keep && SwipeAction.undo.decision == nil)
     }
 }
 

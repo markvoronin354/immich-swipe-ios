@@ -1449,6 +1449,22 @@
         }
       }
     },
+    "ARCHIVE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ARCHIVAR"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ARCHIVER"
+          }
+        }
+      }
+    },
     "Archive %lld." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2663,6 +2679,22 @@
         }
       }
     },
+    "Details" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "es" : {
@@ -2969,6 +3001,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Favori"
+          }
+        }
+      }
+    },
+    "FAVORITE" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FAVORITO"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FAVORI"
           }
         }
       }
@@ -3835,6 +3883,22 @@
         }
       }
     },
+    "LOCK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BLOQUEAR"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VERROUILLER"
+          }
+        }
+      }
+    },
     "Lock button" : {
       "localizations" : {
         "es" : {
@@ -4048,38 +4112,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Placer %lld dans le dossier verrouillé."
-          }
-        }
-      }
-    },
-    "Move asset to archive" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Mover al archivo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Placer dans les archives"
-          }
-        }
-      }
-    },
-    "Move asset to locked folder" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Mover a la carpeta bloqueada"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Placer dans le dossier verrouillé"
           }
         }
       }
@@ -4464,6 +4496,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Permission de notification refusée. Le rappel reste désactivé."
+          }
+        }
+      }
+    },
+    "Off: swiping down closes the viewer. On: it does what Swipe down does on the card. Swiping up always closes it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivado: deslizar hacia abajo cierra el visor. Activado: hace lo mismo que Deslizar hacia abajo en la tarjeta. Deslizar hacia arriba siempre lo cierra."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivé : glisser vers le bas ferme la visionneuse. Activé : cela fait la même chose que Swipe vers le bas sur la carte. Glisser vers le haut la ferme toujours."
           }
         }
       }
@@ -5088,6 +5136,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Réinitialiser les choix ?"
+          }
+        }
+      }
+    },
+    "Reset Interactions?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Restablecer interacciones?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les interactions ?"
           }
         }
       }
@@ -5905,6 +5969,22 @@
         }
       }
     },
+    "Swipe actions" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acciones de deslizamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions de swipe"
+          }
+        }
+      }
+    },
     "Swipe card action buttons" : {
       "localizations" : {
         "es" : {
@@ -5917,6 +5997,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Boutons d’action à l’écran"
+          }
+        }
+      }
+    },
+    "Swipe down" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslizar hacia abajo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe vers le bas"
           }
         }
       }
@@ -5937,6 +6033,38 @@
         }
       }
     },
+    "Swipe left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslizar a la izquierda"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe à gauche"
+          }
+        }
+      }
+    },
+    "Swipe right" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslizar a la derecha"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe à droite"
+          }
+        }
+      }
+    },
     "Swipe right to keep and left to delete." : {
       "localizations" : {
         "es" : {
@@ -5949,6 +6077,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Glissez vers la droite pour garder et vers la gauche pour supprimer."
+          }
+        }
+      }
+    },
+    "Swipe up" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslizar hacia arriba"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe vers le haut"
           }
         }
       }
@@ -6017,18 +6161,18 @@
         }
       }
     },
-    "Tap to swipe: tap the left ⅓ of the card to delete and the right ⅓ to keep. The middle ⅓ is left free for the card's buttons." : {
+    "Tap to swipe: tap the left ⅓ of the card to swipe left and the right ⅓ to swipe right. The middle ⅓ is left free for the card's buttons." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Tocar para clasificar: toca el ⅓ izquierdo de la tarjeta para eliminar y el ⅓ derecho para conservar. El ⅓ central queda libre para los botones de la tarjeta."
+            "state" : "translated",
+            "value" : "Tocar para clasificar: toca el ⅓ izquierdo de la tarjeta para deslizar a la izquierda y el ⅓ derecho para deslizar a la derecha. El ⅓ central queda libre para los botones de la tarjeta."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Appuyer pour trier : appuyez sur le ⅓ gauche de la carte pour supprimer et sur le ⅓ droit pour garder. Le ⅓ central reste libre pour les boutons de la carte."
+            "state" : "translated",
+            "value" : "Appuyer pour trier : appuyez sur le ⅓ gauche de la carte pour swiper à gauche et sur le ⅓ droit pour swiper à droite. Le ⅓ central reste libre pour les boutons de la carte."
           }
         }
       }
@@ -6061,6 +6205,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Le serveur a refusé cette clé d’API. Vérifiez qu’elle a été copiée en entier et qu’elle n’a pas été supprimée."
+          }
+        }
+      }
+    },
+    "The toolbar, swipe actions, tap gestures and timeline will go back to their defaults." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barra de herramientas, las acciones de deslizamiento, los gestos táctiles y la línea de tiempo volverán a sus valores predeterminados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barre d’outils, les actions de swipe, les gestes tactiles et la frise des médias reviendront à leurs valeurs par défaut."
           }
         }
       }
@@ -6483,6 +6643,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Statistiques d’usage"
+          }
+        }
+      }
+    },
+    "Use swipe down action in fullscreen" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar la acción de deslizar hacia abajo en pantalla completa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser l’action de swipe vers le bas en plein écran"
           }
         }
       }

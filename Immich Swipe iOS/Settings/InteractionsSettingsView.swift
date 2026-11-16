@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Which bottom-bar buttons show, and how tapping the card behaves.
+/// Which bottom-bar buttons show, what each swipe does, and how tapping the card behaves.
 struct InteractionsSettingsView: View {
     @AppStorage(Setting.Key.showAddToAlbumButton) private var showAddToAlbum = Setting.Default.showAddToAlbumButton
     @AppStorage(Setting.Key.showSwipeButtons) private var showSwipeButtons = Setting.Default.showSwipeButtons
@@ -14,8 +14,42 @@ struct InteractionsSettingsView: View {
     @AppStorage(Setting.Key.showTimeline) private var showTimeline = Setting.Default.showTimeline
     @AppStorage(Setting.Key.showToolbarLabels) private var showLabels = Setting.Default.showToolbarLabels
     @AppStorage(Setting.Key.toolbarButtonOrder) private var savedOrder = Setting.Default.toolbarButtonOrder
+    @AppStorage(Setting.Key.swipeLeftAction) private var swipeLeft = Setting.Default.swipeLeftAction
+    @AppStorage(Setting.Key.swipeRightAction) private var swipeRight = Setting.Default.swipeRightAction
+    @AppStorage(Setting.Key.swipeUpAction) private var swipeUp = Setting.Default.swipeUpAction
+    @AppStorage(Setting.Key.swipeDownAction) private var swipeDown = Setting.Default.swipeDownAction
+    @AppStorage(Setting.Key.fullscreenSwipeDownUsesAction) private var fullscreenSwipeDown = Setting.Default.fullscreenSwipeDownUsesAction
+    // The Info button lives under Action Buttons, but Android resets it from here too, and turns it on here.
+    @AppStorage(Setting.Key.showInfoButton) private var showInfo = Setting.Default.showInfoButton
+    @AppStorage(Setting.Key.infoPosition) private var infoPosition = Setting.Default.infoPosition
+    @State private var isConfirmingReset = false
 
     private var order: [SortingBarButton] { SortingBarButton.order(from: savedOrder) }
+
+    private var swipes: SwipeMapping { SwipeMapping(left: swipeLeft, right: swipeRight, up: swipeUp, down: swipeDown) }
+
+    /// Left and right can't share an action: picking the other side's hands that side this one's old action.
+    private var leftBinding: Binding<SwipeAction> {
+        Binding(get: { swipeLeft }, set: { action in
+            let mapping = swipes.settingLeft(action)
+            (swipeLeft, swipeRight) = (mapping.left, mapping.right)
+        })
+    }
+
+    private var rightBinding: Binding<SwipeAction> {
+        Binding(get: { swipeRight }, set: { action in
+            let mapping = swipes.settingRight(action)
+            (swipeLeft, swipeRight) = (mapping.left, mapping.right)
+        })
+    }
+
+    /// Swiping up was the only way into the details panel, so moving it off Details turns on the Info button.
+    private var upBinding: Binding<SwipeAction> {
+        Binding(get: { swipeUp }, set: { action in
+            swipeUp = action
+            if action != .details { showInfo = true }
+        })
+    }
 
     private var shownButtons: [SortingBarButton] {
         order.filter { button in
@@ -62,7 +96,20 @@ struct InteractionsSettingsView: View {
                     }
                 }
 
-                SettingsCard(header: "Actions", footer: "Tap to swipe: tap the left ⅓ of the card to delete and the right ⅓ to keep. The middle ⅓ is left free for the card's buttons.") {
+                SettingsCard(header: "Swipe actions") {
+                    SettingsRow { SwipeActionPicker(title: "Swipe left", choices: SwipeAction.sideChoices, selection: leftBinding) }
+                    SettingsRow { SwipeActionPicker(title: "Swipe right", choices: SwipeAction.sideChoices, selection: rightBinding) }
+                    SettingsRow { SwipeActionPicker(title: "Swipe up", choices: SwipeAction.upChoices, selection: upBinding) }
+                    SettingsRow { SwipeActionPicker(title: "Swipe down", choices: SwipeAction.downChoices, selection: $swipeDown) }
+                    SettingsRow(isLast: true) {
+                        Toggle(isOn: $fullscreenSwipeDown) {
+                            Text("Use swipe down action in fullscreen")
+                            Text("Off: swiping down closes the viewer. On: it does what Swipe down does on the card. Swiping up always closes it.")
+                        }
+                    }
+                }
+
+                SettingsCard(header: "Actions", footer: "Tap to swipe: tap the left ⅓ of the card to swipe left and the right ⅓ to swipe right. The middle ⅓ is left free for the card's buttons.") {
                     SettingsRow { Toggle("Tap to swipe", isOn: $tapToSwipe) }
                     SettingsRow(isLast: !doubleTapEnabled) { Toggle("Double tap", isOn: $doubleTapEnabled) }
                     if doubleTapEnabled {
@@ -80,9 +127,25 @@ struct InteractionsSettingsView: View {
                 SettingsCard(header: "Layout") {
                     SettingsRow(isLast: true) { Toggle("Asset timeline", isOn: $showTimeline) }
                 }
+
+                Button {
+                    isConfirmingReset = true
+                } label: {
+                    Label("Reset to defaults", systemImage: "arrow.counterclockwise")
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .contentShape(.rect)
+                }
+                .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 26))
+                .padding(.top, 28)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
+        }
+        .alert("Reset Interactions?", isPresented: $isConfirmingReset) {
+            Button("Cancel", role: .cancel) {}
+            Button("Reset", role: .destructive, action: resetToDefaults)
+        } message: {
+            Text("The toolbar, swipe actions, tap gestures and timeline will go back to their defaults.")
         }
         // The toggles write straight to storage, so animate here: the preview slides in and out, and its
         // buttons come and go, as buttons are turned on and off.
@@ -94,6 +157,29 @@ struct InteractionsSettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    /// Everything this screen edits, plus the Info button, as Android's `resetInteractions` does.
+    private func resetToDefaults() {
+        showLabels = Setting.Default.showToolbarLabels
+        showAddToAlbum = Setting.Default.showAddToAlbumButton
+        showSwipeButtons = Setting.Default.showSwipeButtons
+        showArchive = Setting.Default.showArchiveButton
+        showLock = Setting.Default.showLockButton
+        showFavorite = Setting.Default.showFavoriteButton
+        autoNext = Setting.Default.autoNextOnFavorite
+        savedOrder = Setting.Default.toolbarButtonOrder
+        swipeLeft = Setting.Default.swipeLeftAction
+        swipeRight = Setting.Default.swipeRightAction
+        swipeUp = Setting.Default.swipeUpAction
+        swipeDown = Setting.Default.swipeDownAction
+        fullscreenSwipeDown = Setting.Default.fullscreenSwipeDownUsesAction
+        showInfo = Setting.Default.showInfoButton
+        infoPosition = Setting.Default.infoPosition
+        tapToSwipe = Setting.Default.tapToSwipe
+        doubleTapEnabled = Setting.Default.doubleTapEnabled
+        doubleTapAction = Setting.Default.doubleTapAction
+        showTimeline = Setting.Default.showTimeline
     }
 
     /// As on Android, the buttons are rearranged by dragging them sideways in a toolbar preview, in the
@@ -186,6 +272,26 @@ private struct SettingsRow<Content: View>: View {
     }
 }
 
+/// A row naming a swipe direction, with a menu of what it can do on the right.
+private struct SwipeActionPicker: View {
+    let title: LocalizedStringKey
+    let choices: [SwipeAction]
+    @Binding var selection: SwipeAction
+
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Picker(title, selection: $selection) {
+                ForEach(choices, id: \.self) { action in
+                    Label(action.title, systemImage: action.systemImage).tag(action)
+                }
+            }
+            .labelsHidden()
+        }
+    }
+}
+
 /// Where each button on the swipe card sits, whether it shows, and how buttons in one corner stack.
 struct ActionButtonsSettingsView: View {
     @AppStorage(Setting.Key.showFullscreenButton) private var showFullscreen = Setting.Default.showFullscreenButton
@@ -205,16 +311,18 @@ struct ActionButtonsSettingsView: View {
     @AppStorage(Setting.Key.sharePosition) private var sharePosition = Setting.Default.sharePosition
     @AppStorage(Setting.Key.fullResolutionPosition) private var fullResolutionPosition = Setting.Default.fullResolutionPosition
     @AppStorage(Setting.Key.keepFullResolution) private var keepFullResolution = Setting.Default.keepFullResolution
+    @AppStorage(Setting.Key.showInfoButton) private var showInfo = Setting.Default.showInfoButton
+    @AppStorage(Setting.Key.infoPosition) private var infoPosition = Setting.Default.infoPosition
     @State private var isConfirmingReset = false
 
     private var layout: CardButtonLayout {
         CardButtonLayout(
             show: [
-                .fullscreen: showFullscreen, .rotate: showRotate, .immich: showImmich,
+                .fullscreen: showFullscreen, .info: showInfo, .rotate: showRotate, .immich: showImmich,
                 .mute: showMute, .download: showDownload, .share: showShare, .fullResolution: showFullResolution,
             ],
             position: [
-                .fullscreen: fullscreenPosition, .rotate: rotatePosition, .immich: immichPosition,
+                .fullscreen: fullscreenPosition, .info: infoPosition, .rotate: rotatePosition, .immich: immichPosition,
                 .mute: mutePosition, .download: downloadPosition, .share: sharePosition, .fullResolution: fullResolutionPosition,
             ],
             orientation: orientation
@@ -242,6 +350,7 @@ struct ActionButtonsSettingsView: View {
             }
 
             ButtonSection(title: "Full Screen", systemImage: "arrow.up.left.and.arrow.down.right", show: $showFullscreen, position: $fullscreenPosition)
+            ButtonSection(title: "Details", systemImage: CardButton.info.symbol, show: $showInfo, position: $infoPosition)
             ButtonSection(title: "Rotate", systemImage: "arrow.clockwise", show: $showRotate, position: $rotatePosition)
             ButtonSection(title: "Open in Immich", systemImage: "arrow.up.forward.square", show: $showImmich, position: $immichPosition) {
                 Picker("Open mode", selection: $openMode) {
@@ -295,6 +404,7 @@ struct ActionButtonsSettingsView: View {
 
     private func resetToDefaults() {
         showFullscreen = Setting.Default.showFullscreenButton
+        showInfo = Setting.Default.showInfoButton
         showRotate = Setting.Default.showRotateButton
         showImmich = Setting.Default.showImmichButton
         showMute = Setting.Default.showMuteButton
@@ -302,6 +412,7 @@ struct ActionButtonsSettingsView: View {
         showShare = Setting.Default.showShareButton
         showFullResolution = Setting.Default.showFullResolutionButton
         fullscreenPosition = Setting.Default.fullscreenPosition
+        infoPosition = Setting.Default.infoPosition
         rotatePosition = Setting.Default.rotatePosition
         immichPosition = Setting.Default.immichPosition
         mutePosition = Setting.Default.mutePosition
@@ -442,6 +553,7 @@ extension CardButton {
     var symbol: String {
         switch self {
         case .fullscreen: "arrow.up.left.and.arrow.down.right"
+        case .info: "info"
         case .rotate: "arrow.clockwise"
         case .immich: "arrow.up.forward.square"
         case .mute: "speaker.wave.2.fill"

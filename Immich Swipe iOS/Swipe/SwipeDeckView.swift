@@ -299,7 +299,10 @@ private struct CardStack: View {
                 .background {
                     CardPinchGesture(onBegan: beginPinch, onChanged: pinch, onEnded: endTouches)
                 }
-                .onGeometryChange(for: CGSize.self) { $0.size } action: { cardSize = $0 }
+                .onGeometryChange(for: CGSize.self) { $0.size } action: {
+                    cardSize = $0
+                    motion.cardHeight = $0.height
+                }
                 // A drag that finished normally has already cleared `isDragging` in `onEnded`.
                 .onChange(of: isDragActive) { _, active in
                     if !active { cancelDrag() }
@@ -320,9 +323,9 @@ private struct CardStack: View {
                             controlsHidden = false
                         } else if panelProgress > 0.1 {
                             setPanel(open: false)
-                        } else if let decision = CardTapRules.decision(atX: x, width: cardSize.width, tapToSwipe: prefs.tapToSwipe) {
+                        } else if let edge = CardTapRules.edge(atX: x, width: cardSize.width, tapToSwipe: prefs.tapToSwipe) {
                             // Videos only pause from their time pill, as on Android.
-                            motion.fly(decision, in: model)
+                            motion.fly(prefs.swipes.action(toward: edge), toward: edge, in: model)
                         }
                     },
                     onDoubleTap: {
@@ -349,8 +352,8 @@ private struct CardStack: View {
                         }
                 )
                 .sensoryFeedback(trigger: controlsHidden) { _, hidden in hidden ? .impact : .selection }
-                .accessibilityAction(named: "Keep") { motion.fly(.keep, in: model) }
-                .accessibilityAction(named: "Delete") { motion.fly(.delete, in: model) }
+                .accessibilityAction(named: Text(prefs.swipes.right.title)) { motion.fly(prefs.swipes.right, toward: .trailing, in: model) }
+                .accessibilityAction(named: Text(prefs.swipes.left.title)) { motion.fly(prefs.swipes.left, toward: .leading, in: model) }
                 .accessibilityAction(named: "Image details") { setPanel(open: true) }
                 .accessibilityActions {
                     if videoPlayer.assetID == current.id {
@@ -445,6 +448,7 @@ private struct CardStack: View {
         var actions = actions
         actions.isLoadingFullResolution = loadingOriginalID == model.deck.current?.id
         actions.video = videoPlayer.assetID == model.deck.current?.id ? videoPlayer : nil
+        actions.toggleDetails = { setPanel(open: panelProgress <= 0.5) }
         return actions
     }
 
@@ -468,9 +472,14 @@ private struct CardStack: View {
         .degrees(motion.offset.width / max(25, cardSize.width / 15))
     }
 
-    /// 0 at rest, 1 once the top card is 320 points aside (Android's 800 px).
+    /// 0 at rest, 1 once the top card is 320 points aside (Android's 800 px). A card pulled down to swipe, not
+    /// to undo, or up to swipe, not to show details, brings the next one forward the same way.
     private var backCardProgress: CGFloat {
-        min(1, abs(motion.offset.width) / 320)
+        let offset = motion.offset
+        let swipes = prefs.swipes
+        let pulledDown = swipes.down != .undo && !motion.isRestoring && offset.height > abs(offset.width)
+        let pulledUp = swipes.up != .details && -offset.height > abs(offset.width)
+        return min(1, abs(pulledDown || pulledUp ? offset.height : offset.width) / 320)
     }
 
     /// The original is drawn over the preview when asked for. GIFs already load as originals.
@@ -481,14 +490,24 @@ private struct CardStack: View {
     private var intent: SwipeIntent? {
         if motion.isRestoring { return nil }
         let offset = motion.offset
-        if offset.height > abs(offset.width), offset.height > 20, model.deck.canUndo { return .undo }
-        if offset.width > 20 { return .keep }
-        if offset.width < -20 { return .delete }
+        let swipes = prefs.swipes
+        if offset.height > abs(offset.width), offset.height > 20, model.deck.canUndo || swipes.down != .undo {
+            return SwipeIntent(action: swipes.down, edge: .bottom)
+        }
+        if swipes.up != .details, -offset.height > abs(offset.width), offset.height < -20 {
+            return SwipeIntent(action: swipes.up, edge: .top)
+        }
+        if offset.width > 20 { return SwipeIntent(action: swipes.right, edge: .trailing) }
+        if offset.width < -20 { return SwipeIntent(action: swipes.left, edge: .leading) }
         return nil
     }
 
     private var intentStrength: Double {
-        let distance = intent == .undo ? motion.offset.height : abs(motion.offset.width)
+        let distance = switch intent?.edge {
+        case .bottom: motion.offset.height
+        case .top: -motion.offset.height
+        default: abs(motion.offset.width)
+        }
         return min(1, Double(distance / CardMotion.distanceThreshold))
     }
 
@@ -503,19 +522,28 @@ private struct CardStack: View {
                 // Once a second finger has landed the fingers move the photo, not the card.
                 if isZoomSession { return }
                 let (dx, dy) = (value.translation.width, value.translation.height)
+                let swipes = prefs.swipes
                 if dragMode == .undecided {
-                    // Mostly upward, or any vertical move while the panel is already open, works the panel.
+                    // Any vertical move while the panel is already open works the panel, and so does a mostly
+                    // upward one, unless swiping up is an action of its own.
                     panelStartProgress = panelProgress
-                    let isPanel = (panelStartProgress > 0.1 && abs(dy) > 5) || (abs(dy) > abs(dx) && dy < 0)
+                    let isPanel = (panelStartProgress > 0.1 && abs(dy) > 5) || (abs(dy) > abs(dx) && dy < 0 && swipes.up == .details)
                     dragMode = isPanel ? .panel : .card
                 }
                 if dragMode == .panel {
                     dragPanel(by: dy)
                     return
                 }
-                // Cards only travel downwards, and resist when there's nothing to undo.
-                let down = max(0, dy)
-                motion.offset = CGSize(width: dx, height: model.deck.canUndo ? down : down * 0.2)
+                // Cards travel downwards, and upwards when swiping up is an action. With nothing to undo the card
+                // resists a pull down instead of following the finger, unless pulling down is a swipe of its own.
+                let height: CGFloat
+                if swipes.up != .details, dy < 0 {
+                    height = dy
+                } else {
+                    let down = max(0, dy)
+                    height = model.deck.canUndo || swipes.down != .undo ? down : down * 0.2
+                }
+                motion.offset = CGSize(width: dx, height: height)
             }
             .onEnded { value in
                 isDragging = false
@@ -529,7 +557,7 @@ private struct CardStack: View {
                 if mode == .panel {
                     releasePanel(velocity: value.velocity.height)
                 } else {
-                    motion.release(translation: value.translation, velocity: value.velocity, in: model)
+                    motion.release(translation: value.translation, velocity: value.velocity, swipes: prefs.swipes, in: model)
                 }
             }
     }
@@ -625,6 +653,9 @@ final class CardMotion {
     /// one behind stays as it was until the restored card has settled over it.
     private(set) var heldBackCard: Asset?
 
+    /// The card's height, so a swipe up or down can carry it clear of the screen.
+    var cardHeight: CGFloat = 0
+
     /// Distance and speed past which a drag commits (spec §3.2, Android pixels converted to points).
     static let distanceThreshold: CGFloat = 100
     static let velocityThreshold: CGFloat = 500
@@ -633,21 +664,29 @@ final class CardMotion {
     func toggleFavorite(in model: DeckModel, autoAdvance: Bool) {
         guard let asset = model.deck.current else { return }
         model.toggleFavoriteForCurrent()
-        if autoAdvance, model.isFavorite(asset) { fly(.keep, in: model) }
+        if autoAdvance, model.isFavorite(asset) { fly(.keep, toward: .trailing, in: model) }
     }
 
-    /// Decides what a released drag means: undo (pull down), keep (right), delete (left), or snap back.
-    func release(translation: CGSize, velocity: CGSize, in model: DeckModel) {
+    /// Decides what a released drag means, as on Android (`SwipeCard.kt`): a pull down or up runs that
+    /// direction's action (a pull down undoes by default), a swipe right or left runs that side's, and
+    /// anything shorter snaps back.
+    func release(translation: CGSize, velocity: CGSize, swipes: SwipeMapping, in model: DeckModel) {
         guard !isFlying else { return }
         let (x, y) = (translation.width, translation.height)
         let (vx, vy) = (velocity.width, velocity.height)
+        let isPullDown = y > abs(x) && (y > Self.distanceThreshold || vy > Self.velocityThreshold)
+        let isPullUp = swipes.up != .details && -y > abs(x) && (y < -Self.distanceThreshold || vy < -Self.velocityThreshold)
 
-        if model.deck.canUndo, y > abs(x), y > Self.distanceThreshold || vy > Self.velocityThreshold {
+        if isPullDown, swipes.down != .undo {
+            fly(swipes.down, toward: .bottom, in: model)
+        } else if isPullDown, model.deck.canUndo {
             undo(in: model)
+        } else if isPullUp {
+            fly(swipes.up, toward: .top, in: model)
         } else if x > Self.distanceThreshold || (vx > Self.velocityThreshold && x > -20) {
-            fly(.keep, in: model)
+            fly(swipes.right, toward: .trailing, in: model)
         } else if x < -Self.distanceThreshold || (vx < -Self.velocityThreshold && x < 20) {
-            fly(.delete, in: model)
+            fly(swipes.left, toward: .leading, in: model)
         } else {
             withAnimation(.bouncy) { offset = .zero }
         }
@@ -682,14 +721,28 @@ final class CardMotion {
         }
     }
 
-    /// Throws the card off screen, then records the decision and brings the next card in place.
-    func fly(_ decision: SwipeDecision, in model: DeckModel) {
+    /// Throws the card off screen towards the edge, then carries out the action and brings the next card in
+    /// place. Undo pulls the previous card back instead, and Details only settles the card.
+    func fly(_ action: SwipeAction, toward edge: Edge, in model: DeckModel) {
         guard !isFlying, model.deck.current != nil else { return }
+        switch action {
+        case .undo where model.deck.canUndo:
+            undo(in: model)
+            return
+        case .undo, .details:
+            withAnimation(.bouncy) { offset = .zero }
+            return
+        default:
+            break
+        }
         isFlying = true
-        let target: CGSize = switch decision {
-        case .keep: CGSize(width: 700, height: offset.height)
-        case .delete: CGSize(width: -700, height: offset.height)
-        case .archive, .lock: CGSize(width: 0, height: -900)
+        // Clear of the screen above or below even on an iPad, where the card is far taller than 900 points.
+        let vertical = max(900, cardHeight + 300)
+        let target: CGSize = switch edge {
+        case .trailing: CGSize(width: 700, height: offset.height)
+        case .leading: CGSize(width: -700, height: offset.height)
+        case .top: CGSize(width: offset.width, height: -vertical)
+        case .bottom: CGSize(width: offset.width, height: vertical)
         }
         // Starts fast and slows, so a flick carries straight on instead of stalling as it leaves the finger.
         withAnimation(.easeOut(duration: 0.2)) {
@@ -698,7 +751,7 @@ final class CardMotion {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                model.decide(decision)
+                model.swipe(action)
                 self.offset = .zero
             }
             self.isFlying = false
@@ -831,7 +884,7 @@ private struct DeckBottomBar: View {
     }
 
     private var titles: [LocalizedStringKey] {
-        let ends: [LocalizedStringKey] = prefs.showSwipeButtons ? ["Delete", "Keep"] : []
+        let ends: [LocalizedStringKey] = prefs.showSwipeButtons ? [prefs.swipes.left.title, prefs.swipes.right.title] : []
         return ends + ["Undo", "Sort"] + shownButtons.map(\.title)
     }
 
@@ -845,9 +898,13 @@ private struct DeckBottomBar: View {
     var body: some View {
         let current = model.deck.current
         let showsTitles = showsTitles
+        let swipes = prefs.swipes
         HStack(spacing: 8) {
+            // The end buttons look like, and do, what swiping that way does (Android's `SwipeFab`).
             if prefs.showSwipeButtons {
-                BarButton(title: "Delete", systemImage: "trash", tint: .red, showsTitle: showsTitles) { motion.fly(.delete, in: model) }
+                BarButton(title: swipes.left.title, systemImage: swipes.left.systemImage, tint: Self.endTint(swipes.left), showsTitle: showsTitles) {
+                    motion.fly(swipes.left, toward: .leading, in: model)
+                }
                     .disabled(current == nil)
                     .frame(width: 64)
                     .padding(.vertical, 8)
@@ -868,7 +925,9 @@ private struct DeckBottomBar: View {
             .padding(.horizontal, 6)
             .glassEffect(.regular, in: .capsule)
             if prefs.showSwipeButtons {
-                BarButton(title: "Keep", systemImage: "checkmark.circle", tint: .green, showsTitle: showsTitles) { motion.fly(.keep, in: model) }
+                BarButton(title: swipes.right.title, systemImage: swipes.right.systemImage, tint: Self.endTint(swipes.right), showsTitle: showsTitles) {
+                    motion.fly(swipes.right, toward: .trailing, in: model)
+                }
                     .disabled(current == nil)
                     .frame(width: 64)
                     .padding(.vertical, 8)
@@ -889,11 +948,20 @@ private struct DeckBottomBar: View {
         // Arrow keys work whichever control has focus.
         .background {
             Group {
-                Button("Delete") { motion.fly(.delete, in: model) }.keyboardShortcut(.leftArrow, modifiers: [])
-                Button("Keep") { motion.fly(.keep, in: model) }.keyboardShortcut(.rightArrow, modifiers: [])
+                Button(swipes.left.title) { motion.fly(swipes.left, toward: .leading, in: model) }.keyboardShortcut(.leftArrow, modifiers: [])
+                Button(swipes.right.title) { motion.fly(swipes.right, toward: .trailing, in: model) }.keyboardShortcut(.rightArrow, modifiers: [])
             }
             .opacity(0)
             .accessibilityHidden(true)
+        }
+    }
+
+    /// Keep green and Delete red, as before; the other actions take the bar's usual colour.
+    private static func endTint(_ action: SwipeAction) -> Color? {
+        switch action {
+        case .keep: .green
+        case .delete: .red
+        default: nil
         }
     }
 
@@ -901,9 +969,9 @@ private struct DeckBottomBar: View {
     private func middleButton(_ button: SortingBarButton, current: Asset?, showsTitle: Bool) -> some View {
         switch button {
         case .archive:
-            BarButton(title: button.title, systemImage: button.systemImage, showsTitle: showsTitle) { motion.fly(.archive, in: model) }
+            BarButton(title: button.title, systemImage: button.systemImage, showsTitle: showsTitle) { motion.fly(.archive, toward: .top, in: model) }
         case .lock:
-            BarButton(title: button.title, systemImage: button.systemImage, showsTitle: showsTitle) { motion.fly(.lock, in: model) }
+            BarButton(title: button.title, systemImage: button.systemImage, showsTitle: showsTitle) { motion.fly(.lock, toward: .top, in: model) }
         case .favorite:
             let isFavorite = current.map(model.isFavorite) ?? false
             BarButton(title: button.title, systemImage: isFavorite ? "heart.fill" : "heart", tint: isFavorite ? .red : nil, showsTitle: showsTitle) {

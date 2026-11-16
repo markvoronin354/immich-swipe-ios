@@ -4,9 +4,11 @@ import SwiftUI
 /// The fullscreen viewer, as on Android (`FullscreenViewer.kt`): the current photo or video on black,
 /// with the next one waiting behind it.
 ///
-/// Drag right to keep or left to delete, and the next photo takes its place; drag down to close. Pinch or
-/// double-tap to zoom. Tapping shows or hides the controls, and with tap to swipe on, tapping the edges
-/// keeps or deletes. Holding a finger down hides the controls and pauses a video until it lifts.
+/// Drag right or left to do what swiping that way does on the card, and the next photo takes its place;
+/// drag up to close. Dragging down closes too, unless "Use swipe down action in fullscreen" is on, when it does
+/// what swiping down does on the card. Pinch or double-tap to zoom. Tapping shows or hides the controls, and
+/// with tap to swipe on, tapping the edges swipes. Holding a finger down hides the controls and pauses a video
+/// until it lifts.
 ///
 /// Android's distances are pixels; they are divided by 2.5 here, as for the card (`CardMotion`).
 struct FullscreenViewer: View {
@@ -26,16 +28,20 @@ struct FullscreenViewer: View {
     @State private var controlsVisible = true
     /// The asset whose details are showing.
     @State private var infoAsset: Asset?
+    /// While the photo brought back by a swipe down rises in from below, so it shows no badge.
+    @State private var isRestoring = false
 
-    /// 150 px: past this a released drag keeps or deletes.
+    /// 150 px: past this a released drag swipes.
     fileprivate static let swipeDistance: CGFloat = 60
-    /// 120 px down, and less than 100 px sideways, closes.
-    private static let closeDistance: CGFloat = 48
+    /// 120 px up or down, and less than 100 px sideways, closes, or runs the swipe down action.
+    fileprivate static let closeDistance: CGFloat = 48
     private static let closeMaxSideways: CGFloat = 40
-    /// 1000 px: the background is gone once the page has been pulled this far down.
+    /// 1000 px: the background is gone once the page has been pulled this far towards closing.
     private static let fadeDistance: CGFloat = 400
-    /// 2000 px: where a kept or deleted page flies to.
+    /// 2000 px: where a page swiped sideways flies to.
     private static let flyDistance: CGFloat = 800
+    /// Android flies a page swiped down off the window; this clears the tallest iPad.
+    private static let verticalFlyDistance: CGFloat = 1400
     /// 500 px: the next page is full size once the current one is this far aside.
     private static let nextGrowDistance: CGFloat = 200
 
@@ -63,6 +69,7 @@ struct FullscreenViewer: View {
                     fade: fade,
                     controlsVisible: controlsVisible && !isHolding,
                     isZoomed: $isZoomed,
+                    isRestoring: isRestoring,
                     actions: actions(for: current)
                 )
                 .id(current.id)
@@ -90,13 +97,18 @@ struct FullscreenViewer: View {
         }
     }
 
-    /// 1 at rest, 0 once the page has been pulled `fadeDistance` down.
+    /// 1 at rest, 0 once the page has been pulled `fadeDistance` towards closing: up always, and down unless
+    /// swiping down runs its action.
     private var fade: Double {
-        min(max(1 - dragOffset.height / Self.fadeDistance, 0), 1)
+        let closingPull = prefs.fullscreenSwipeDownUsesAction ? -dragOffset.height : abs(dragOffset.height)
+        return min(max(1 - closingPull / Self.fadeDistance, 0), 1)
     }
 
+    /// A pull that swipes, rather than closes or undoes, brings the next photo up as a sideways one does.
     private var nextProgress: CGFloat {
-        min(abs(dragOffset.width) / Self.nextGrowDistance, 1)
+        let pullsToSwipe = prefs.fullscreenSwipeDownUsesAction && prefs.swipeDownAction != .undo
+        let pull = pullsToSwipe ? max(abs(dragOffset.width), dragOffset.height) : abs(dragOffset.width)
+        return min(pull / Self.nextGrowDistance, 1)
     }
 
     private func actions(for asset: Asset) -> ViewerActions {
@@ -109,7 +121,7 @@ struct FullscreenViewer: View {
             },
             hold: { hold($0, asset: asset) },
             drag: drag,
-            swipe: swipe,
+            swipe: { swipe($0, toward: $1) },
             close: { dismiss() },
             undo: { model.undo() },
             favorite: { model.toggleFavoriteForCurrent() },
@@ -121,10 +133,10 @@ struct FullscreenViewer: View {
 
     /// Tap to swipe on the edges, as on the card. Not while zoomed in.
     private func tap(at point: CGPoint, in size: CGSize) -> Bool {
-        guard !isZoomed, let decision = CardTapRules.decision(atX: point.x, width: size.width, tapToSwipe: prefs.tapToSwipe) else {
+        guard !isZoomed, let edge = CardTapRules.edge(atX: point.x, width: size.width, tapToSwipe: prefs.tapToSwipe) else {
             return false
         }
-        swipe(decision)
+        swipe(prefs.swipes.action(toward: edge), toward: edge)
         return true
     }
 
@@ -139,23 +151,28 @@ struct FullscreenViewer: View {
         }
     }
 
-    /// The page follows the finger, never above where it started. While a finger is held the drag is ignored.
+    /// The page follows the finger. While a finger is held the drag is ignored.
     private func drag(_ drag: ViewerDrag) {
         guard !isFlying else { return }
         switch drag {
         case .changed(let translation):
             guard !isHolding else { return }
-            dragOffset = CGSize(width: translation.width, height: max(0, translation.height))
+            // With nothing to undo, a pull down that would undo resists instead of following the finger.
+            let resists = prefs.fullscreenSwipeDownUsesAction && prefs.swipeDownAction == .undo && !model.deck.canUndo
+            let height = resists && translation.height > 0 ? translation.height * 0.2 : translation.height
+            dragOffset = CGSize(width: translation.width, height: height)
         case .ended:
             let (x, y) = (dragOffset.width, dragOffset.height)
             if isHolding {
                 snapBack()
             } else if y > Self.closeDistance, abs(x) < Self.closeMaxSideways {
+                if prefs.fullscreenSwipeDownUsesAction { swipeDown() } else { close() }
+            } else if y < -Self.closeDistance, abs(x) < Self.closeMaxSideways {
                 close()
             } else if x > Self.swipeDistance {
-                swipe(.keep)
+                swipe(prefs.swipes.right, toward: .trailing)
             } else if x < -Self.swipeDistance {
-                swipe(.delete)
+                swipe(prefs.swipes.left, toward: .leading)
             } else {
                 snapBack()
             }
@@ -168,32 +185,68 @@ struct FullscreenViewer: View {
         withAnimation(.spring(duration: 0.35, bounce: 0.25)) { dragOffset = .zero }
     }
 
-    /// Throws the page off the side in 180 ms, as on Android, then records the decision. The next page is
-    /// already in place underneath.
-    private func swipe(_ decision: SwipeDecision) {
+    /// Throws the page off towards the edge in 180 ms, as on Android, then carries out the action. The next
+    /// page is already in place underneath.
+    private func swipe(_ action: SwipeAction, toward edge: Edge) {
         guard !isFlying, !isHolding, model.deck.current != nil else { return }
         isFlying = true
-        let target = decision == .keep ? Self.flyDistance : -Self.flyDistance
+        let target: CGSize = switch edge {
+        case .trailing: CGSize(width: Self.flyDistance, height: 0)
+        case .leading: CGSize(width: -Self.flyDistance, height: 0)
+        case .bottom: CGSize(width: 0, height: Self.verticalFlyDistance)
+        case .top: CGSize(width: 0, height: -Self.verticalFlyDistance)
+        }
         withAnimation(.easeInOut(duration: 0.18)) {
-            dragOffset = CGSize(width: target, height: 0)
+            dragOffset = target
         } completion: {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                model.decide(decision)
+                model.swipe(action)
                 dragOffset = .zero
             }
             isFlying = false
         }
     }
 
-    /// Carries the pull on in one motion: the page keeps sliding down and the background fades out, and
-    /// only then is the cover removed, without its own slide. Otherwise the cover would slide down a
+    /// A swipe down that runs the card's swipe down action. Undo keeps the viewer open, as on Android: this
+    /// photo drops away and the one brought back rises in from below.
+    private func swipeDown() {
+        let action = prefs.swipeDownAction
+        guard action == .undo else {
+            swipe(action, toward: .bottom)
+            return
+        }
+        guard !isFlying, !isHolding, model.deck.canUndo else {
+            snapBack()
+            return
+        }
+        isFlying = true
+        withAnimation(.easeInOut(duration: 0.18)) {
+            dragOffset = CGSize(width: 0, height: Self.verticalFlyDistance)
+        } completion: {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                model.undo()
+                isRestoring = true
+            }
+            withAnimation(.spring(duration: 0.4, bounce: 0.2)) {
+                dragOffset = .zero
+            } completion: {
+                isRestoring = false
+                isFlying = false
+            }
+        }
+    }
+
+    /// Carries the pull on in one motion: the page keeps sliding up or down and the background fades out, and
+    /// only then is the cover removed, without its own slide. Otherwise the cover would slide away a
     /// second time after the page had already been pulled.
     private func close() {
         isFlying = true
         withAnimation(.easeOut(duration: 0.22)) {
-            dragOffset = CGSize(width: dragOffset.width, height: 1000)
+            dragOffset = CGSize(width: dragOffset.width, height: dragOffset.height < 0 ? -1000 : 1000)
         }
         Task {
             try? await Task.sleep(for: .milliseconds(220))
@@ -211,7 +264,7 @@ struct ViewerActions {
     var playPause: () -> Void = {}
     var hold: (Bool) -> Void = { _ in }
     var drag: (ViewerDrag) -> Void = { _ in }
-    var swipe: (SwipeDecision) -> Void = { _ in }
+    var swipe: (SwipeAction, Edge) -> Void = { _, _ in }
     var close: () -> Void = {}
     var undo: () -> Void = {}
     var favorite: () -> Void = {}
@@ -237,6 +290,8 @@ private struct ViewerPage: View {
     var fade: Double = 1
     var controlsVisible = true
     var isZoomed: Binding<Bool> = .constant(false)
+    /// Rising back in after a swipe down undid, so the badge stays off it, as on the card.
+    var isRestoring = false
     var actions = ViewerActions()
 
     private let prefs = DeckPreferences()
@@ -298,8 +353,8 @@ private struct ViewerPage: View {
                 .ignoresSafeArea()
                 .accessibilityElement()
                 .accessibilityLabel(isVideo ? "Video" : "Photo")
-                .accessibilityAction(named: "Keep") { actions.swipe(.keep) }
-                .accessibilityAction(named: "Delete") { actions.swipe(.delete) }
+                .accessibilityAction(named: Text(prefs.swipes.right.title)) { actions.swipe(prefs.swipes.right, .trailing) }
+                .accessibilityAction(named: Text(prefs.swipes.left.title)) { actions.swipe(prefs.swipes.left, .leading) }
                 .accessibilityAction(named: model.isFavorite(asset) ? "Unfavorite" : "Favorite") { actions.favorite() }
                 .accessibilityActions {
                     if player != nil {
@@ -391,13 +446,20 @@ private struct ViewerPage: View {
         }
     }
 
-    /// KEEP or DELETE, fading in over the first 200 px of a drag, up to 90%.
+    /// What the drag would do, fading in over the first 200 px of it, up to 90%: the swipe down action while
+    /// that is on and pulling down would run it, else the action for the side being dragged towards.
     @ViewBuilder
     private var stamp: some View {
-        if offset.width != 0 {
-            let intent: SwipeIntent = offset.width > 0 ? .keep : .delete
-            IntentStamp(intent: intent, isCommitted: abs(offset.width) > FullscreenViewer.swipeDistance)
-                .opacity(min(abs(offset.width) / 80, 1) * 0.9)
+        let swipes = prefs.swipes
+        let pullsDown = prefs.fullscreenSwipeDownUsesAction && !isRestoring
+            && (model.deck.canUndo || swipes.down != .undo) && offset.height > abs(offset.width)
+        if pullsDown || offset.width != 0 {
+            let intent = pullsDown ? SwipeIntent(action: swipes.down, edge: .bottom)
+                : offset.width > 0 ? SwipeIntent(action: swipes.right, edge: .trailing)
+                : SwipeIntent(action: swipes.left, edge: .leading)
+            let distance = pullsDown ? offset.height : abs(offset.width)
+            IntentStamp(action: intent.action, isCommitted: distance > (pullsDown ? FullscreenViewer.closeDistance : FullscreenViewer.swipeDistance))
+                .opacity(min(distance / 80, 1) * 0.9)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: intent.stampAlignment)
                 // Below the top bar, as on Android.
                 .padding(.top, ViewerControls.topBarBottom + 6)

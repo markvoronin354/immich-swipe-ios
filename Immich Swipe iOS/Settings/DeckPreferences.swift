@@ -22,6 +22,8 @@ struct DeckPreferences: DynamicProperty {
     @AppStorage(Setting.Key.sharePosition) var sharePosition = Setting.Default.sharePosition
     @AppStorage(Setting.Key.fullResolutionPosition) var fullResolutionPosition = Setting.Default.fullResolutionPosition
     @AppStorage(Setting.Key.keepFullResolution) var keepFullResolution = Setting.Default.keepFullResolution
+    @AppStorage(Setting.Key.showInfoButton) var showInfoButton = Setting.Default.showInfoButton
+    @AppStorage(Setting.Key.infoPosition) var infoPosition = Setting.Default.infoPosition
 
     @AppStorage(Setting.Key.showFavoriteButton) var showFavoriteButton = Setting.Default.showFavoriteButton
     @AppStorage(Setting.Key.showArchiveButton) var showArchiveButton = Setting.Default.showArchiveButton
@@ -35,15 +37,24 @@ struct DeckPreferences: DynamicProperty {
     @AppStorage(Setting.Key.doubleTapEnabled) var doubleTapEnabled = Setting.Default.doubleTapEnabled
     @AppStorage(Setting.Key.doubleTapAction) var doubleTapAction = Setting.Default.doubleTapAction
     @AppStorage(Setting.Key.showTimeline) var showTimeline = Setting.Default.showTimeline
+    @AppStorage(Setting.Key.swipeLeftAction) var swipeLeftAction = Setting.Default.swipeLeftAction
+    @AppStorage(Setting.Key.swipeRightAction) var swipeRightAction = Setting.Default.swipeRightAction
+    @AppStorage(Setting.Key.swipeUpAction) var swipeUpAction = Setting.Default.swipeUpAction
+    @AppStorage(Setting.Key.swipeDownAction) var swipeDownAction = Setting.Default.swipeDownAction
+    @AppStorage(Setting.Key.fullscreenSwipeDownUsesAction) var fullscreenSwipeDownUsesAction = Setting.Default.fullscreenSwipeDownUsesAction
+
+    var swipes: SwipeMapping {
+        SwipeMapping(left: swipeLeftAction, right: swipeRightAction, up: swipeUpAction, down: swipeDownAction)
+    }
 
     var layout: CardButtonLayout {
         CardButtonLayout(
             show: [
-                .fullscreen: showFullscreenButton, .rotate: showRotateButton, .immich: showImmichButton,
+                .fullscreen: showFullscreenButton, .info: showInfoButton, .rotate: showRotateButton, .immich: showImmichButton,
                 .mute: showMuteButton, .download: showDownloadButton, .share: showShareButton, .fullResolution: showFullResolutionButton,
             ],
             position: [
-                .fullscreen: fullscreenPosition, .rotate: rotatePosition, .immich: immichPosition,
+                .fullscreen: fullscreenPosition, .info: infoPosition, .rotate: rotatePosition, .immich: immichPosition,
                 .mute: mutePosition, .download: downloadPosition, .share: sharePosition, .fullResolution: fullResolutionPosition,
             ],
             orientation: stackOrientation

@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SwiftUI
 import Testing
 @testable import Immich_Swipe_iOS
 
@@ -233,33 +234,33 @@ struct IntentStampPlacementTests {
     }
 
     @Test func emptyCornerUsesAndroidsInsets() {
-        let insets = IntentStamp.cardInsets(for: .delete, layout: layout(.topLeft, .vertical), isVideo: false)
+        let insets = IntentStamp.cardInsets(for: SwipeIntent(action: .delete, edge: .leading), layout: layout(.topLeft, .vertical), isVideo: false)
         #expect(insets.top == 60 && insets.side == 60)
     }
 
     @Test func columnInItsCornerPushesTheBadgeInFromTheSide() {
-        let insets = IntentStamp.cardInsets(for: .delete, layout: layout(.topRight, .vertical), isVideo: false)
+        let insets = IntentStamp.cardInsets(for: SwipeIntent(action: .delete, edge: .leading), layout: layout(.topRight, .vertical), isVideo: false)
         #expect(insets.top == 60 && insets.side == 76)
     }
 
     @Test func rowInItsCornerPushesTheBadgeDown() {
-        let insets = IntentStamp.cardInsets(for: .keep, layout: layout(.topLeft, .horizontal), isVideo: false)
+        let insets = IntentStamp.cardInsets(for: SwipeIntent(action: .keep, edge: .trailing), layout: layout(.topLeft, .horizontal), isVideo: false)
         #expect(insets.top == 76 && insets.side == 60)
     }
 
     @Test func rowInTheOtherTopCornerStillPushesTheBadgeDown() {
         // A long top-right row reaches across to where Keep sits.
-        let insets = IntentStamp.cardInsets(for: .keep, layout: layout(.topRight, .horizontal), isVideo: false)
+        let insets = IntentStamp.cardInsets(for: SwipeIntent(action: .keep, edge: .trailing), layout: layout(.topRight, .horizontal), isVideo: false)
         #expect(insets.top == 76 && insets.side == 60)
     }
 
     @Test func columnInTheOtherCornerLeavesTheBadgeAlone() {
-        let insets = IntentStamp.cardInsets(for: .keep, layout: layout(.topRight, .vertical), isVideo: false)
+        let insets = IntentStamp.cardInsets(for: SwipeIntent(action: .keep, edge: .trailing), layout: layout(.topRight, .vertical), isVideo: false)
         #expect(insets.top == 60 && insets.side == 60)
     }
 
     @Test func undoOnlyMovesForARowAlongTheTop() {
-        #expect(IntentStamp.cardInsets(for: .undo, layout: layout(.topRight, .vertical), isVideo: false).top == 60)
-        #expect(IntentStamp.cardInsets(for: .undo, layout: layout(.topRight, .horizontal), isVideo: false).top == 76)
+        #expect(IntentStamp.cardInsets(for: SwipeIntent(action: .undo, edge: .bottom), layout: layout(.topRight, .vertical), isVideo: false).top == 60)
+        #expect(IntentStamp.cardInsets(for: SwipeIntent(action: .undo, edge: .bottom), layout: layout(.topRight, .horizontal), isVideo: false).top == 76)
     }
 }

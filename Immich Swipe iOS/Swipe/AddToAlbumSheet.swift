@@ -21,7 +21,17 @@ struct AddToAlbumSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                // One group, as on Android: archive and lock (separate rows, as they are different actions), then
+                // the new album. Archive and lock only show when neither a toolbar button nor a swipe does them.
                 Section {
+                    if !prefs.showArchiveButton && !prefs.swipes.contains(.archive) && matches("Archive", aliases: ["archive", "archiv"]) {
+                        DecisionRow(systemImage: "archivebox.fill", title: "Archive") { decide(.archive) }
+                            .disabled(workingAlbumID != nil || decided != nil)
+                    }
+                    if !prefs.showLockButton && !prefs.swipes.contains(.lock) && matches("Locked folder", aliases: ["lock", "verrouil", "bloque"]) {
+                        DecisionRow(systemImage: "lock.fill", title: "Locked folder") { decide(.lock) }
+                            .disabled(workingAlbumID != nil || decided != nil)
+                    }
                     HStack {
                         TextField("New album name", text: $newAlbumName)
                             .onSubmit(createAlbum)
@@ -37,26 +47,6 @@ struct AddToAlbumSheet: View {
                 }
 
                 Section("Albums") {
-                    // With no dedicated archive or lock button, they're offered here instead, like Android does for
-                    // lock. Android has no archive row; it's the same row for the other button.
-                    if !prefs.showArchiveButton && matches("Archive", aliases: ["archive", "archiv"]) {
-                        DecisionRow(
-                            systemImage: "archivebox.fill",
-                            title: "Archive",
-                            subtitle: "Move asset to archive",
-                            action: { decide(.archive) }
-                        )
-                        .disabled(workingAlbumID != nil || decided != nil)
-                    }
-                    if !prefs.showLockButton && matches("Locked folder", aliases: ["lock", "verrouil", "bloque"]) {
-                        DecisionRow(
-                            systemImage: "lock.fill",
-                            title: "Locked folder",
-                            subtitle: "Move asset to locked folder",
-                            action: { decide(.lock) }
-                        )
-                        .disabled(workingAlbumID != nil || decided != nil)
-                    }
                     if let albums {
                         ForEach(filtered(albums)) { album in
                             Button {
@@ -174,12 +164,11 @@ struct AddToAlbumSheet: View {
     }
 }
 
-/// A tile row at the top of the album list for a decision that has no toolbar button: an icon, a title and
-/// what it does.
+/// A one-line row above the album list for a decision that has no toolbar button or swipe: an icon and a
+/// title, compact as on Android.
 private struct DecisionRow: View {
     let systemImage: String
     let title: LocalizedStringKey
-    let subtitle: LocalizedStringKey
     let action: () -> Void
 
     var body: some View {
@@ -189,14 +178,10 @@ private struct DecisionRow: View {
                     .foregroundStyle(.white)
                     .frame(width: 36, height: 36)
                     .background(.tint, in: .rect(cornerRadius: 8))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-                    Text(subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+                Text(title)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
                 Spacer()
                 Image(systemName: "chevron.right")
                     .foregroundStyle(.tint)

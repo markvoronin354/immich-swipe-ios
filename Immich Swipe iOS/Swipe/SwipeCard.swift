@@ -44,11 +44,12 @@ struct SwipeCard: View {
 
             if let intent {
                 let insets = IntentStamp.cardInsets(for: intent, layout: buttonLayout, isVideo: asset.type == .video)
-                IntentStamp(intent: intent, isCommitted: intentStrength >= 1)
+                IntentStamp(action: intent.action, isCommitted: intentStrength >= 1)
                     // Android: up to 90% opaque.
                     .opacity(intentStrength * 0.9)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: intent.stampAlignment)
-                    .padding(.top, insets.top)
+                    // A swipe up's badge sits above the bottom buttons instead, 72 pt up as on Android.
+                    .padding(intent.edge == .top ? .bottom : .top, intent.edge == .top ? 72 : insets.top)
                     .padding(.horizontal, insets.side)
                     .allowsHitTesting(false)
             }
@@ -82,6 +83,8 @@ struct SwipeCardActions {
     var sizeText: String?
     /// The deck's player, set only while it is playing this card's video.
     var video: DeckVideoPlayer?
+    /// Opens the details panel, or shuts it if it's open. Set by the card stack, which owns the panel.
+    var toggleDetails: () -> Void = {}
 }
 
 /// The preview, the original over it when asked for, and the playing video over both, all turned in
@@ -122,7 +125,6 @@ struct CardControls: View {
     let asset: Asset
     let actions: SwipeCardActions
 
-    @State private var cardWidth: CGFloat = 0
     @State private var topLeftSize: CGSize = .zero
     @State private var topRightSize: CGSize = .zero
     @State private var sizeWidth: CGFloat = 0
@@ -131,45 +133,66 @@ struct CardControls: View {
     @State private var infoWidth: CGFloat = 0
 
     var body: some View {
-        VStack {
-            HStack(alignment: .top) {
-                CornerButtons(corner: .topLeft, asset: asset, actions: actions)
+        // The card's size, from the space it offers: the controls' own size grows with a row too long to fit,
+        // so measuring that would never shrink the buttons.
+        GeometryReader { proxy in
+            controls(in: proxy.size)
+                .frame(width: proxy.size.width, height: proxy.size.height)
+        }
+    }
+
+    private func controls(in cardSize: CGSize) -> some View {
+        // Smaller and closer together when a corner's stack wouldn't otherwise fit the card.
+        let metrics = actions.layout.metrics(fitting: CGSize(width: cardSize.width - 16, height: cardSize.height - 16), isVideo: asset.type == .video)
+        let cardWidth = cardSize.width
+        // A gap only between two corners that both have buttons, as `metrics(fitting:)` counts it. Stack spacing
+        // would also add one beside an empty corner, pushing a full row past the card's inset.
+        let isVideo = asset.type == .video
+        func gap(_ first: IconPosition, _ second: IconPosition) -> CGFloat {
+            [first, second].allSatisfy { !actions.layout.buttons(in: $0, isVideo: isVideo).isEmpty } ? metrics.spacing : 0
+        }
+        return VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
+                CornerButtons(corner: .topLeft, asset: asset, actions: actions, spacing: metrics.spacing)
                     .onGeometryChange(for: CGSize.self) { $0.size } action: { topLeftSize = $0 }
-                Spacer()
-                CornerButtons(corner: .topRight, asset: asset, actions: actions)
+                Spacer(minLength: gap(.topLeft, .topRight))
+                CornerButtons(corner: .topRight, asset: asset, actions: actions, spacing: metrics.spacing)
                     .onGeometryChange(for: CGSize.self) { $0.size } action: { topRightSize = $0 }
             }
 
-            Spacer()
+            // The taller of the two side columns decides how close the rows may come.
+            Spacer(minLength: max(gap(.topLeft, .bottomLeft), gap(.topRight, .bottomRight)))
 
-            HStack(alignment: .bottom) {
-                CornerButtons(corner: .bottomLeft, asset: asset, actions: actions)
+            HStack(alignment: .bottom, spacing: 0) {
+                CornerButtons(corner: .bottomLeft, asset: asset, actions: actions, spacing: metrics.spacing)
                     .onGeometryChange(for: CGSize.self) { $0.size } action: { bottomLeftSize = $0 }
-                Spacer()
-                CornerButtons(corner: .bottomRight, asset: asset, actions: actions)
+                Spacer(minLength: gap(.bottomLeft, .bottomRight))
+                CornerButtons(corner: .bottomRight, asset: asset, actions: actions, spacing: metrics.spacing)
                     .onGeometryChange(for: CGSize.self) { $0.size } action: { bottomRightSize = $0 }
             }
         }
+        .environment(\.cardButtonSize, metrics.size)
         // 8 pt, the same inset as the centred pills, so the buttons' outer edges line up with them.
         .padding(8)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { cardWidth = $0 }
         // The size while sorting by size, top centre for photos and videos alike, as on Android.
         .overlay(alignment: .top) {
             if let sizeText = actions.sizeText {
+                let clearance = clearance(of: sizeWidth, cardWidth: cardWidth, from: (.topLeft, topLeftSize), (.topRight, topRightSize))
                 Text(sizeText)
                     .modifier(CardPillText())
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { sizeWidth = $0 }
-                    .padding(.top, clearance(of: sizeWidth, from: (.topLeft, topLeftSize), (.topRight, topRightSize)))
-                    .animation(.snappy, value: clearance(of: sizeWidth, from: (.topLeft, topLeftSize), (.topRight, topRightSize)))
+                    .padding(.top, clearance)
+                    .animation(.snappy, value: clearance)
                     .allowsHitTesting(false)
             }
         }
         .overlay(alignment: .bottom) {
             if asset.type == .video, let video = actions.video, video.duration > 0 {
+                let clearance = clearance(of: infoWidth, cardWidth: cardWidth, from: (.bottomLeft, bottomLeftSize), (.bottomRight, bottomRightSize))
                 TimePill(video: video)
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { infoWidth = $0 }
-                    .padding(.bottom, clearance(of: infoWidth, from: (.bottomLeft, bottomLeftSize), (.bottomRight, bottomRightSize)))
-                    .animation(.snappy, value: clearance(of: infoWidth, from: (.bottomLeft, bottomLeftSize), (.bottomRight, bottomRightSize)))
+                    .padding(.bottom, clearance)
+                    .animation(.snappy, value: clearance)
             }
         }
         .overlay {
@@ -193,7 +216,7 @@ struct CardControls: View {
 
     /// How far a centred pill sits from the card's top or bottom edge: 8 pt, as on Android, or, when it
     /// would overlap a corner's buttons on that edge, past them with a gap of 8 pt (`clearOfCornerButtons`).
-    private func clearance(of pillWidth: CGFloat, from first: (IconPosition, CGSize), _ second: (IconPosition, CGSize)) -> CGFloat {
+    private func clearance(of pillWidth: CGFloat, cardWidth: CGFloat, from first: (IconPosition, CGSize), _ second: (IconPosition, CGSize)) -> CGFloat {
         let isVideo = asset.type == .video
         // A corner that has lost its buttons may keep its last measured size, so empty corners count as zero.
         let sizes = [first, second].map { actions.layout.buttons(in: $0.0, isVideo: isVideo).isEmpty ? .zero : $0.1 }
@@ -267,13 +290,14 @@ private struct CornerButtons: View {
     let corner: IconPosition
     let asset: Asset
     let actions: SwipeCardActions
+    var spacing = CardButtonLayout.fullMetrics.spacing
 
     var body: some View {
         let buttons = actions.layout.buttons(in: corner, isVideo: asset.type == .video)
         if !buttons.isEmpty {
             let stack = actions.layout.orientation == .vertical
-                ? AnyLayout(VStackLayout(alignment: corner.isLeading ? .leading : .trailing, spacing: 12))
-                : AnyLayout(HStackLayout(alignment: corner.isTop ? .top : .bottom, spacing: 12))
+                ? AnyLayout(VStackLayout(alignment: corner.isLeading ? .leading : .trailing, spacing: spacing))
+                : AnyLayout(HStackLayout(alignment: corner.isTop ? .top : .bottom, spacing: spacing))
             stack {
                 ForEach(buttons, id: \.self) { button in
                     view(for: button)
@@ -287,6 +311,8 @@ private struct CornerButtons: View {
         switch button {
         case .fullscreen:
             CardIconButton(title: "Full Screen", systemImage: "arrow.up.left.and.arrow.down.right", action: actions.fullscreen)
+        case .info:
+            CardIconButton(title: "Details", systemImage: CardButton.info.symbol, action: actions.toggleDetails)
         case .rotate:
             CardIconButton(title: "Rotate", systemImage: "arrow.clockwise", action: actions.rotate)
         case .immich:
@@ -316,7 +342,7 @@ private struct CornerButtons: View {
             .buttonStyle(.plain)
         case .fullResolution:
             CardIconButton(
-                title: "Full Resolution",
+                title: "Full-res",
                 systemImage: CardGlyph.hd,
                 isActive: actions.isFullResolution,
                 isBusy: actions.isLoadingFullResolution,
@@ -354,6 +380,11 @@ struct CardGlyph: View {
     }
 }
 
+extension EnvironmentValues {
+    /// The side of the card's round buttons, smaller when a corner's stack wouldn't otherwise fit.
+    @Entry var cardButtonSize = CardButtonLayout.fullMetrics.size
+}
+
 /// The look shared by every round button on the card.
 private struct CardIconLabel: View {
     let title: LocalizedStringKey
@@ -361,7 +392,11 @@ private struct CardIconLabel: View {
     var isActive = false
     var isBusy = false
 
+    @Environment(\.cardButtonSize) private var size
+
     var body: some View {
+        // The icon shrinks with the circle.
+        let scale = size / CardButtonLayout.fullMetrics.size
         Group {
             if isBusy {
                 ProgressView().tint(.white)
@@ -373,8 +408,9 @@ private struct CardIconLabel: View {
                     .offset(y: systemImage == "arrow.clockwise" ? -2 : 0)
             }
         }
+        .scaleEffect(scale)
         .foregroundStyle(.white)
-        .frame(width: 48, height: 48)
+        .frame(width: size, height: size)
         // A blurred material, not Liquid Glass: glass reacts to the card's movement and swelled up while the
         // card was dragged or flew off. A material stays the same size whatever the card does.
         .background(isActive ? Color.accentColor.opacity(0.6) : .black.opacity(0.35), in: .circle)
@@ -399,25 +435,29 @@ private struct CardIconButton: View {
     }
 }
 
-/// What releasing the drag would do right now.
-enum SwipeIntent: Equatable {
-    case keep, delete, undo
+/// What releasing the drag would do right now: the action, and the edge the card is heading for.
+struct SwipeIntent: Equatable {
+    let action: SwipeAction
+    let edge: Edge
 
+    /// Opposite the way the card is going, as on Android: a swipe right shows its badge top-left, a swipe down
+    /// top centre, and a swipe up bottom centre.
     var stampAlignment: Alignment {
-        switch self {
-        case .keep: .topLeading
-        case .delete: .topTrailing
-        case .undo: .top
+        switch edge {
+        case .trailing: .topLeading
+        case .leading: .topTrailing
+        case .bottom: .top
+        case .top: .bottom
         }
     }
 }
 
-/// The Keep / Delete / Undo label shown while dragging, after Android's `IndicatorBadge`: the bare word in
-/// heavy rounded type and the intent's colour, with no container. It springs in from 60% and pops to 112%,
-/// with a tick, once the drag is far enough to commit.
+/// The action's word shown while dragging, after Android's `IndicatorBadge`: the bare word in heavy rounded
+/// type and the action's colour, with no container. It springs in from 60% and pops to 112%, with a tick,
+/// once the drag is far enough to commit.
 struct IntentStamp: View {
-    let intent: SwipeIntent
-    /// True once letting go would carry out the intent.
+    let action: SwipeAction
+    /// True once letting go would carry out the action.
     var isCommitted = false
 
     @State private var hasAppeared = false
@@ -437,27 +477,35 @@ struct IntentStamp: View {
             .accessibilityHidden(true)
     }
 
+    /// Android's `indicatorLabelRes`. Details opens a panel, so it is never shown as a badge.
     private var title: LocalizedStringKey {
-        switch intent {
+        switch action {
         case .keep: "KEEP"
         case .delete: "DELETE"
+        case .archive: "ARCHIVE"
+        case .lock: "LOCK"
+        case .favorite: "FAVORITE"
         case .undo: "UNDO"
+        case .details: "Details"
         }
     }
 
+    /// Android's `indicatorColor()`, with system colours for its theme colours: blue for primary, purple
+    /// for the tertiary it gives Lock.
     private var color: Color {
-        switch intent {
+        switch action {
         case .keep: .green
-        case .delete: .red
-        case .undo: .blue
+        case .delete, .favorite: .red
+        case .archive, .undo, .details: .blue
+        case .lock: .purple
         }
     }
 
     /// Where the badge sits on the card: Android's 60 pt from the top and the side, moved clear of the
     /// card buttons it would land on. A row of buttons along the top can reach across the card from either
     /// corner, so any top row pushes every badge down. A column stays at its own side, so it only pushes in
-    /// the badge that shares its corner: Keep top-left, Delete top-right. Undo sits in the middle, which a
-    /// column never reaches.
+    /// the badge that shares its corner: a swipe right's top-left, a swipe left's top-right. A swipe down's
+    /// sits in the middle, which a column never reaches. (A swipe up's sits at the bottom; see `SwipeCard`.)
     static func cardInsets(for intent: SwipeIntent, layout: CardButtonLayout?, isVideo: Bool) -> (top: CGFloat, side: CGFloat) {
         // A corner's buttons are 48 pt circles, 16 pt from the edge; the badge keeps 12 pt from them.
         let clear: CGFloat = 16 + 48 + 12
@@ -468,10 +516,10 @@ struct IntentStamp: View {
         if layout.orientation == .horizontal {
             return hasButtons(.topLeft) || hasButtons(.topRight) ? (clear, android) : (android, android)
         }
-        let ownCorner: IconPosition? = switch intent {
-        case .keep: .topLeft
-        case .delete: .topRight
-        case .undo: nil
+        let ownCorner: IconPosition? = switch intent.edge {
+        case .trailing: .topLeft
+        case .leading: .topRight
+        case .top, .bottom: nil
         }
         guard let ownCorner, hasButtons(ownCorner) else { return (android, android) }
         return (android, clear)

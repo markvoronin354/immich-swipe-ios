@@ -20,6 +20,93 @@ nonisolated enum DoubleTapAction: String, CaseIterable, Sendable {
     case fullscreen = "FULLSCREEN", favorite = "FAVORITE"
 }
 
+/// What a swipe does (Android's `SwipeAction`). Favorite favourites the photo, then keeps it so the deck moves
+/// on. Undo only makes sense for a swipe down and Details for a swipe up, which is what they do by default.
+nonisolated enum SwipeAction: String, CaseIterable, Sendable {
+    case keep = "KEEP", delete = "DELETE", archive = "ARCHIVE", lock = "LOCK", favorite = "FAVORITE", undo = "UNDO", details = "DETAILS"
+
+    /// The choices for each direction, in Android's order. Undo and Details are left out of the sides.
+    static let sideChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .lock]
+    static let downChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .undo, .lock]
+    static let upChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .details, .lock]
+
+    /// The decision it records. Favorite keeps the photo; Undo and Details record nothing.
+    var decision: SwipeDecision? {
+        switch self {
+        case .keep, .favorite: .keep
+        case .delete: .delete
+        case .archive: .archive
+        case .lock: .lock
+        case .undo, .details: nil
+        }
+    }
+
+    /// Android's `swipe_keep`, `swipe_delete`, `swipe_archive`, `swipe_locked`, `swipe_label_favorite`, `swipe_undo`, `swipe_details`.
+    var title: LocalizedStringKey {
+        switch self {
+        case .keep: "Keep"
+        case .delete: "Delete"
+        case .archive: "Archive"
+        case .lock: "Lock"
+        case .favorite: "Favorite"
+        case .undo: "Undo"
+        case .details: "Details"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .keep: "checkmark.circle"
+        case .delete: "trash"
+        case .archive: "archivebox"
+        case .lock: "lock"
+        case .favorite: "heart"
+        case .undo: "arrow.uturn.backward"
+        case .details: "info.circle"
+        }
+    }
+}
+
+/// What swiping in each direction does. Left and right never share an action: the toolbar's end buttons and
+/// the tap zones would otherwise do the same thing.
+nonisolated struct SwipeMapping: Equatable, Sendable {
+    var left: SwipeAction
+    var right: SwipeAction
+    var up: SwipeAction
+    var down: SwipeAction
+
+    static let `default` = SwipeMapping(left: Setting.Default.swipeLeftAction, right: Setting.Default.swipeRightAction, up: Setting.Default.swipeUpAction, down: Setting.Default.swipeDownAction)
+
+    /// The action for a swipe off this edge: left towards leading, right towards trailing.
+    func action(toward edge: Edge) -> SwipeAction {
+        switch edge {
+        case .leading: left
+        case .trailing: right
+        case .top: up
+        case .bottom: down
+        }
+    }
+
+    /// Picking the other side's action hands that side this side's old one, as on Android.
+    func settingLeft(_ action: SwipeAction) -> SwipeMapping {
+        var mapping = self
+        if action == right { mapping.right = left }
+        mapping.left = action
+        return mapping
+    }
+
+    func settingRight(_ action: SwipeAction) -> SwipeMapping {
+        var mapping = self
+        if action == left { mapping.left = right }
+        mapping.right = action
+        return mapping
+    }
+
+    func contains(_ action: SwipeAction) -> Bool {
+        [left, right, up, down].contains(action)
+    }
+}
+
 nonisolated enum ImmichOpenMode: String, CaseIterable, Sendable {
     case app = "APP", web = "WEB"
 
@@ -78,6 +165,8 @@ nonisolated enum Setting {
         static let sharePosition = "share_icon_pos"
         static let fullResolutionPosition = "full_size_icon_pos"
         static let keepFullResolution = "keep_full_resolution"
+        static let showInfoButton = "show_info_icon"
+        static let infoPosition = "info_icon_pos"
 
         static let showFavoriteButton = "show_favorite"
         static let showArchiveButton = "show_archive"
@@ -92,6 +181,11 @@ nonisolated enum Setting {
         static let doubleTapAction = "double_tap_action"
         static let showTimeline = "show_timeline"
         static let includeArchived = "include_archived"
+        static let swipeLeftAction = "swipe_left_action"
+        static let swipeRightAction = "swipe_right_action"
+        static let swipeUpAction = "swipe_up_action"
+        static let swipeDownAction = "swipe_down_action"
+        static let fullscreenSwipeDownUsesAction = "fullscreen_swipe_down_uses_action"
 
         static let reminderEnabled = "reminder_enabled"
         static let reminderInterval = "reminder_interval"
@@ -121,6 +215,8 @@ nonisolated enum Setting {
         static let sharePosition = IconPosition.bottomRight
         static let fullResolutionPosition = IconPosition.bottomRight
         static let keepFullResolution = false
+        static let showInfoButton = false
+        static let infoPosition = IconPosition.bottomLeft
 
         static let showFavoriteButton = true
         static let showArchiveButton = true
@@ -137,6 +233,12 @@ nonisolated enum Setting {
         static let showTimeline = true
         /// On by default, as on Android: decks and counts include photos archived in Immich.
         static let includeArchived = true
+        static let swipeLeftAction = SwipeAction.delete
+        static let swipeRightAction = SwipeAction.keep
+        static let swipeUpAction = SwipeAction.details
+        static let swipeDownAction = SwipeAction.undo
+        /// Off, as on Android: swiping down in the viewer closes it.
+        static let fullscreenSwipeDownUsesAction = false
 
         static let reminderEnabled = false
         static let reminderInterval = ReminderInterval.often
@@ -202,7 +304,8 @@ nonisolated enum SortingBarButton: String, CaseIterable, Sendable {
 /// One of the round buttons that can sit in a corner of the card.
 /// The declaration order is the order buttons stack in when they share a corner.
 nonisolated enum CardButton: CaseIterable, Hashable, Sendable {
-    case fullscreen, rotate, immich, mute, download, share, fullResolution
+    /// Info opens the details panel, after Fullscreen as on Android (`ActionButtonsOverlay.kt`).
+    case fullscreen, info, rotate, immich, mute, download, share, fullResolution
 }
 
 /// Which buttons go in which corner, in order. Pure, so it's easy to test and the same rules apply
@@ -215,6 +318,7 @@ nonisolated struct CardButtonLayout: Equatable, Sendable {
     static let `default` = CardButtonLayout(
         show: [
             .fullscreen: Setting.Default.showFullscreenButton,
+            .info: Setting.Default.showInfoButton,
             .rotate: Setting.Default.showRotateButton,
             .immich: Setting.Default.showImmichButton,
             .mute: Setting.Default.showMuteButton,
@@ -224,6 +328,7 @@ nonisolated struct CardButtonLayout: Equatable, Sendable {
         ],
         position: [
             .fullscreen: Setting.Default.fullscreenPosition,
+            .info: Setting.Default.infoPosition,
             .rotate: Setting.Default.rotatePosition,
             .immich: Setting.Default.immichPosition,
             .mute: Setting.Default.mutePosition,
@@ -250,19 +355,61 @@ nonisolated struct CardButtonLayout: Equatable, Sendable {
             show[$0] == true && position[$0] == corner && Self.applies($0, toVideo: isVideo)
         }
     }
+
+    /// How big the card's buttons are and how far apart.
+    struct Metrics: Equatable, Sendable {
+        var size: CGFloat
+        var spacing: CGFloat
+    }
+
+    static let fullMetrics = Metrics(size: 48, spacing: 12)
+    /// Android's 8 dp gap, and a size that stays easy to tap.
+    static let tightestMetrics = Metrics(size: 36, spacing: 8)
+
+    /// Shrinks the buttons so every edge's stacks fit in `available`, the card's size inside its padding. Not
+    /// on Android, where too many buttons in a row run off the card. First the gap closes from 12 pt to 8 pt,
+    /// then every button shrinks alike, never below 36 pt. Two corners along one edge keep one gap between
+    /// them, as between buttons.
+    func metrics(fitting available: CGSize, isVideo: Bool = false) -> Metrics {
+        let full = Self.fullMetrics, tightest = Self.tightestMetrics
+        guard available.width > 0, available.height > 0 else { return full }
+        let edges: [(IconPosition, IconPosition, isRow: Bool)] = [
+            (.topLeft, .topRight, true), (.bottomLeft, .bottomRight, true),
+            (.topLeft, .bottomLeft, false), (.topRight, .bottomRight, false),
+        ]
+        // Along each edge: how many button lengths and gaps it needs, and how much room it has.
+        let demands = edges.map { first, second, isRow -> (buttons: CGFloat, gaps: CGFloat, room: CGFloat) in
+            let stacksAlong = isRow == (orientation == .horizontal)
+            let counts = [first, second].map { buttons(in: $0, isVideo: isVideo).count }.filter { $0 > 0 }
+            let buttons = counts.reduce(0) { $0 + (stacksAlong ? $1 : 1) }
+            let gaps = counts.reduce(0) { $0 + (stacksAlong ? $1 - 1 : 0) } + (counts.count == 2 ? 1 : 0)
+            return (CGFloat(buttons), CGFloat(gaps), isRow ? available.width : available.height)
+        }
+
+        let spacing = demands.filter { $0.gaps > 0 }
+            .map { ($0.room - $0.buttons * full.size) / $0.gaps }
+            .reduce(full.spacing, min)
+        if spacing >= tightest.spacing { return Metrics(size: full.size, spacing: spacing) }
+
+        let size = demands.filter { $0.buttons > 0 }
+            .map { ($0.room - $0.gaps * tightest.spacing) / $0.buttons }
+            .reduce(full.size, min)
+        return Metrics(size: max(size, tightest.size), spacing: tightest.spacing)
+    }
 }
 
 // MARK: - Taps
 
-/// What a tap on the card does when "Tap to swipe" is on: the left third deletes, the right third
-/// keeps, and the middle is left alone so the card's own buttons stay usable.
+/// What a tap on the card does when "Tap to swipe" is on: the left third swipes left, the right third
+/// swipes right, and the middle is left alone so the card's own buttons stay usable.
 nonisolated enum CardTapRules {
     static let edgeFraction = 0.3
 
-    static func decision(atX x: Double, width: Double, tapToSwipe: Bool) -> SwipeDecision? {
+    /// The edge the tap swipes the card towards, or nil for the middle.
+    static func edge(atX x: Double, width: Double, tapToSwipe: Bool) -> Edge? {
         guard tapToSwipe, width > 0 else { return nil }
-        if x < width * edgeFraction { return .delete }
-        if x > width * (1 - edgeFraction) { return .keep }
+        if x < width * edgeFraction { return .leading }
+        if x > width * (1 - edgeFraction) { return .trailing }
         return nil
     }
 }
