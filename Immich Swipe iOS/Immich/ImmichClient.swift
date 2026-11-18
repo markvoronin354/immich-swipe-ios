@@ -87,6 +87,23 @@ nonisolated struct ImmichClient: Sendable {
         try await send(.get, "users/me")
     }
 
+    /// The permissions the API key was given, or nil when the server doesn't say.
+    func getApiKeyPermissions() async -> [String]? {
+        do {
+            let info: ApiKeyInfo = try await send(.get, "api-keys/me")
+            return info.permissions
+        } catch {
+            AppLog.w("Auth", "Could not read the API key's permissions: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// The permissions the key lacks, best effort: a server that doesn't say counts as missing nothing.
+    func missingPermissions() async -> [String] {
+        guard let granted = await getApiKeyPermissions() else { return [] }
+        return ApiKeyPermissions.missing(granted: granted)
+    }
+
     // MARK: Albums
 
     /// All albums, or only those containing `assetID` when given.

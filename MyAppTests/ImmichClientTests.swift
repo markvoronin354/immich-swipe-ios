@@ -88,6 +88,27 @@ struct ImmichClientTests {
         )
     }
 
+    @Test func namesTheKeysMissingPermissions() async {
+        MockServer.reset(responses: [(200, #"{"permissions":["asset.read","album.read"]}"#)])
+        let missing = await client.missingPermissions()
+        #expect(!missing.contains("asset.read") && !missing.contains("album.read"))
+        #expect(missing.contains("album.create") && missing.contains("user.read"))
+
+        MockServer.reset(responses: [(200, #"{"permissions":["all"]}"#)])
+        #expect(await client.missingPermissions().isEmpty)
+
+        // A server that doesn't answer counts as missing nothing, so nothing is warned about by mistake.
+        MockServer.reset(responses: [(404, "")])
+        #expect(await client.missingPermissions().isEmpty)
+    }
+
+    @Test func readsTheMissingPermissionFromAForbiddenAnswer() {
+        let refused = ImmichError.http(status: 403, message: "Missing required permission: album.create")
+        #expect(refused.missingPermission == "album.create")
+        #expect(ImmichError.http(status: 403, message: "Forbidden").missingPermission == nil)
+        #expect(ImmichError.http(status: 500, message: "Missing required permission: album.create").missingPermission == nil)
+    }
+
     @Test func sendsAPIKeyAndRetriesTransientFailures() async throws {
         MockServer.reset(responses: [(503, ""), (200, #"{"id":"u1","email":"me@example.com","name":"Me"}"#)])
         let user = try await client.getMyUser()

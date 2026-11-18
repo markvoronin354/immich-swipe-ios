@@ -1,6 +1,38 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Access denied. Your API key is missing these permissions: %@." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Acceso denegado. A su clave de API le faltan estos permisos: %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Accès refusé. Il manque ces permissions à votre clé API : %@."
+          }
+        }
+      }
+    },
+    "Before you continue" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Antes de continuar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Avant de continuer"
+          }
+        }
+      }
+    },
     "Connected" : {
       "localizations" : {
         "es" : {
@@ -13,6 +45,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Reliés"
+          }
+        }
+      }
+    },
+    "Couldn't add to %@. Your API key is missing the %@ permission." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No se pudo añadir a %@. A tu clave de API le falta el permiso %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Impossible d’ajouter à %@. Il manque la permission %@ à votre clé API."
           }
         }
       }
@@ -97,6 +145,22 @@
         }
       }
     },
+    "The server refused some changes. Check that your Immich API key has every permission Immich Swipe needs (see the README)." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "El servidor rechazó algunos cambios. Compruebe que su clave API de Immich tenga todos los permisos que necesita Immich Swipe (consulte el README)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Le serveur a refusé certaines modifications. Vérifiez que votre clé API Immich a toutes les permissions dont Immich Swipe a besoin (voir le README)."
+          }
+        }
+      }
+    },
     "The toolbar, swipe actions and tap gestures will go back to their defaults." : {
       "localizations" : {
         "es" : {
@@ -109,6 +173,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "La barre d’outils, les actions de swipe et les gestes tactiles reviendront à leurs valeurs par défaut."
+          }
+        }
+      }
+    },
+    "Your API key is missing these permissions: %@. Add them to the key in Immich, then tap Try Again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "A tu clave de API le faltan estos permisos: %@. Añádelos a la clave en Immich y pulsa Reintentar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Il manque ces permissions à votre clé API : %@. Ajoutez-les à la clé dans Immich, puis touchez Réessayer."
+          }
+        }
+      }
+    },
+    "Your API key is missing these permissions: %@. Features that need them won't work until you add them to the key in Immich." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "A tu clave de API le faltan estos permisos: %@. Las funciones que los necesitan no funcionarán hasta que los añadas a la clave en Immich."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Il manque ces permissions à votre clé API : %@. Les fonctions qui en ont besoin ne marcheront pas tant que vous ne les aurez pas ajoutées à la clé dans Immich."
           }
         }
       }
@@ -929,18 +1025,18 @@
         }
       }
     },
-    "1. Open your Immich Web Interface (creating keys is not supported in the mobile app).\n2. Go to Account Settings > API Keys.\n3. Click \"New API Key\" and name it \"Immich Swipe\".\n4. Under Permissions, select:\n• Asset (All)\n• album.read\n• album.update\n• albumAsset.create\n• duplicate.read\n• user.read\n• userProfileImage.read\n5. Click Create, then copy and paste the key here." : {
+    "1. Open your Immich Web Interface (creating keys is not supported in the mobile app).\n2. Go to Account Settings > API Keys.\n3. Click \"New API Key\" and name it \"Immich Swipe\".\n4. Under Permissions, select:\n• Asset (All)\n• album.read\n• album.update\n• albumAsset.create\n• duplicate.read\n• user.read\n• userProfileImage.read\n• album.create\n5. Click Create, then copy and paste the key here." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "1. Abre la interfaz web de Immich (no se puede en la app móvil).\n2. Ve a Ajustes de la cuenta > Claves de API.\n3. Haz clic en “Nueva clave de API” y nómbrala “Immich Swipe”.\n4. En Permisos, selecciona:\n• Asset (Todos)\n• album.read\n• album.update\n• albumAsset.create\n• duplicate.read\n• user.read\n• userProfileImage.read\n5. Haz clic en Crear, copia la clave y pégala aquí."
+            "value" : "1. Abre la interfaz web de Immich (no se puede en la app móvil).\n2. Ve a Ajustes de la cuenta > Claves de API.\n3. Haz clic en “Nueva clave de API” y nómbrala “Immich Swipe”.\n4. En Permisos, selecciona:\n• Asset (Todos)\n• album.read\n• album.update\n• albumAsset.create\n• duplicate.read\n• user.read\n• userProfileImage.read\n• album.create\n5. Haz clic en Crear, copia la clave y pégala aquí."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "1. Ouvrez l’interface web Immich (impossible via l’application mobile).\n2. Allez dans Paramètres du compte > Clés d’API.\n3. Cliquez sur « Nouvelle clé d’API » et nommez-la « Immich Swipe ».\n4. Dans les permissions, sélectionnez :\n• Asset (Tous)\n• album.read\n• album.update\n• albumAsset.create\n• duplicate.read\n• user.read\n• userProfileImage.read\n5. Cliquez sur Créer, puis copiez et collez la clé ici."
+            "value" : "1. Ouvrez l’interface web Immich (impossible via l’application mobile).\n2. Allez dans Paramètres du compte > Clés d’API.\n3. Cliquez sur « Nouvelle clé d’API » et nommez-la « Immich Swipe ».\n4. Dans les permissions, sélectionnez :\n• Asset (Tous)\n• album.read\n• album.update\n• albumAsset.create\n• duplicate.read\n• user.read\n• userProfileImage.read\n• album.create\n5. Cliquez sur Créer, puis copiez et collez la clé ici."
           }
         }
       }

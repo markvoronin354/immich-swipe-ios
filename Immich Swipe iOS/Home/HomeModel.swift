@@ -51,7 +51,7 @@ final class HomeModel {
             errorMessage = nil
         case .failure(let error):
             AppLog.e("Home", "Error during initial loading", error)
-            errorMessage = error.localizedDescription
+            errorMessage = await Self.message(for: error, client: client)
         }
         counts = HomeSections.CollectionCounts(
             all: Self.value(of: await allResult, failure: "Could not load the total asset count"),
@@ -65,6 +65,14 @@ final class HomeModel {
         if !includeArchived, !albums.isEmpty {
             albums = await Self.withoutArchived(albums, client: client)
         }
+    }
+
+    /// A 403 means the API key lacks a permission: name the missing ones instead of showing "HTTP 403".
+    private static func message(for error: Error, client: ImmichClient) async -> String {
+        guard case ImmichError.http(status: 403, _) = error else { return error.localizedDescription }
+        let missing = await client.missingPermissions()
+        guard !missing.isEmpty else { return error.localizedDescription }
+        return String(localized: "Your API key is missing these permissions: \(missing.formatted()). Add them to the key in Immich, then tap Try Again.")
     }
 
     /// The count, or nil with a warning logged, as Android's `AssetRepository` does.

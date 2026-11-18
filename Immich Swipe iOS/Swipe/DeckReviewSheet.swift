@@ -227,6 +227,10 @@ private struct OutcomeLines: View {
                     Text("\(Self.title(for: step)): \(outcome.failures[step] ?? "")")
                         .font(.footnote)
                 }
+                if outcome.permissionDenied {
+                    Text("The server refused some changes. Check that your Immich API key has every permission Immich Swipe needs (see the README).")
+                        .font(.footnote)
+                }
                 Text("Everything else was applied. Tap Apply Changes to try the rest again.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)

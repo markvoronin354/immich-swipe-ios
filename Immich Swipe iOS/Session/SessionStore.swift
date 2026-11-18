@@ -22,12 +22,24 @@ final class SessionStore {
         case invalidServerURL
         /// Plain HTTP to a public host. The caller should confirm, then retry with `allowInsecure`.
         case insecureConnectionNeedsConfirmation
+        /// The key works but lacks permissions the app uses. The caller should say so, then retry with
+        /// `acknowledgeWarnings` if the user carries on.
+        case missingPermissions([String])
+        /// The server refused the key, and says which permissions it lacks.
+        case accessDenied(missing: [String])
+
+        /// Warnings the user can read and carry on past, unlike a failure.
+        var isServerWarning: Bool {
+            if case .missingPermissions = self { true } else { false }
+        }
 
         var errorDescription: String? {
             switch self {
             case .emptyFields: "Enter your server address and API key."
             case .invalidServerURL: "That doesn't look like a server address. Include http:// or https://."
             case .insecureConnectionNeedsConfirmation: "This connection isn't encrypted."
+            case .missingPermissions(let missing): String(localized: "Your API key is missing these permissions: \(missing.formatted()). Features that need them won't work until you add them to the key in Immich.")
+            case .accessDenied(let missing): String(localized: "Access denied. Your API key is missing these permissions: \(missing.formatted()).")
             }
         }
     }
@@ -57,7 +69,7 @@ final class SessionStore {
     }
 
     /// Checks the API key against the server and makes that account active.
-    func signIn(server serverText: String, apiKey rawKey: String, allowInsecure: Bool = false) async throws {
+    func signIn(server serverText: String, apiKey rawKey: String, allowInsecure: Bool = false, acknowledgeWarnings: Bool = false) async throws {
         let apiKey = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !serverText.trimmingCharacters(in: .whitespaces).isEmpty, !apiKey.isEmpty else { throw SignInError.emptyFields }
         guard let serverURL = ImmichClient.normalizedServerURL(serverText) else { throw SignInError.invalidServerURL }
@@ -71,9 +83,20 @@ final class SessionStore {
             user = try await probe.getMyUser()
         } catch {
             AppLog.e("Auth", "Connection failed: \(error.localizedDescription)", error)
+            // A refusal means the key lacks a permission: say which, when the server will tell.
+            if case ImmichError.http(status: 403, _) = error {
+                let missing = await probe.missingPermissions()
+                if !missing.isEmpty { throw SignInError.accessDenied(missing: missing) }
+            }
             throw error
         }
         AppLog.i("Auth", "Valid credentials. User: \(user.name ?? user.email) (\(user.id))")
+
+        let missing = await probe.missingPermissions()
+        if !missing.isEmpty {
+            AppLog.w("Auth", "API key lacks: \(missing.joined(separator: ", "))")
+            if !acknowledgeWarnings { throw SignInError.missingPermissions(missing) }
+        }
 
         try Keychain.setAPIKey(apiKey, for: user.id)
         let signedIn = Account(userID: user.id, serverURL: serverURL, name: user.name, email: user.email, avatarColor: user.avatarColor, lastActive: .now)

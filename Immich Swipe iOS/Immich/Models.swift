@@ -179,6 +179,33 @@ nonisolated struct User: Codable, Hashable, Identifiable, Sendable {
     var quotaSizeInBytes: Int64?
 }
 
+/// What `GET /api-keys/me` says about the key in use.
+nonisolated struct ApiKeyInfo: Decodable, Sendable {
+    var permissions: [String]?
+}
+
+/// The permissions an API key needs for every feature of the app, as listed in the README.
+nonisolated enum ApiKeyPermissions {
+    static let required = [
+        "asset.read", "asset.statistics", "asset.download", "asset.update", "asset.edit.create", "asset.delete",
+        "asset.view", "album.read", "album.update", "albumAsset.create", "duplicate.read", "user.read",
+        "userProfileImage.read", "album.create",
+    ]
+
+    /// What `required` lists and `granted` lacks. A key created with all permissions lacks nothing.
+    static func missing(granted: [String]) -> [String] {
+        granted.contains("all") ? [] : required.filter { !granted.contains($0) }
+    }
+}
+
+extension Error {
+    /// The permission Immich says a refused request lacked, such as `album.create`; nil when it doesn't say.
+    nonisolated var missingPermission: String? {
+        guard case .http(status: 403, let message?)? = self as? ImmichError else { return nil }
+        return message.firstMatch(of: /Missing required permission: ([\w.]+)/).map { String($0.1) }
+    }
+}
+
 nonisolated struct ServerVersion: Codable, Hashable, Comparable, Sendable, CustomStringConvertible {
     var major: Int
     var minor: Int

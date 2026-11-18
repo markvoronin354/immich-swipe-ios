@@ -17,6 +17,8 @@ nonisolated struct ApplyOutcome: Equatable, Sendable {
     var favoritesApplied: [String: Bool] = [:]
     /// The first error message for each step that failed.
     var failures: [Step: String] = [:]
+    /// Immich answers 403 when the API key lacks the permission a step needs.
+    var permissionDenied = false
 
     var hasFailures: Bool { !failures.isEmpty }
 
@@ -126,6 +128,7 @@ struct ApplyChanges {
     private func record(_ error: Error?, for step: ApplyOutcome.Step, in outcome: inout ApplyOutcome) {
         guard let error else { return }
         AppLog.e("ApplySwipeDecisionsUseCase", "Sync step \(step) failed: \(error.localizedDescription)", error)
+        if case ImmichError.http(status: 403, _) = error { outcome.permissionDenied = true }
         guard outcome.failures[step] == nil else { return }
         outcome.failures[step] = error.localizedDescription
     }

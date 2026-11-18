@@ -158,7 +158,11 @@ struct AddToAlbumSheet: View {
                 try? await Task.sleep(for: .milliseconds(700))
                 dismiss()
             } catch {
-                errorMessage = error.localizedDescription
+                if let permission = error.missingPermission {
+                    errorMessage = String(localized: "Couldn't add to \(name). Your API key is missing the \(permission) permission.")
+                } else {
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }

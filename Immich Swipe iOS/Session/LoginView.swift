@@ -10,6 +10,8 @@ struct LoginView: View {
     @State private var isSigningIn = false
     @State private var errorMessage: String?
     @State private var isConfirmingInsecure = false
+    /// What to tell the user before saving a key that works but lacks permissions.
+    @State private var serverWarning: String?
     @State private var isShowingKeyTutorial = false
     @State private var isShowingLogs = false
 
@@ -167,8 +169,16 @@ struct LoginView: View {
             • duplicate.read
             • user.read
             • userProfileImage.read
+            • album.create
             5. Click Create, then copy and paste the key here.
             """)
+        }
+        .alert("Before you continue", isPresented: Binding(get: { serverWarning != nil }, set: { if !$0 { serverWarning = nil } })) {
+            // The plain-HTTP check already ran, or was confirmed, before the server was first contacted.
+            Button("Continue") { signIn(allowInsecure: true, acknowledgeWarnings: true) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(serverWarning ?? "")
         }
         .alert("Connect without encryption?", isPresented: $isConfirmingInsecure) {
             Button("Connect Anyway", role: .destructive) { signIn(allowInsecure: true) }
@@ -178,16 +188,18 @@ struct LoginView: View {
         }
     }
 
-    private func signIn(allowInsecure: Bool) {
+    private func signIn(allowInsecure: Bool, acknowledgeWarnings: Bool = false) {
         errorMessage = nil
         isSigningIn = true
         Task {
             defer { isSigningIn = false }
             do {
-                try await session.signIn(server: server, apiKey: apiKey, allowInsecure: allowInsecure)
+                try await session.signIn(server: server, apiKey: apiKey, allowInsecure: allowInsecure, acknowledgeWarnings: acknowledgeWarnings)
                 apiKey = ""
             } catch SessionStore.SignInError.insecureConnectionNeedsConfirmation {
                 isConfirmingInsecure = true
+            } catch let error as SessionStore.SignInError where error.isServerWarning {
+                serverWarning = error.localizedDescription
             } catch {
                 errorMessage = Self.message(for: error)
             }

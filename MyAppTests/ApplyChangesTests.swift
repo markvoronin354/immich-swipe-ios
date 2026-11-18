@@ -90,10 +90,10 @@ struct ApplyChangesTests {
     }
 
     /// Serves one page of photos newest-first, and accepts every write unless `fails` says otherwise.
-    private func serve(_ assets: [String], fails: @escaping @Sendable (String, String, [String: Any]) -> Bool = { _, _, _ in false }) {
+    private func serve(_ assets: [String], failStatus: Int = 500, fails: @escaping @Sendable (String, String, [String: Any]) -> Bool = { _, _, _ in false }) {
         let page = assets.joined(separator: ",")
         RoutingServer.route(host: host) { method, path, body in
-            if fails(method, path, body) { return (500, #"{"message":"boom"}"#) }
+            if fails(method, path, body) { return (failStatus, #"{"message":"boom"}"#) }
             switch (method, path) {
             case ("POST", "/api/search/statistics"): return (200, #"{"total":\#(assets.count)}"#)
             case ("POST", "/api/search/metadata"): return (200, #"{"assets":{"items":[\#(page)],"total":\#(assets.count),"nextPage":null,"nextCursor":null}}"#)
@@ -160,6 +160,24 @@ struct ApplyChangesTests {
         #expect(model.plan.isEmpty)
         #expect(!model.deck.canUndo, "applied decisions can't be undone")
         #expect(model.serverTotal == 3)
+    }
+
+    @Test func aRefusedStepIsFlaggedAsAMissingPermission() async throws {
+        serve(standardPile(), failStatus: 403) { method, path, body in
+            method == "PUT" && path == "/api/assets" && body["visibility"] as? String == "archive"
+        }
+        let model = makeModel()
+        await model.load()
+        model.decide(.archive)
+        await model.apply()
+        #expect(model.lastOutcome?.permissionDenied == true)
+
+        // A step that fails any other way is not a permission problem.
+        serve(standardPile()) { method, path, body in
+            method == "PUT" && path == "/api/assets" && body["visibility"] as? String == "archive"
+        }
+        await model.apply()
+        #expect(model.lastOutcome?.permissionDenied == false)
     }
 
     @Test func aFailedStepLeavesItsPhotosPendingAndOthersApplied() async throws {
