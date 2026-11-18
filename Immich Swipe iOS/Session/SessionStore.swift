@@ -20,6 +20,8 @@ final class SessionStore {
     enum SignInError: Error, Equatable, LocalizedError {
         case emptyFields
         case invalidServerURL
+        /// A custom header has an empty or invalid name or value, or its name repeats.
+        case invalidHeaders
         /// Plain HTTP to a public host. The caller should confirm, then retry with `allowInsecure`.
         case insecureConnectionNeedsConfirmation
         /// The server works but something will go wrong later: it is too old to save rotations, or the key
@@ -38,6 +40,7 @@ final class SessionStore {
             switch self {
             case .emptyFields: "Enter your server address and API key."
             case .invalidServerURL: "That doesn't look like a server address. Include http:// or https://."
+            case .invalidHeaders: String(localized: "A custom header isn't valid. Names can't be empty or contain spaces, values need visible characters, and x-api-key is set by the app.")
             case .insecureConnectionNeedsConfirmation: "This connection isn't encrypted."
             case .warnings(let outdated, let missing):
                 [
@@ -74,14 +77,14 @@ final class SessionStore {
     }
 
     /// Checks the API key against the server and makes that account active.
-    func signIn(server serverText: String, apiKey rawKey: String, allowInsecure: Bool = false, acknowledgeWarnings: Bool = false) async throws {
+    func signIn(server serverText: String, apiKey rawKey: String, allowInsecure: Bool = false, acknowledgeWarnings: Bool = false, headers: [String: String] = [:]) async throws {
         let apiKey = rawKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !serverText.trimmingCharacters(in: .whitespaces).isEmpty, !apiKey.isEmpty else { throw SignInError.emptyFields }
         guard let serverURL = ImmichClient.normalizedServerURL(serverText) else { throw SignInError.invalidServerURL }
         if !allowInsecure, URLPolicy.isInsecureRemote(serverURL) { throw SignInError.insecureConnectionNeedsConfirmation }
 
         // No retries here, so a wrong address fails fast instead of after backoff.
-        let probe = ImmichClient(serverURL: serverURL, apiKey: apiKey, session: session, retry: .none)
+        let probe = ImmichClient(serverURL: serverURL, apiKey: apiKey, headers: headers, session: session, retry: .none)
         AppLog.i("Auth", "Attempting connection to \(serverURL.absoluteString)")
         let user: User
         do {
@@ -113,10 +116,11 @@ final class SessionStore {
         }
 
         try Keychain.setAPIKey(apiKey, for: user.id)
+        try Keychain.setHeaders(headers, for: user.id)
         let signedIn = Account(userID: user.id, serverURL: serverURL, name: user.name, email: user.email, avatarColor: user.avatarColor, lastActive: .now)
         accounts.removeAll { $0.userID == user.id }
         accounts.insert(signedIn, at: 0)
-        activate(signedIn, apiKey: apiKey)
+        activate(signedIn, apiKey: apiKey, headers: headers)
         persist()
     }
 
@@ -131,7 +135,7 @@ final class SessionStore {
         var updated = target
         updated.lastActive = .now
         accounts = [updated] + accounts.filter { $0.userID != target.userID }
-        activate(updated, apiKey: apiKey)
+        activate(updated, apiKey: apiKey, headers: Keychain.headers(for: target.userID))
         persist()
     }
 
@@ -147,6 +151,7 @@ final class SessionStore {
     /// Removes an account and its API key from this device.
     func forget(_ target: Account) throws {
         try Keychain.removeAPIKey(for: target.userID)
+        try Keychain.removeHeaders(for: target.userID)
         accounts.removeAll { $0.userID == target.userID }
         if account?.userID == target.userID { signOut() }
         persist()
@@ -156,18 +161,18 @@ final class SessionStore {
     /// accounts other than the active one show their pictures too. Nil if the key isn't on this device.
     func profileImageRequest(for account: Account) -> URLRequest? {
         guard let apiKey = try? Keychain.apiKey(for: account.userID) else { return nil }
-        return ImmichClient(serverURL: account.serverURL, apiKey: apiKey, session: session)
+        return ImmichClient(serverURL: account.serverURL, apiKey: apiKey, headers: Keychain.headers(for: account.userID), session: session)
             .authorizedRequest(for: .profileImage(userID: account.userID))
     }
 
     // MARK: Private
 
-    private func activate(_ target: Account, apiKey: String) {
+    private func activate(_ target: Account, apiKey: String, headers: [String: String]) {
         AppLog.i("SessionManager", "Session initialized for user \(target.userID) at \(target.serverURL.absoluteString)")
         account = target
         connection = nil
         // Events arrive off the main actor. Weak so the client's callback doesn't keep the store alive.
-        client = ImmichClient(serverURL: target.serverURL, apiKey: apiKey, session: session) { [weak self] event in
+        client = ImmichClient(serverURL: target.serverURL, apiKey: apiKey, headers: headers, session: session) { [weak self] event in
             let store = self
             Task { @MainActor in store?.connection = event }
         }
@@ -181,7 +186,7 @@ final class SessionStore {
         guard let activeID = defaults.string(forKey: Self.activeUserKey),
               let active = accounts.first(where: { $0.userID == activeID }),
               let apiKey = try? Keychain.apiKey(for: activeID) else { return }
-        activate(active, apiKey: apiKey)
+        activate(active, apiKey: apiKey, headers: Keychain.headers(for: activeID))
     }
 
     private func persist() {

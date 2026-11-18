@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A custom header isn't valid. Names can't be empty or contain spaces, values need visible characters, and x-api-key is set by the app." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Una cabecera personalizada no es válida. Los nombres no pueden estar vacíos ni contener espacios, los valores necesitan caracteres visibles, y x-api-key la define la aplicación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Un en-tête personnalisé n’est pas valide. Les noms ne peuvent pas être vides ni contenir d’espaces, les valeurs doivent contenir des caractères visibles, et x-api-key est défini par l’application."
+          }
+        }
+      }
+    },
     "Access denied. Your API key is missing these permissions: %@." : {
       "localizations" : {
         "es" : {
@@ -13,6 +29,38 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Accès refusé. Il manque ces permissions à votre clé API : %@."
+          }
+        }
+      }
+    },
+    "Add header" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Añadir cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ajouter un en-tête"
+          }
+        }
+      }
+    },
+    "Advanced" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Avanzado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Avancé"
           }
         }
       }
@@ -81,6 +129,54 @@
         }
       }
     },
+    "Extra headers sent with every request to your server, for example for a reverse proxy or Cloudflare Access." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Cabeceras adicionales que se envían con cada solicitud a su servidor, por ejemplo para un proxy inverso o Cloudflare Access."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "En-têtes supplémentaires envoyés avec chaque requête vers votre serveur, par exemple pour un proxy inverse ou Cloudflare Access."
+          }
+        }
+      }
+    },
+    "Header name" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nombre de la cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nom de l’en-tête"
+          }
+        }
+      }
+    },
+    "Header value" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Valor de la cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Valeur de l’en-tête"
+          }
+        }
+      }
+    },
     "How buttons behave when they share a corner." : {
       "localizations" : {
         "es" : {
@@ -109,6 +205,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Rien à trier"
+          }
+        }
+      }
+    },
+    "Remove header" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Quitar cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Supprimer l’en-tête"
           }
         }
       }

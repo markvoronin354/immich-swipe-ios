@@ -14,6 +14,9 @@ struct LoginView: View {
     @State private var serverWarning: String?
     @State private var isShowingKeyTutorial = false
     @State private var isShowingLogs = false
+    /// Extra request headers for a proxy in front of the server.
+    @State private var headerRows: [HeaderRow] = []
+    @State private var isShowingAdvanced = false
 
     private var canSignIn: Bool { !isSigningIn && !server.isEmpty && !apiKey.isEmpty }
     /// With saved accounts, this screen was reached by adding an account, so offer a way back.
@@ -70,6 +73,13 @@ struct LoginView: View {
                     .padding(.top, 12)
                     .padding(.leading, 4)
 
+                DisclosureGroup("Advanced", isExpanded: $isShowingAdvanced) {
+                    advancedHeaders
+                }
+                .font(.footnote)
+                .padding(.top, 12)
+                .padding(.horizontal, 4)
+
                 if let errorMessage {
                     Text(errorMessage)
                         .font(.footnote)
@@ -101,6 +111,7 @@ struct LoginView: View {
                 Button("Clear", systemImage: "xmark") {
                     server = ""
                     apiKey = ""
+                    headerRows = []
                     errorMessage = nil
                 }
                 .buttonStyle(.plain)
@@ -188,13 +199,53 @@ struct LoginView: View {
         }
     }
 
+    /// One custom header row on this screen.
+    private struct HeaderRow: Identifiable {
+        let id = UUID()
+        var name = ""
+        var value = ""
+    }
+
+    private var advancedHeaders: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Extra headers sent with every request to your server, for example for a reverse proxy or Cloudflare Access.")
+                .foregroundStyle(.secondary)
+            ForEach($headerRows) { $row in
+                HStack(spacing: 8) {
+                    VStack(spacing: 8) {
+                        FieldContainer {
+                            TextField("Header name", text: $row.name, prompt: Text("Header name"))
+                                .serverAddressInput()
+                        }
+                        FieldContainer {
+                            TextField("Header value", text: $row.value, prompt: Text("Header value"))
+                                .serverAddressInput()
+                        }
+                    }
+                    Button("Remove header", systemImage: "minus.circle.fill") {
+                        headerRows.removeAll { $0.id == row.id }
+                    }
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(.red)
+                    .buttonStyle(.plain)
+                }
+            }
+            Button("Add header", systemImage: "plus.circle.fill") { headerRows.append(HeaderRow()) }
+        }
+        .padding(.top, 8)
+    }
+
     private func signIn(allowInsecure: Bool, acknowledgeWarnings: Bool = false) {
         errorMessage = nil
+        guard let headers = CustomHeaders.fromEntries(headerRows.map { ($0.name, $0.value) }) else {
+            errorMessage = SessionStore.SignInError.invalidHeaders.localizedDescription
+            return
+        }
         isSigningIn = true
         Task {
             defer { isSigningIn = false }
             do {
-                try await session.signIn(server: server, apiKey: apiKey, allowInsecure: allowInsecure, acknowledgeWarnings: acknowledgeWarnings)
+                try await session.signIn(server: server, apiKey: apiKey, allowInsecure: allowInsecure, acknowledgeWarnings: acknowledgeWarnings, headers: headers)
                 apiKey = ""
             } catch SessionStore.SignInError.insecureConnectionNeedsConfirmation {
                 isConfirmingInsecure = true

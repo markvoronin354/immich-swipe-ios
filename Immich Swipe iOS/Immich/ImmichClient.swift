@@ -48,18 +48,22 @@ nonisolated struct ImmichClient: Sendable {
     let serverURL: URL
     let apiKey: String
     private let session: URLSession
+    /// The account's custom headers, sent along with the key to this server only.
+    let headers: [String: String]
     private let retry: RetryPolicy
     private let onEvent: (@Sendable (ConnectionEvent) -> Void)?
 
     init(
         serverURL: URL,
         apiKey: String,
+        headers: [String: String] = [:],
         session: URLSession = .shared,
         retry: RetryPolicy = .default,
         onEvent: (@Sendable (ConnectionEvent) -> Void)? = nil
     ) {
         self.serverURL = serverURL
         self.apiKey = apiKey
+        self.headers = headers
         self.session = session
         self.retry = retry
         self.onEvent = onEvent
@@ -237,11 +241,11 @@ nonisolated struct ImmichClient: Sendable {
     }
 
     /// Headers every request needs. Pass to `AVURLAsset` via `"AVURLAssetHTTPHeaderFieldsKey"`.
-    var authorizationHeaders: [String: String] { ["x-api-key": apiKey] }
+    var authorizationHeaders: [String: String] { headers.merging(["x-api-key": apiKey]) { _, key in key } }
 
     func authorizedRequest(for media: Media) -> URLRequest {
         var request = URLRequest(url: url(for: media))
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        for (name, value) in authorizationHeaders { request.setValue(value, forHTTPHeaderField: name) }
         return request
     }
 
@@ -310,7 +314,7 @@ nonisolated struct ImmichClient: Sendable {
     private func perform(_ method: Method, _ path: String, query: [URLQueryItem] = [], body: (any Encodable)?) async throws -> Data {
         var request = URLRequest(url: endpoint(path, query: query))
         request.httpMethod = method.rawValue
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        for (name, value) in authorizationHeaders { request.setValue(value, forHTTPHeaderField: name) }
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let body {
             request.httpBody = try JSONEncoder().encode(body)
@@ -397,11 +401,14 @@ nonisolated struct ImmichClient: Sendable {
     }
 }
 
-/// Keeps the API key on its own server, like Android's `ImmichAuthInterceptor`. URLSession copies every
-/// header onto a redirect, so without this a redirect to another host would receive the key. Pass it as
-/// the per-request delegate of any request that carries `x-api-key`.
+/// Keeps the API key, and the account's custom headers, on their own server, like Android's
+/// `ImmichAuthInterceptor`. URLSession copies every header onto a redirect, so without this a redirect to
+/// another host would receive them. Pass it as the per-request delegate of any request that carries `x-api-key`.
 nonisolated final class APIKeyRedirectGuard: NSObject, URLSessionTaskDelegate, Sendable {
     static let shared = APIKeyRedirectGuard()
+
+    /// Headers the app sets on every request itself, which are fine to send on.
+    private static let ordinaryHeaders: Set<String> = ["accept", "content-type", "content-length", "user-agent"]
 
     // The completion-handler form, because the async one crashes the Swift compiler.
     func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void) {
@@ -409,6 +416,10 @@ nonisolated final class APIKeyRedirectGuard: NSObject, URLSessionTaskDelegate, S
               !Self.isSameOrigin(target, original) else { return completionHandler(request) }
         var stripped = request
         stripped.setValue(nil, forHTTPHeaderField: "x-api-key")
+        // The custom headers are whatever else the request carried beyond the ordinary ones.
+        for name in task.originalRequest?.allHTTPHeaderFields?.keys ?? [:].keys where !Self.ordinaryHeaders.contains(name.lowercased()) {
+            stripped.setValue(nil, forHTTPHeaderField: name)
+        }
         completionHandler(stripped)
     }
 

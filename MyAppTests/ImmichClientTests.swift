@@ -205,10 +205,14 @@ final class RedirectingServer: URLProtocol, @unchecked Sendable {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var target = ""
     nonisolated(unsafe) private static var keys: [String: String?] = [:]
+    nonisolated(unsafe) private static var proxyHeaders: [String: String?] = [:]
 
     static func reset(redirectTo url: String) {
-        lock.withLock { target = url; keys = [:] }
+        lock.withLock { target = url; keys = [:]; proxyHeaders = [:] }
     }
+
+    /// The custom header each host received, `.some(nil)` when it got none.
+    static var proxyHeadersByHost: [String: String?] { lock.withLock { proxyHeaders } }
 
     /// The API key each host received, `.some(nil)` when it got none.
     static var keysByHost: [String: String?] { lock.withLock { keys } }
@@ -221,6 +225,7 @@ final class RedirectingServer: URLProtocol, @unchecked Sendable {
         let url = request.url!
         let target = Self.lock.withLock {
             Self.keys[url.host() ?? ""] = request.value(forHTTPHeaderField: "x-api-key")
+            Self.proxyHeaders[url.host() ?? ""] = request.value(forHTTPHeaderField: "CF-Access-Client-Id")
             return Self.target
         }
         if url.path().hasPrefix("/api/") {
@@ -261,6 +266,30 @@ struct APIKeyRedirectGuardTests {
         #expect(RedirectingServer.keysByHost["photos.example.com"] == .some("KEY"))
     }
 
+    @Test func customHeadersFollowTheKeyAndStayOnTheServer() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RedirectingServer.self]
+        let proxied = ImmichClient(serverURL: URL(string: "https://photos.example.com")!, apiKey: "KEY", headers: ["CF-Access-Client-Id": "id-1"], session: URLSession(configuration: configuration), retry: .none)
+
+        RedirectingServer.reset(redirectTo: "https://evil.example.net/steal")
+        _ = try await proxied.getMyUser()
+        #expect(RedirectingServer.proxyHeadersByHost["photos.example.com"] == .some("id-1"))
+        #expect(RedirectingServer.proxyHeadersByHost["evil.example.net"] == .some(nil))
+        #expect(RedirectingServer.keysByHost["evil.example.net"] == .some(nil))
+
+        RedirectingServer.reset(redirectTo: "https://photos.example.com:443/moved")
+        _ = try await proxied.getMyUser()
+        #expect(RedirectingServer.proxyHeadersByHost["photos.example.com"] == .some("id-1"))
+    }
+
+    @Test func mediaRequestsAndVideoHeadersCarryTheCustomHeaders() {
+        let proxied = ImmichClient(serverURL: URL(string: "https://photos.example.com")!, apiKey: "KEY", headers: ["CF-Access-Client-Id": "id-1"])
+        let request = proxied.authorizedRequest(for: .thumbnail(assetID: "a1"))
+        #expect(request.value(forHTTPHeaderField: "CF-Access-Client-Id") == "id-1")
+        #expect(request.value(forHTTPHeaderField: "x-api-key") == "KEY")
+        #expect(proxied.authorizationHeaders == ["CF-Access-Client-Id": "id-1", "x-api-key": "KEY"])
+    }
+
     @Test func sameOriginNeedsSchemeHostAndPort() {
         let base = URL(string: "https://photos.example.com/api")!
         #expect(APIKeyRedirectGuard.isSameOrigin(URL(string: "https://Photos.Example.com:443/x")!, base))
@@ -285,5 +314,40 @@ struct SignInWarningTests {
 
         let onlyPermissions = SessionStore.SignInError.warnings(outdatedServer: nil, missingPermissions: ["user.read"])
         #expect(!(onlyPermissions.errorDescription ?? "").contains("2.5.0"))
+    }
+}
+
+struct CustomHeadersTests {
+    @Test func namesFollowTheHTTPTokenRulesAndExcludeReservedOnes() {
+        #expect(CustomHeaders.isValidName("CF-Access-Client-Id"))
+        #expect(CustomHeaders.isValidName("X_Custom.1"))
+        #expect(!CustomHeaders.isValidName(""))
+        #expect(!CustomHeaders.isValidName("Has Space"))
+        #expect(!CustomHeaders.isValidName("a:b"))
+        #expect(!CustomHeaders.isValidName("X-Api-Key"), "the app sets the key itself")
+        #expect(!CustomHeaders.isValidName("Host"))
+    }
+
+    @Test func valuesNeedVisibleASCII() {
+        #expect(CustomHeaders.isValidValue("abc 123\ttab"))
+        #expect(!CustomHeaders.isValidValue(""))
+        #expect(!CustomHeaders.isValidValue("café"))
+        #expect(!CustomHeaders.isValidValue("line\nbreak"))
+    }
+
+    @Test func entriesSkipBlankRowsAndRejectBadOrRepeatedOnes() {
+        #expect(CustomHeaders.fromEntries([("", ""), (" A ", " 1 ")]) == ["A": "1"])
+        #expect(CustomHeaders.fromEntries([("A", "")]) == nil, "a name without a value is an error")
+        #expect(CustomHeaders.fromEntries([("", "1")]) == nil)
+        #expect(CustomHeaders.fromEntries([("A", "1"), ("a", "2")]) == nil, "names repeat regardless of case")
+        #expect(CustomHeaders.fromEntries([]) == [:])
+    }
+
+    @Test func storedFormRoundTripsAndDropsBadLines() {
+        let headers = ["B": "2", "A": "x: y"]
+        #expect(CustomHeaders.parse(CustomHeaders.encode(headers)) == headers)
+        #expect(CustomHeaders.encode([:]) == nil)
+        #expect(CustomHeaders.parse("A: 1\nnot a header\nX-Api-Key: no\nB: 2") == ["A": "1", "B": "2"])
+        #expect(CustomHeaders.parse(nil).isEmpty)
     }
 }
