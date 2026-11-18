@@ -11,7 +11,6 @@ struct InteractionsSettingsView: View {
     @AppStorage(Setting.Key.tapToSwipe) private var tapToSwipe = Setting.Default.tapToSwipe
     @AppStorage(Setting.Key.doubleTapEnabled) private var doubleTapEnabled = Setting.Default.doubleTapEnabled
     @AppStorage(Setting.Key.doubleTapAction) private var doubleTapAction = Setting.Default.doubleTapAction
-    @AppStorage(Setting.Key.showTimeline) private var showTimeline = Setting.Default.showTimeline
     @AppStorage(Setting.Key.showToolbarLabels) private var showLabels = Setting.Default.showToolbarLabels
     @AppStorage(Setting.Key.toolbarButtonOrder) private var savedOrder = Setting.Default.toolbarButtonOrder
     @AppStorage(Setting.Key.swipeLeftAction) private var swipeLeft = Setting.Default.swipeLeftAction
@@ -123,11 +122,6 @@ struct InteractionsSettingsView: View {
                     }
                 }
 
-                // Not in the Android app, where the timeline always shows.
-                SettingsCard(header: "Layout") {
-                    SettingsRow(isLast: true) { Toggle("Asset timeline", isOn: $showTimeline) }
-                }
-
                 Button {
                     isConfirmingReset = true
                 } label: {
@@ -145,7 +139,7 @@ struct InteractionsSettingsView: View {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive, action: resetToDefaults)
         } message: {
-            Text("The toolbar, swipe actions, tap gestures and timeline will go back to their defaults.")
+            Text("The toolbar, swipe actions and tap gestures will go back to their defaults.")
         }
         // The toggles write straight to storage, so animate here: the preview slides in and out, and its
         // buttons come and go, as buttons are turned on and off.
@@ -179,7 +173,6 @@ struct InteractionsSettingsView: View {
         tapToSwipe = Setting.Default.tapToSwipe
         doubleTapEnabled = Setting.Default.doubleTapEnabled
         doubleTapAction = Setting.Default.doubleTapAction
-        showTimeline = Setting.Default.showTimeline
     }
 
     /// As on Android, the buttons are rearranged by dragging them sideways in a toolbar preview, in the
@@ -481,6 +474,8 @@ struct CardLayoutPreview: View {
     private let inset: CGFloat = 10
     private let buttonSize: CGFloat = 30
     private let buttonSpacing: CGFloat = 6
+    /// Connected buttons touch, so only separate ones leave a gap inside a corner.
+    private var innerSpacing: CGFloat { layout.style == .connected ? 0 : buttonSpacing }
 
     /// How much to shrink the buttons so no row or column of corners runs past the card's edge.
     private var buttonScale: CGFloat {
@@ -504,7 +499,7 @@ struct CardLayoutPreview: View {
     private func extent(of position: IconPosition, along stackAxis: Bool) -> CGFloat {
         let count = CGFloat(layout.buttons(in: position, isVideo: previewsVideo).count)
         guard count > 0 else { return 0 }
-        return stackAxis ? count * buttonSize + (count - 1) * buttonSpacing : buttonSize
+        return stackAxis ? count * buttonSize + (count - 1) * innerSpacing : buttonSize
     }
 
     var body: some View {
@@ -534,18 +529,21 @@ struct CardLayoutPreview: View {
     @ViewBuilder
     private func corner(_ position: IconPosition) -> some View {
         let scale = buttonScale
+        let buttons = layout.buttons(in: position, isVideo: previewsVideo)
+        let merged = buttons.count > 1 && layout.style == .connected
         let stack = layout.orientation == .vertical
-            ? AnyLayout(VStackLayout(spacing: buttonSpacing * scale))
-            : AnyLayout(HStackLayout(spacing: buttonSpacing * scale))
+            ? AnyLayout(VStackLayout(spacing: innerSpacing * scale))
+            : AnyLayout(HStackLayout(spacing: innerSpacing * scale))
         stack {
-            ForEach(layout.buttons(in: position, isVideo: previewsVideo), id: \.self) { button in
+            ForEach(buttons, id: \.self) { button in
                 CardGlyph(name: button.symbol)
                     .font(.system(size: 12 * scale, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: buttonSize * scale, height: buttonSize * scale)
-                    .background(.black.opacity(0.65), in: .circle)
+                    .background(merged ? Color.clear : Color.black.opacity(0.65), in: .circle)
             }
         }
+        .background(merged ? Color.black.opacity(0.65) : Color.clear, in: .capsule)
     }
 }
 

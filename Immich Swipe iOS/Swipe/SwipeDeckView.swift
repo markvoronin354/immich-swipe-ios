@@ -37,8 +37,25 @@ struct SwipeDeckView: View {
             }
             .padding(.horizontal)
 
-            if prefs.showTimeline, !model.deck.assets.isEmpty {
-                DeckTimelineStrip(model: model)
+            if !model.deck.assets.isEmpty {
+                // Android's chevron above the card: it folds the timeline away and brings it back.
+                Button {
+                    withAnimation(.snappy) { prefs.showTimeline.toggle() }
+                } label: {
+                    Image(systemName: "chevron.compact.up")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(prefs.showTimeline ? 0 : 180))
+                        .frame(width: 96, height: 20)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Asset timeline")
+
+                if prefs.showTimeline {
+                    DeckTimelineStrip(model: model)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
             }
 
             content

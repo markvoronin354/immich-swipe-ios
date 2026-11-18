@@ -3765,22 +3765,6 @@
         }
       }
     },
-    "Layout" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Diseño"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Disposition"
-          }
-        }
-      }
-    },
     "Light" : {
       "localizations" : {
         "es" : {
@@ -6205,22 +6189,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Le serveur a refusé cette clé d’API. Vérifiez qu’elle a été copiée en entier et qu’elle n’a pas été supprimée."
-          }
-        }
-      }
-    },
-    "The toolbar, swipe actions, tap gestures and timeline will go back to their defaults." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La barra de herramientas, las acciones de deslizamiento, los gestos táctiles y la línea de tiempo volverán a sus valores predeterminados."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La barre d’outils, les actions de swipe, les gestes tactiles et la frise des médias reviendront à leurs valeurs par défaut."
           }
         }
       }
