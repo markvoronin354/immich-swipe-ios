@@ -42,7 +42,7 @@ struct DuplicateClusterCard: View {
                         Label("Sorted", systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     } else {
-                        Text("\(decided) of \(cluster.assets.count) sorted")
+                        Text("\(decided, format: .number) of \(cluster.assets.count, format: .number) sorted")
                             .foregroundStyle(.secondary)
                             .contentTransition(.numericText())
                     }

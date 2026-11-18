@@ -167,7 +167,7 @@ struct SwipeDeckView: View {
             if let total = model.serverTotal, total > 0, model.syncedCount > 0 {
                 // A sync that holds its pages back until the end, as on Android, shows how far it has got.
                 ProgressView(value: Double(min(model.syncedCount, total)), total: Double(total)) {
-                    Text("Loading album metadata… \(model.syncedCount) / \(total)")
+                    Text("Loading album metadata… \(model.syncedCount, format: .number) / \(total, format: .number)")
                 }
                 .frame(width: 200)
             } else {
@@ -793,7 +793,7 @@ private struct ProgressPill: View {
         Button(action: onReview) { content }
             .buttonStyle(.plain)
             .accessibilityLabel("Review Decisions")
-            .accessibilityValue(Text("\(remaining) left, \(deleted) deleted, \(kept) kept"))
+            .accessibilityValue(Text("\(remaining, format: .number) left, \(deleted, format: .number) deleted, \(kept, format: .number) kept"))
     }
 
     private var content: some View {
@@ -1180,7 +1180,7 @@ private struct FinishedView: View {
                 .foregroundStyle(.green)
         } description: {
             VStack(spacing: 4) {
-                Text("Kept \(model.keptCount) · Deleted \(model.deletedCount)")
+                Text("Kept \(model.keptCount, format: .number) · Deleted \(model.deletedCount, format: .number)")
                 if freed > 0 {
                     Text("Deleting frees \(freed.formatted(.byteCount(style: .file)))")
                 }

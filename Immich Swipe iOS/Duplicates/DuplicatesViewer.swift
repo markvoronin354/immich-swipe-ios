@@ -331,7 +331,7 @@ struct DuplicatesViewer: View {
             VStack(spacing: 2) {
                 Group {
                     if clusters.count > 1 {
-                        Text("Group \(clusterIndex + 1) of \(clusters.count)")
+                        Text("Group \(clusterIndex + 1, format: .number) of \(clusters.count, format: .number)")
                     } else {
                         Text(verbatim: "\(selectedIndex + 1) / \(assets.count)")
                     }

@@ -47,7 +47,7 @@ struct DeckReviewSheet: View {
                             }
                         } header: {
                             Label {
-                                Text("\(Self.title(for: decision)) (\(assets.count))")
+                                Text("\(Self.title(for: decision)) (\(assets.count, format: .number))")
                             } icon: {
                                 DecisionBadge(decision: decision)
                             }

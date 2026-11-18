@@ -241,7 +241,7 @@ struct DuplicatesView: View {
         let decided = model.decidedClusterCount
         if decided == model.clusters.count { return "Every group already has choices. Replace them?" }
         if decided == 1 { return "1 group already has choices. Auto-select can leave it alone and only sort the rest, or replace its choices." }
-        return "\(decided) groups already have choices. Auto-select can leave them alone and only sort the rest, or replace their choices."
+        return "\(decided, format: .number) groups already have choices. Auto-select can leave them alone and only sort the rest, or replace their choices."
     }
 
     /// Follows a pinch, then lets the picture glide back into its tile before the overlay goes (Android:
@@ -337,7 +337,7 @@ private struct DuplicatesHeader: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Delete Marked Duplicates")
-            .accessibilityValue(Text("\(remaining) left, \(deleted) delete, \(kept) keep"))
+            .accessibilityValue(Text("\(remaining, format: .number) left, \(deleted, format: .number) delete, \(kept, format: .number) keep"))
             .animation(.snappy, value: remaining)
         }
     }

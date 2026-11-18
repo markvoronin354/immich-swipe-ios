@@ -369,7 +369,7 @@
         }
       }
     },
-    "%@ (%lld)" : {
+    "%@ (%@)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -521,18 +521,18 @@
         }
       }
     },
-    "%lld groups already have choices. Auto-select can leave them alone and only sort the rest, or replace their choices." : {
+    "%@ groups already have choices. Auto-select can leave them alone and only sort the rest, or replace their choices." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%lld grupos ya tienen elecciones. La selección automática puede dejarlos como están y ordenar solo el resto, o reemplazar sus elecciones."
+            "value" : "%@ grupos ya tienen elecciones. La selección automática puede dejarlos como están y ordenar solo el resto, o reemplazar sus elecciones."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%lld groupes ont déjà des choix. La sélection automatique peut les laisser tels quels et ne trier que le reste, ou remplacer leurs choix."
+            "value" : "%@ groupes ont déjà des choix. La sélection automatique peut les laisser tels quels et ne trier que le reste, ou remplacer leurs choix."
           }
         }
       }
@@ -613,7 +613,7 @@
         }
       }
     },
-    "%lld left, %lld delete, %lld keep" : {
+    "%@ left, %@ delete, %@ keep" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -635,7 +635,7 @@
         }
       }
     },
-    "%lld left, %lld deleted, %lld kept" : {
+    "%@ left, %@ deleted, %@ kept" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -733,7 +733,7 @@
         }
       }
     },
-    "%lld of %lld sorted" : {
+    "%@ of %@ sorted" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -755,18 +755,18 @@
         }
       }
     },
-    "%lld to apply" : {
+    "%@ to apply" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%lld por aplicar"
+            "value" : "%@ por aplicar"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "%lld à appliquer"
+            "value" : "%@ à appliquer"
           }
         }
       }
@@ -3581,7 +3581,7 @@
         }
       }
     },
-    "Group %lld of %lld" : {
+    "Group %@ of %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4031,7 +4031,7 @@
         }
       }
     },
-    "Kept %lld · Deleted %lld" : {
+    "Kept %@ · Deleted %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4101,7 +4101,7 @@
         }
       }
     },
-    "Loading album metadata… %lld / %lld" : {
+    "Loading album metadata… %@ / %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {

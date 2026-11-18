@@ -160,7 +160,7 @@ private struct AlbumRow: View {
             Spacer(minLength: 0)
 
             if entry.progress.unsynced > 0 {
-                Text("\(entry.progress.unsynced) to apply")
+                Text("\(entry.progress.unsynced, format: .number) to apply")
                     .font(.caption.weight(.medium))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
@@ -184,7 +184,7 @@ private struct ProgressLine: View {
                     .labelStyle(.titleAndIcon)
                     .foregroundStyle(.green)
             } else if entry.decidedCount > 0 {
-                Text("\(entry.decidedCount) of \(total) sorted")
+                Text("\(entry.decidedCount, format: .number) of \(total, format: .number) sorted")
             } else {
                 Text("^[\(total) item](inflect: true)")
             }
