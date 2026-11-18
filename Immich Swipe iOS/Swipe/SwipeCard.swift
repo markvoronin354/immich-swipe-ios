@@ -27,6 +27,9 @@ struct SwipeCard: View {
     /// Reports whether the original is still downloading.
     var isLoadingOriginal: Binding<Bool>?
 
+    /// How far the size pill reaches down from the card's top edge, so the swipe badges can stay clear of it.
+    @State private var sizePillBottom: CGFloat = 0
+
     var body: some View {
         ZStack {
             CardMedia(preview: imageRequest, original: fullResolutionRequest, player: player, rotation: rotation, isLoadingOriginal: isLoadingOriginal)
@@ -44,22 +47,30 @@ struct SwipeCard: View {
 
             if let intent {
                 let insets = IntentStamp.cardInsets(for: intent, layout: buttonLayout, isVideo: asset.type == .video)
+                // Each badge keeps its usual spot unless the size pill reaches it: then 12 pt past the pill.
+                let clearOfSizePill = sizePillBottom > 0 && !controlsHidden ? sizePillBottom + 12 : 0
                 IntentStamp(action: intent.action, isCommitted: intentStrength >= 1)
                     // Android: up to 90% opaque.
                     .opacity(intentStrength * 0.9)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: intent.stampAlignment)
-                    // A swipe up's badge sits above the bottom buttons instead, 72 pt up as on Android.
-                    .padding(intent.edge == .top ? .bottom : .top, intent.edge == .top ? 72 : insets.top)
+                    .padding(.top, max(insets.top, clearOfSizePill))
                     .padding(.horizontal, insets.side)
                     .allowsHitTesting(false)
             }
         }
+        .onPreferenceChange(SizePillBottomKey.self) { sizePillBottom = $0 }
         // The bars around a fitted asset. Android fills them with the card's container colour, a light grey in
         // light mode (surfaceContainerHighest); dark mode stays black.
         .background(Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? .black : .systemGray5 }))
         .clipShape(.rect(cornerRadius: 28))
         .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
     }
+}
+
+/// Where the size pill ends, measured from the card's top edge. Nothing is reported while there's no pill.
+private struct SizePillBottomKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 
 /// What the on-card buttons do, and where they sit. Supplied by the deck screen.
@@ -180,9 +191,10 @@ struct CardControls: View {
                 let clearance = clearance(of: sizeWidth, cardWidth: cardWidth, from: (.topLeft, topLeftSize), (.topRight, topRightSize))
                 Text(sizeText)
                     .modifier(CardPillText())
-                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { sizeWidth = $0 }
+                    .onGeometryChange(for: CGSize.self) { $0.size } action: { sizeWidth = $0.width; sizeHeight = $0.height }
                     .padding(.top, clearance)
                     .animation(.snappy, value: clearance)
+                    .preference(key: SizePillBottomKey.self, value: clearance + sizeHeight)
                     .allowsHitTesting(false)
             }
         }
@@ -440,14 +452,13 @@ struct SwipeIntent: Equatable {
     let action: SwipeAction
     let edge: Edge
 
-    /// Opposite the way the card is going, as on Android: a swipe right shows its badge top-left, a swipe down
-    /// top centre, and a swipe up bottom centre.
+    /// Opposite the way the card is going, as on Android: a swipe right shows its badge top-left, a swipe left
+    /// top-right, and a swipe up or down top centre.
     var stampAlignment: Alignment {
         switch edge {
         case .trailing: .topLeading
         case .leading: .topTrailing
-        case .bottom: .top
-        case .top: .bottom
+        case .top, .bottom: .top
         }
     }
 }
@@ -505,7 +516,7 @@ struct IntentStamp: View {
     /// card buttons it would land on. A row of buttons along the top can reach across the card from either
     /// corner, so any top row pushes every badge down. A column stays at its own side, so it only pushes in
     /// the badge that shares its corner: a swipe right's top-left, a swipe left's top-right. A swipe down's
-    /// sits in the middle, which a column never reaches. (A swipe up's sits at the bottom; see `SwipeCard`.)
+    /// and a swipe up's sit in the middle, which a column never reaches.
     static func cardInsets(for intent: SwipeIntent, layout: CardButtonLayout?, isVideo: Bool) -> (top: CGFloat, side: CGFloat) {
         // A corner's buttons are 48 pt circles, 16 pt from the edge; the badge keeps 12 pt from them.
         let clear: CGFloat = 16 + 48 + 12
