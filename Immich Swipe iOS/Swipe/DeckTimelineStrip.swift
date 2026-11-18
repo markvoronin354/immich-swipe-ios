@@ -5,6 +5,8 @@ import SwiftUI
 struct DeckTimelineStrip: View {
     let model: DeckModel
 
+    @State private var hasPositioned = false
+
     var body: some View {
         let currentID = model.deck.current?.id
         ScrollViewReader { proxy in
@@ -33,7 +35,12 @@ struct DeckTimelineStrip: View {
             .frame(height: 76)
             .onChange(of: currentID, initial: true) { _, id in
                 guard let id else { return }
-                withAnimation(.snappy) { proxy.scrollTo(id, anchor: .center) }
+                // The first scroll, when the strip appears, jumps straight to the photo instead of
+                // sweeping there from the start of the row.
+                var transaction = Transaction(animation: .snappy)
+                transaction.disablesAnimations = !hasPositioned
+                withTransaction(transaction) { proxy.scrollTo(id, anchor: .center) }
+                hasPositioned = true
             }
         }
         .accessibilityElement(children: .ignore)

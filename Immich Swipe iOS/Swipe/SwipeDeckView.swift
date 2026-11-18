@@ -70,6 +70,8 @@ struct SwipeDeckView: View {
             .padding(.horizontal)
         }
         .padding(.bottom, 8)
+        // Slides the card up or down along with the strip, whichever way the chevron was tapped.
+        .animation(.snappy, value: prefs.showTimeline)
         .navigationTitle(model.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
