@@ -213,6 +213,9 @@ nonisolated struct ServerVersion: Codable, Hashable, Comparable, Sendable, Custo
 
     var description: String { "\(major).\(minor).\(patch)" }
 
+    /// First release with `PUT /assets/{id}/edits`, which saves a photo's rotation.
+    static let rotationEdits = ServerVersion(major: 2, minor: 5, patch: 0)
+
     static func < (lhs: ServerVersion, rhs: ServerVersion) -> Bool {
         (lhs.major, lhs.minor, lhs.patch) < (rhs.major, rhs.minor, rhs.patch)
     }

@@ -269,3 +269,21 @@ struct APIKeyRedirectGuardTests {
         #expect(!APIKeyRedirectGuard.isSameOrigin(URL(string: "https://photos.example.com.evil.net/x")!, base))
     }
 }
+
+struct SignInWarningTests {
+    @Test func versionsBeforeRotationEditsAreOld() {
+        #expect(ServerVersion(major: 2, minor: 4, patch: 9) < ServerVersion.rotationEdits)
+        #expect(!(ServerVersion(major: 2, minor: 5, patch: 0) < ServerVersion.rotationEdits))
+        #expect(ServerVersion.rotationEdits.description == "2.5.0")
+    }
+
+    @Test func theWarningNamesTheVersionAndThePermissions() {
+        let both = SessionStore.SignInError.warnings(outdatedServer: ServerVersion(major: 1, minor: 130, patch: 0), missingPermissions: ["album.create"])
+        let text = both.errorDescription ?? ""
+        #expect(text.contains("1.130.0") && text.contains("2.5.0") && text.contains("album.create"))
+        #expect(both.isServerWarning)
+
+        let onlyPermissions = SessionStore.SignInError.warnings(outdatedServer: nil, missingPermissions: ["user.read"])
+        #expect(!(onlyPermissions.errorDescription ?? "").contains("2.5.0"))
+    }
+}

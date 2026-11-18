@@ -22,15 +22,16 @@ final class SessionStore {
         case invalidServerURL
         /// Plain HTTP to a public host. The caller should confirm, then retry with `allowInsecure`.
         case insecureConnectionNeedsConfirmation
-        /// The key works but lacks permissions the app uses. The caller should say so, then retry with
-        /// `acknowledgeWarnings` if the user carries on.
-        case missingPermissions([String])
+        /// The server works but something will go wrong later: it is too old to save rotations, or the key
+        /// lacks permissions the app uses. The caller should say so, then retry with `acknowledgeWarnings`
+        /// if the user carries on.
+        case warnings(outdatedServer: ServerVersion?, missingPermissions: [String])
         /// The server refused the key, and says which permissions it lacks.
         case accessDenied(missing: [String])
 
         /// Warnings the user can read and carry on past, unlike a failure.
         var isServerWarning: Bool {
-            if case .missingPermissions = self { true } else { false }
+            if case .warnings = self { true } else { false }
         }
 
         var errorDescription: String? {
@@ -38,7 +39,11 @@ final class SessionStore {
             case .emptyFields: "Enter your server address and API key."
             case .invalidServerURL: "That doesn't look like a server address. Include http:// or https://."
             case .insecureConnectionNeedsConfirmation: "This connection isn't encrypted."
-            case .missingPermissions(let missing): String(localized: "Your API key is missing these permissions: \(missing.formatted()). Features that need them won't work until you add them to the key in Immich.")
+            case .warnings(let outdated, let missing):
+                [
+                    outdated.map { String(localized: "This server runs Immich \($0.description). Saving a photo's rotation to the server needs \(ServerVersion.rotationEdits.description) or newer, so rotations you make here won't be saved there.") },
+                    missing.isEmpty ? nil : String(localized: "Your API key is missing these permissions: \(missing.formatted()). Features that need them won't work until you add them to the key in Immich."),
+                ].compactMap { $0 }.joined(separator: "\n\n")
             case .accessDenied(let missing): String(localized: "Access denied. Your API key is missing these permissions: \(missing.formatted()).")
             }
         }
@@ -92,10 +97,19 @@ final class SessionStore {
         }
         AppLog.i("Auth", "Valid credentials. User: \(user.name ?? user.email) (\(user.id))")
 
+        // Best effort: a server that doesn't say which version it runs, or what the key can do, warns of nothing.
+        let version = try? await probe.getServerVersion()
+        AppLog.i("Auth", "Server version: \(version?.description ?? "unknown")")
+        let outdated = version.flatMap { $0 < ServerVersion.rotationEdits ? $0 : nil }
+        if let outdated {
+            AppLog.w("Auth", "Server \(outdated) is older than \(ServerVersion.rotationEdits): photo rotations can't be saved to it")
+        }
         let missing = await probe.missingPermissions()
         if !missing.isEmpty {
             AppLog.w("Auth", "API key lacks: \(missing.joined(separator: ", "))")
-            if !acknowledgeWarnings { throw SignInError.missingPermissions(missing) }
+        }
+        if (outdated != nil || !missing.isEmpty), !acknowledgeWarnings {
+            throw SignInError.warnings(outdatedServer: outdated, missingPermissions: missing)
         }
 
         try Keychain.setAPIKey(apiKey, for: user.id)

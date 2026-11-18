@@ -177,6 +177,22 @@
         }
       }
     },
+    "This server runs Immich %@. Saving a photo's rotation to the server needs %@ or newer, so rotations you make here won't be saved there." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Este servidor usa Immich %@. Guardar la rotación de una foto en el servidor requiere la versión %@ o posterior, así que las rotaciones que hagas aquí no se guardarán allí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ce serveur utilise Immich %@. Enregistrer la rotation d’une photo sur le serveur nécessite la version %@ ou plus récente ; les rotations faites ici n’y seront donc pas enregistrées."
+          }
+        }
+      }
+    },
     "Your API key is missing these permissions: %@. Add them to the key in Immich, then tap Try Again." : {
       "localizations" : {
         "es" : {
