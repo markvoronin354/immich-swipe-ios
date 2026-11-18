@@ -69,14 +69,23 @@ struct StatisticsSheet: View {
         }
     }
 
-    /// Android's `formatSize`: GB, MB or KB, whichever fits.
-    private static func size(_ bytes: Int64) -> String {
-        let kb = Double(bytes) / 1024
-        let mb = kb / 1024
-        let gb = mb / 1024
-        if gb >= 1 { return String(localized: "\(gb, format: .number.precision(.fractionLength(2))) GB") }
-        if mb >= 1 { return String(localized: "\(mb, format: .number.precision(.fractionLength(1))) MB") }
-        return String(localized: "\(kb, format: .number.precision(.fractionLength(0))) KB")
+    /// Android's `formatSize`: at most three digits, in KB, MB, GB or TB. The decimals taper off as the
+    /// number grows, and it steps up a unit once the number would round to four digits.
+    nonisolated static func size(_ bytes: Int64) -> String {
+        var value = Double(bytes) / 1024
+        var unit = 0
+        while value >= 999.5, unit < 3 {
+            value /= 1024
+            unit += 1
+        }
+        let decimals = unit == 0 || value >= 99.95 ? 0 : value >= 9.995 ? 1 : 2
+        let number = value.formatted(.number.precision(.fractionLength(decimals)))
+        switch unit {
+        case 0: return String(localized: "\(number) KB")
+        case 1: return String(localized: "\(number) MB")
+        case 2: return String(localized: "\(number) GB")
+        default: return String(localized: "\(number) TB")
+        }
     }
 
     /// The same sums as Android's `HomeViewModel`. Deleted and locked only count what has been applied.

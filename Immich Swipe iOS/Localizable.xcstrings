@@ -1,6 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ TB" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ TB"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ TB"
+          }
+        }
+      }
+    },
     "A custom header isn't valid. Names can't be empty or contain spaces, values need visible characters, and x-api-key is set by the app." : {
       "localizations" : {
         "es" : {

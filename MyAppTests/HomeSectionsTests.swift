@@ -35,6 +35,20 @@ struct HomeSectionsTests {
         #expect(NothingToSort.ids(userID: "other", defaults: defaults) == ["b"])
     }
 
+    @Test func sizesShowAtMostThreeDigitsAndStepUpAUnit() {
+        let kb: Int64 = 1024, mb = kb * 1024, gb = mb * 1024, tb = gb * 1024
+        #expect(StatisticsSheet.size(512 * kb) == "512 KB")
+        #expect(StatisticsSheet.size(5 * kb) == "5 KB")
+        #expect(StatisticsSheet.size(mb * 3 / 2) == "1.50 MB")
+        #expect(StatisticsSheet.size(15 * mb + mb / 2) == "15.5 MB")
+        #expect(StatisticsSheet.size(150 * mb) == "150 MB")
+        // 999.5 KB would round to four digits, so it becomes MB.
+        #expect(StatisticsSheet.size(Int64(999.6 * 1024)) == "0.98 MB")
+        #expect(StatisticsSheet.size(gb * 2) == "2.00 GB")
+        #expect(StatisticsSheet.size(tb * 3 / 2) == "1.50 TB")
+        #expect(StatisticsSheet.size(5000 * tb) == "5,000 TB", "nothing bigger than TB")
+    }
+
     @Test func groupsAlbumsByProgressKeepingServerOrder() {
         let sections = make(progress: ["a": AlbumProgress(decided: 3, unsynced: 1), "b": AlbumProgress(decided: 4, unsynced: 0)])
         #expect(sections.inProgress.map(\.id) == ["a"])
