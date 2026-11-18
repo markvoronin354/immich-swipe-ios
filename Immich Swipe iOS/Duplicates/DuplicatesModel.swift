@@ -34,7 +34,7 @@ final class DuplicatesModel {
     private(set) var favorites: [String: Bool] = [:]
     private(set) var sortOrder = SortOrder.clusterSize
     private(set) var autoSelectMode: AutoSelectMode?
-    /// Groups that still had undecided photos when "Only undecided groups" was turned on; nil while it's off.
+    /// Groups that still had undecided photos when "Only unsorted groups" was turned on; nil while it's off.
     /// A snapshot, as on Android, so a group stays listed once it's sorted.
     private(set) var undecidedOnlyIDs: Set<String>?
 
@@ -142,7 +142,7 @@ final class DuplicatesModel {
         set(decided, to: nil)
     }
 
-    /// "Only undecided groups": shows the groups that have undecided photos right now, or every group again.
+    /// "Only unsorted groups": shows the groups that have undecided photos right now, or every group again.
     func toggleUndecidedOnly() {
         undecidedOnlyIDs = undecidedOnlyIDs == nil ? Set(clusters.filter(hasUndecided).map(\.id)) : nil
     }

@@ -383,7 +383,7 @@ private struct DuplicatesHeader: View {
 
 // MARK: - Bottom bar
 
-/// Sort (an icon showing the current order), the "Only undecided groups" filter, and Select (the last
+/// Sort (an icon showing the current order), the "Only unsorted groups" filter, and Select (the last
 /// auto-select applied, or "Select"). Android's Select menu also has four Best Shot modes, which are not
 /// ported yet.
 private struct DuplicatesBottomBar: View {
@@ -460,7 +460,7 @@ private struct DuplicatesBottomBar: View {
     }
 }
 
-/// "Only undecided groups" (Android's filter toggle). Tinted glass while on. It can't be turned on when
+/// "Only unsorted groups" (Android's filter toggle). Tinted glass while on. It can't be turned on when
 /// nothing is left to sort, as on Android.
 private struct UndecidedOnlyButton: View {
     let model: DuplicatesModel
@@ -482,7 +482,7 @@ private struct UndecidedOnlyButton: View {
 
     private var button: some View {
         Button { model.toggleUndecidedOnly() } label: {
-            Label("Only undecided groups", systemImage: "line.3.horizontal.decrease")
+            Label("Only unsorted groups", systemImage: "line.3.horizontal.decrease")
                 .labelStyle(.iconOnly)
                 .font(.title3)
                 .frame(width: 32, height: 32)

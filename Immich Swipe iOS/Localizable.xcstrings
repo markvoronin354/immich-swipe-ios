@@ -225,6 +225,22 @@
         }
       }
     },
+    "Only unsorted groups" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Solo grupos sin ordenar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Seulement les groupes non triés"
+          }
+        }
+      }
+    },
     "Remove header" : {
       "localizations" : {
         "es" : {
@@ -4912,22 +4928,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Uniquement mon compte (%@)"
-          }
-        }
-      }
-    },
-    "Only undecided groups" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Solo grupos sin ordenar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Seulement les groupes non triés"
           }
         }
       }

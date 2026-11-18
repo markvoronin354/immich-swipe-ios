@@ -60,7 +60,7 @@ struct DuplicatesViewer: View {
         _selectedIndex = State(initialValue: assetIndex)
     }
 
-    /// The groups the list shows, so "Only undecided groups" applies here too, as on Android.
+    /// The groups the list shows, so "Only unsorted groups" applies here too, as on Android.
     private var clusters: [DuplicatesModel.Cluster] { model.visibleClusters }
     private var assets: [Asset] { clusters.indices.contains(clusterIndex) ? clusters[clusterIndex].assets : [] }
     private var controlsOpacity: Double { min(max(1 - dismissOffset / Self.closeDistance, 0), 1) }
