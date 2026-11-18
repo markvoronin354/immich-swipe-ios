@@ -120,6 +120,11 @@ nonisolated enum IconPosition: String, CaseIterable, Sendable {
     var isLeading: Bool { self == .topLeft || self == .bottomLeft }
 }
 
+/// What a playing video does to other audio on the device (Android's `PlaybackBehavior`).
+nonisolated enum PlaybackBehavior: String, CaseIterable, Sendable {
+    case pauseOthers = "PAUSE_OTHERS", playOverOthers = "IGNORE"
+}
+
 nonisolated enum ButtonStackOrientation: String, CaseIterable, Sendable {
     case vertical = "VERTICAL", horizontal = "HORIZONTAL"
 }
@@ -187,6 +192,7 @@ nonisolated enum Setting {
         static let doubleTapAction = "double_tap_action"
         static let showTimeline = "show_timeline"
         static let includeArchived = "include_archived"
+        static let playbackBehavior = "audio_focus"
         static let swipeLeftAction = "swipe_left_action"
         static let swipeRightAction = "swipe_right_action"
         static let swipeUpAction = "swipe_up_action"
@@ -240,6 +246,7 @@ nonisolated enum Setting {
         static let showTimeline = true
         /// On by default, as on Android: decks and counts include photos archived in Immich.
         static let includeArchived = true
+        static let playbackBehavior = PlaybackBehavior.pauseOthers
         static let swipeLeftAction = SwipeAction.delete
         static let swipeRightAction = SwipeAction.keep
         static let swipeUpAction = SwipeAction.details

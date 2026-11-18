@@ -209,6 +209,22 @@
         }
       }
     },
+    "Manage interaction with other device sounds when playing a video" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Gestiona la interacción con otros sonidos del dispositivo al reproducir un vídeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Gérer l’interaction avec les autres sons de l’appareil lors de la lecture d’une vidéo"
+          }
+        }
+      }
+    },
     "Nothing to sort" : {
       "localizations" : {
         "es" : {
@@ -241,6 +257,38 @@
         }
       }
     },
+    "Pause others" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Pausar otros"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Couper les autres"
+          }
+        }
+      }
+    },
+    "Play over others" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reproducir sobre otros"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Jouer par-dessus"
+          }
+        }
+      }
+    },
     "Remove header" : {
       "localizations" : {
         "es" : {
@@ -269,6 +317,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Séparés"
+          }
+        }
+      }
+    },
+    "Sound behavior" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Comportamiento del sonido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Comportement du son"
           }
         }
       }

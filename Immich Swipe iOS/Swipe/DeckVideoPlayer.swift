@@ -149,17 +149,19 @@ final class DeckVideoPlayer {
         player.isMuted = isMuted
     }
 
-    /// Playback category, so the video's sound plays even with the silent switch on and other audio
-    /// pauses, matching the Android default ("Pause other sounds").
+    /// Playback category, so the video's sound plays even with the silent switch on. Other audio pauses,
+    /// matching the Android default ("Pause others"), unless "Play over others" is chosen: then it mixes.
     ///
-    /// The category is set once, and the session is switched on, off the main thread: AVAudioSession can
-    /// block for a while, which would freeze the swipe screen when a video card comes up.
+    /// The category is set when it changes, and the session is switched on, off the main thread:
+    /// AVAudioSession can block for a while, which would freeze the swipe screen when a video card comes up.
     private static func activateAudioSession() {
         #if !os(macOS)
+        let behavior = UserDefaults.standard.string(forKey: Setting.Key.playbackBehavior).flatMap(PlaybackBehavior.init(rawValue:)) ?? Setting.Default.playbackBehavior
+        let options: AVAudioSession.CategoryOptions = behavior == .playOverOthers ? [.mixWithOthers] : []
         DispatchQueue.global(qos: .userInitiated).async {
             let session = AVAudioSession.sharedInstance()
-            if session.category != .playback {
-                try? session.setCategory(.playback, mode: .moviePlayback)
+            if session.category != .playback || session.categoryOptions != options {
+                try? session.setCategory(.playback, mode: .moviePlayback, options: options)
             }
             try? session.setActive(true)
         }

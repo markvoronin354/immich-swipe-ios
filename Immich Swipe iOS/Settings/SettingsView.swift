@@ -10,6 +10,7 @@ struct SettingsView: View {
 
     @AppStorage(Setting.Key.theme) private var theme = Setting.Default.theme
     @AppStorage(Setting.Key.includeArchived) private var includeArchived = Setting.Default.includeArchived
+    @AppStorage(Setting.Key.playbackBehavior) private var playbackBehavior = Setting.Default.playbackBehavior
     @AppStorage(Setting.Key.reminderEnabled) private var reminderEnabled = Setting.Default.reminderEnabled
     @AppStorage(Setting.Key.reminderInterval) private var reminderInterval = Setting.Default.reminderInterval
     @AppStorage(Setting.Key.reminderCustomMinDays) private var customMinDays = Setting.Default.reminderCustomMinDays
@@ -84,6 +85,15 @@ struct SettingsView: View {
             }
             Toggle(isOn: $includeArchived) {
                 SettingsRow(title: "Include external archives", subtitle: "View and sort photos that have been archived in Immich (outside of Immich Swipe)", systemImage: "archivebox")
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                SettingsRow(title: "Sound behavior", subtitle: "Manage interaction with other device sounds when playing a video", systemImage: "speaker.wave.2")
+                Picker("Sound behavior", selection: $playbackBehavior) {
+                    Text("Pause others").tag(PlaybackBehavior.pauseOthers)
+                    Text("Play over others").tag(PlaybackBehavior.playOverOthers)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
             }
         }
     }

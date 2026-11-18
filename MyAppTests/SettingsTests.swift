@@ -130,6 +130,13 @@ struct CardButtonLayoutTests {
         #expect(metrics.spacing == 8 && abs(metrics.size - 300.0 / 7) < 0.01)
     }
 
+    @Test func soundBehaviorKeepsAndroidsKeyAndValues() {
+        #expect(Setting.Key.playbackBehavior == "audio_focus")
+        #expect(Setting.Default.playbackBehavior == .pauseOthers)
+        #expect(PlaybackBehavior(rawValue: "IGNORE") == .playOverOthers)
+        #expect(PlaybackBehavior(rawValue: "PAUSE_OTHERS") == .pauseOthers)
+    }
+
     @Test func connectedIsTheDefaultStyle() {
         #expect(CardButtonLayout.default.style == .connected)
     }
