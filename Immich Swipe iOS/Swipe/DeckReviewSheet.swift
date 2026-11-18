@@ -160,15 +160,16 @@ private struct ApplyButton: View {
         .padding(.horizontal)
         .padding(.top, 8)
         .padding(.bottom, 8)
-        .confirmationDialog(
+        // An alert, not a confirmation dialog: on iPhone that one hangs off the button with a pointer.
+        .alert(
             "Apply \(plan.pendingCount) changes?",
-            isPresented: $isConfirming,
-            titleVisibility: .visible
+            isPresented: $isConfirming
         ) {
             Button(plan.delete.isEmpty ? "Apply Changes" : "Move to Trash and Apply", role: plan.delete.isEmpty ? nil : .destructive) {
                 // A separate task, so closing the screen never cancels half an apply.
                 Task { await model.apply() }
             }
+            Button("Cancel", role: .cancel) {}
         } message: {
             // The full breakdown is already listed under Apply to Server, so only the deletion is called out.
             if !plan.delete.isEmpty {

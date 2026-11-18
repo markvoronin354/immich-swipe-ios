@@ -1,438 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@ TB" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%@ TB"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%@ TB"
-          }
-        }
-      }
-    },
-    "A custom header isn't valid. Names can't be empty or contain spaces, values need visible characters, and x-api-key is set by the app." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Una cabecera personalizada no es válida. Los nombres no pueden estar vacíos ni contener espacios, los valores necesitan caracteres visibles, y x-api-key la define la aplicación."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Un en-tête personnalisé n’est pas valide. Les noms ne peuvent pas être vides ni contenir d’espaces, les valeurs doivent contenir des caractères visibles, et x-api-key est défini par l’application."
-          }
-        }
-      }
-    },
-    "Access denied. Your API key is missing these permissions: %@." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Acceso denegado. A su clave de API le faltan estos permisos: %@."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Accès refusé. Il manque ces permissions à votre clé API : %@."
-          }
-        }
-      }
-    },
-    "Add header" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Añadir cabecera"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Ajouter un en-tête"
-          }
-        }
-      }
-    },
-    "Advanced" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Avanzado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Avancé"
-          }
-        }
-      }
-    },
-    "Before you continue" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Antes de continuar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Avant de continuer"
-          }
-        }
-      }
-    },
-    "Connected" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Conectados"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Reliés"
-          }
-        }
-      }
-    },
-    "Couldn't add to %@. Your API key is missing the %@ permission." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "No se pudo añadir a %@. A tu clave de API le falta el permiso %@."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Impossible d’ajouter à %@. Il manque la permission %@ à votre clé API."
-          }
-        }
-      }
-    },
-    "Direction" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Dirección"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Direction"
-          }
-        }
-      }
-    },
-    "Extra headers sent with every request to your server, for example for a reverse proxy or Cloudflare Access." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Cabeceras adicionales que se envían con cada solicitud a su servidor, por ejemplo para un proxy inverso o Cloudflare Access."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "En-têtes supplémentaires envoyés avec chaque requête vers votre serveur, par exemple pour un proxy inverse ou Cloudflare Access."
-          }
-        }
-      }
-    },
-    "Header name" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nombre de la cabecera"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nom de l’en-tête"
-          }
-        }
-      }
-    },
-    "Header value" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Valor de la cabecera"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Valeur de l’en-tête"
-          }
-        }
-      }
-    },
-    "How buttons behave when they share a corner." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Cómo se comportan los botones cuando comparten esquina."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Comportement des boutons lorsqu’ils partagent un coin."
-          }
-        }
-      }
-    },
-    "Manage interaction with other device sounds when playing a video" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Gestiona la interacción con otros sonidos del dispositivo al reproducir un vídeo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Gérer l’interaction avec les autres sons de l’appareil lors de la lecture d’une vidéo"
-          }
-        }
-      }
-    },
-    "Nothing to sort" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Nada que ordenar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Rien à trier"
-          }
-        }
-      }
-    },
-    "Only unsorted groups" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Solo grupos sin ordenar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Seulement les groupes non triés"
-          }
-        }
-      }
-    },
-    "Pause others" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Pausar otros"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Couper les autres"
-          }
-        }
-      }
-    },
-    "Play over others" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Reproducir sobre otros"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Jouer par-dessus"
-          }
-        }
-      }
-    },
-    "Remove header" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Quitar cabecera"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Supprimer l’en-tête"
-          }
-        }
-      }
-    },
-    "Separate" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Separados"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Séparés"
-          }
-        }
-      }
-    },
-    "Sound behavior" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Comportamiento del sonido"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Comportement du son"
-          }
-        }
-      }
-    },
-    "Style" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Estilo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Style"
-          }
-        }
-      }
-    },
-    "The server refused some changes. Check that your Immich API key has every permission Immich Swipe needs (see the README)." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "El servidor rechazó algunos cambios. Compruebe que su clave API de Immich tenga todos los permisos que necesita Immich Swipe (consulte el README)."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Le serveur a refusé certaines modifications. Vérifiez que votre clé API Immich a toutes les permissions dont Immich Swipe a besoin (voir le README)."
-          }
-        }
-      }
-    },
-    "The toolbar, swipe actions and tap gestures will go back to their defaults." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La barra de herramientas, las acciones de deslizamiento y los gestos táctiles volverán a sus valores predeterminados."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La barre d’outils, les actions de swipe et les gestes tactiles reviendront à leurs valeurs par défaut."
-          }
-        }
-      }
-    },
-    "This server runs Immich %@. Saving a photo's rotation to the server needs %@ or newer, so rotations you make here won't be saved there." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Este servidor usa Immich %@. Guardar la rotación de una foto en el servidor requiere la versión %@ o posterior, así que las rotaciones que hagas aquí no se guardarán allí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Ce serveur utilise Immich %@. Enregistrer la rotation d’une photo sur le serveur nécessite la version %@ ou plus récente ; les rotations faites ici n’y seront donc pas enregistrées."
-          }
-        }
-      }
-    },
-    "Your API key is missing these permissions: %@. Add them to the key in Immich, then tap Try Again." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "A tu clave de API le faltan estos permisos: %@. Añádelos a la clave en Immich y pulsa Reintentar."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Il manque ces permissions à votre clé API : %@. Ajoutez-les à la clé dans Immich, puis touchez Réessayer."
-          }
-        }
-      }
-    },
-    "Your API key is missing these permissions: %@. Features that need them won't work until you add them to the key in Immich." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "A tu clave de API le faltan estos permisos: %@. Las funciones que los necesitan no funcionarán hasta que los añadas a la clave en Immich."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Il manque ces permissions à votre clé API : %@. Les fonctions qui en ont besoin ne marcheront pas tant que vous ne les aurez pas ajoutées à la clé dans Immich."
-          }
-        }
-      }
-    },
     "· %@" : {
       "localizations" : {
         "es" : {
@@ -541,6 +109,22 @@
         }
       }
     },
+    "%@ groups already have choices. Auto-select can leave them alone and only sort the rest, or replace their choices." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ grupos ya tienen elecciones. La selección automática puede dejarlos como están y ordenar solo el resto, o reemplazar sus elecciones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ groupes ont déjà des choix. La sélection automatique peut les laisser tels quels et ne trier que le reste, ou remplacer leurs choix."
+          }
+        }
+      }
+    },
     "%@ KB" : {
       "localizations" : {
         "es" : {
@@ -553,6 +137,50 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "%@ Ko"
+          }
+        }
+      }
+    },
+    "%@ left, %@ delete, %@ keep" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld left, %2$lld delete, %3$lld keep"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Restantes: %1$lld, para eliminar: %2$lld, para conservar: %3$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Restants : %1$lld, à supprimer : %2$lld, à conserver : %3$lld"
+          }
+        }
+      }
+    },
+    "%@ left, %@ deleted, %@ kept" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld left, %2$lld deleted, %3$lld kept"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Restantes: %1$lld, eliminados: %2$lld, conservados: %3$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Restants : %1$lld, supprimés : %2$lld, conservés : %3$lld"
           }
         }
       }
@@ -595,6 +223,60 @@
         }
       }
     },
+    "%@ of %@ sorted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld sorted"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%1$lld de %2$lld ordenadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%1$lld sur %2$lld triées"
+          }
+        }
+      }
+    },
+    "%@ TB" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ TB"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ TB"
+          }
+        }
+      }
+    },
+    "%@ to apply" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ por aplicar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "%@ à appliquer"
+          }
+        }
+      }
+    },
     "%@: %@" : {
       "localizations" : {
         "en" : {
@@ -613,22 +295,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "%1$@ : %2$@"
-          }
-        }
-      }
-    },
-    "%@ groups already have choices. Auto-select can leave them alone and only sort the rest, or replace their choices." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%@ grupos ya tienen elecciones. La selección automática puede dejarlos como están y ordenar solo el resto, o reemplazar sus elecciones."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%@ groupes ont déjà des choix. La sélection automatique peut les laisser tels quels et ne trier que le reste, ou remplacer leurs choix."
           }
         }
       }
@@ -709,50 +375,6 @@
         }
       }
     },
-    "%@ left, %@ delete, %@ keep" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld left, %2$lld delete, %3$lld keep"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Restantes: %1$lld, para eliminar: %2$lld, para conservar: %3$lld"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Restants : %1$lld, à supprimer : %2$lld, à conserver : %3$lld"
-          }
-        }
-      }
-    },
-    "%@ left, %@ deleted, %@ kept" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld left, %2$lld deleted, %3$lld kept"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Restantes: %1$lld, eliminados: %2$lld, conservados: %3$lld"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Restants : %1$lld, supprimés : %2$lld, conservés : %3$lld"
-          }
-        }
-      }
-    },
     "%lld more belong to other accounts and will appear when you sign in to them." : {
       "localizations" : {
         "en" : {
@@ -825,44 +447,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "%@ of %@ sorted" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld sorted"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%1$lld de %2$lld ordenadas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%1$lld sur %2$lld triées"
-          }
-        }
-      }
-    },
-    "%@ to apply" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%@ por aplicar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "%@ à appliquer"
           }
         }
       }
@@ -1265,6 +849,22 @@
         }
       }
     },
+    "A custom header isn't valid. Names can't be empty or contain spaces, values need visible characters, and x-api-key is set by the app." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Una cabecera personalizada no es válida. Los nombres no pueden estar vacíos ni contener espacios, los valores necesitan caracteres visibles, y x-api-key la define la aplicación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Un en-tête personnalisé n’est pas valide. Les noms ne peuvent pas être vides ni contenir d’espaces, les valeurs doivent contenir des caractères visibles, et x-api-key est défini par l’application."
+          }
+        }
+      }
+    },
     "About & Legal" : {
       "localizations" : {
         "es" : {
@@ -1277,6 +877,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "À propos et légal"
+          }
+        }
+      }
+    },
+    "Access denied. Your API key is missing these permissions: %@." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Acceso denegado. A su clave de API le faltan estos permisos: %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Accès refusé. Il manque ces permissions à votre clé API : %@."
           }
         }
       }
@@ -1373,6 +989,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Ajouter un autre compte"
+          }
+        }
+      }
+    },
+    "Add header" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Añadir cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ajouter un en-tête"
           }
         }
       }
@@ -1497,6 +1129,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Ajouté à %@"
+          }
+        }
+      }
+    },
+    "Advanced" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Avanzado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Avancé"
           }
         }
       }
@@ -2106,6 +1754,22 @@
         }
       }
     },
+    "Before you continue" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Antes de continuar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Avant de continuer"
+          }
+        }
+      }
+    },
     "Bottom Left" : {
       "localizations" : {
         "es" : {
@@ -2551,6 +2215,22 @@
         }
       }
     },
+    "Connected" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Conectados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reliés"
+          }
+        }
+      }
+    },
     "Connected to Immich server" : {
       "localizations" : {
         "es" : {
@@ -2567,6 +2247,9 @@
         }
       }
     },
+    "Continue" : {
+
+    },
     "Copy All" : {
       "localizations" : {
         "es" : {
@@ -2579,6 +2262,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tout copier"
+          }
+        }
+      }
+    },
+    "Couldn't add to %@. Your API key is missing the %@ permission." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No se pudo añadir a %@. A tu clave de API le falta el permiso %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Impossible d’ajouter à %@. Il manque la permission %@ à votre clé API."
           }
         }
       }
@@ -3127,6 +2826,22 @@
         }
       }
     },
+    "Direction" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Direction"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "es" : {
@@ -3417,6 +3132,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Erreur d’exportation : %@"
+          }
+        }
+      }
+    },
+    "Extra headers sent with every request to your server, for example for a reverse proxy or Cloudflare Access." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Cabeceras adicionales que se envían con cada solicitud a su servidor, por ejemplo para un proxy inverso o Cloudflare Access."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "En-têtes supplémentaires envoyés avec chaque requête vers votre serveur, par exemple pour un proxy inverse ou Cloudflare Access."
           }
         }
       }
@@ -3715,6 +3446,38 @@
         }
       }
     },
+    "Header name" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nombre de la cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nom de l’en-tête"
+          }
+        }
+      }
+    },
+    "Header value" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Valor de la cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Valeur de l’en-tête"
+          }
+        }
+      }
+    },
     "Hide API key" : {
       "localizations" : {
         "es" : {
@@ -3743,6 +3506,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Horizontalement"
+          }
+        }
+      }
+    },
+    "How buttons behave when they share a corner." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Cómo se comportan los botones cuando comparten esquina."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Comportement des boutons lorsqu’ils partagent un coin."
           }
         }
       }
@@ -4427,6 +4206,22 @@
         }
       }
     },
+    "Manage interaction with other device sounds when playing a video" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Gestiona la interacción con otros sonidos del dispositivo al reproducir un vídeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Gérer l’interaction avec les autres sons de l’appareil lors de la lecture d’une vidéo"
+          }
+        }
+      }
+    },
     "Mark %lld as kept." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4884,6 +4679,22 @@
         }
       }
     },
+    "Nothing to sort" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Nada que ordenar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Rien à trier"
+          }
+        }
+      }
+    },
     "Notification permission denied. The reminder stays disabled." : {
       "localizations" : {
         "es" : {
@@ -5012,6 +4823,22 @@
         }
       }
     },
+    "Only unsorted groups" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Solo grupos sin ordenar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Seulement les groupes non triés"
+          }
+        }
+      }
+    },
     "Open an issue on GitHub" : {
       "localizations" : {
         "es" : {
@@ -5124,6 +4951,22 @@
         }
       }
     },
+    "Pause others" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Pausar otros"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Couper les autres"
+          }
+        }
+      }
+    },
     "Photo" : {
       "localizations" : {
         "es" : {
@@ -5216,6 +5059,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Lecture"
+          }
+        }
+      }
+    },
+    "Play over others" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reproducir sobre otros"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Jouer par-dessus"
           }
         }
       }
@@ -5424,6 +5283,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Supprimer tous les comptes ?"
+          }
+        }
+      }
+    },
+    "Remove header" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Quitar cabecera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Supprimer l’en-tête"
           }
         }
       }
@@ -5793,6 +5668,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Sélectionner"
+          }
+        }
+      }
+    },
+    "Separate" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Separados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Séparés"
           }
         }
       }
@@ -6193,6 +6084,22 @@
         }
       }
     },
+    "Sound behavior" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Comportamiento del sonido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Comportement du son"
+          }
+        }
+      }
+    },
     "Source code" : {
       "localizations" : {
         "es" : {
@@ -6333,6 +6240,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Utilisation du stockage"
+          }
+        }
+      }
+    },
+    "Style" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Estilo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Style"
           }
         }
       }
@@ -6561,6 +6484,22 @@
         }
       }
     },
+    "The server refused some changes. Check that your Immich API key has every permission Immich Swipe needs (see the README)." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "El servidor rechazó algunos cambios. Compruebe que su clave API de Immich tenga todos los permisos que necesita Immich Swipe (consulte el README)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Le serveur a refusé certaines modifications. Vérifiez que votre clé API Immich a toutes les permissions dont Immich Swipe a besoin (voir le README)."
+          }
+        }
+      }
+    },
     "The server rejected this API key. Check that it was copied in full and hasn't been deleted." : {
       "localizations" : {
         "es" : {
@@ -6573,6 +6512,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Le serveur a refusé cette clé d’API. Vérifiez qu’elle a été copiée en entier et qu’elle n’a pas été supprimée."
+          }
+        }
+      }
+    },
+    "The toolbar, swipe actions and tap gestures will go back to their defaults." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barra de herramientas, las acciones de deslizamiento y los gestos táctiles volverán a sus valores predeterminados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barre d’outils, les actions de swipe et les gestes tactiles reviendront à leurs valeurs par défaut."
           }
         }
       }
@@ -6669,6 +6624,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Cela supprime de cet appareil tous les comptes enregistrés et toutes les clés d’API, et vous déconnecte. Votre serveur n’est pas modifié."
+          }
+        }
+      }
+    },
+    "This server runs Immich %@. Saving a photo's rotation to the server needs %@ or newer, so rotations you make here won't be saved there." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Este servidor usa Immich %@. Guardar la rotación de una foto en el servidor requiere la versión %@ o posterior, así que las rotaciones que hagas aquí no se guardarán allí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ce serveur utilise Immich %@. Enregistrer la rotation d’une photo sur le serveur nécessite la version %@ ou plus récente ; les rotations faites ici n’y seront donc pas enregistrées."
           }
         }
       }
@@ -7187,6 +7158,38 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Web"
+          }
+        }
+      }
+    },
+    "Your API key is missing these permissions: %@. Add them to the key in Immich, then tap Try Again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "A tu clave de API le faltan estos permisos: %@. Añádelos a la clave en Immich y pulsa Reintentar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Il manque ces permissions à votre clé API : %@. Ajoutez-les à la clé dans Immich, puis touchez Réessayer."
+          }
+        }
+      }
+    },
+    "Your API key is missing these permissions: %@. Features that need them won't work until you add them to the key in Immich." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "A tu clave de API le faltan estos permisos: %@. Las funciones que los necesitan no funcionarán hasta que los añadas a la clave en Immich."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Il manque ces permissions à votre clé API : %@. Les fonctions qui en ont besoin ne marcheront pas tant que vous ne les aurez pas ajoutées à la clé dans Immich."
           }
         }
       }

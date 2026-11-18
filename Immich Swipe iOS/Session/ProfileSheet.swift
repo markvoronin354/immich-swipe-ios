@@ -162,21 +162,23 @@ struct ProfileSheet: View {
                 user = nil
                 user = try? await session.client?.getMyUser()
             }
-            .confirmationDialog("Sign out?", isPresented: $isConfirmingSignOut, titleVisibility: .visible) {
+            .alert("Sign out?", isPresented: $isConfirmingSignOut) {
                 Button("Sign Out", role: .destructive) {
                     dismiss()
                     session.signOut()
                 }
+                Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to sign out of this account? You can sign back in with the same key.")
             }
-            .confirmationDialog(
+            // An alert, not a confirmation dialog: on iPhone that one hangs off the trash button with a pointer.
+            .alert(
                 "Remove account?",
                 isPresented: Binding(get: { accountToRemove != nil }, set: { if !$0 { accountToRemove = nil } }),
-                titleVisibility: .visible,
                 presenting: accountToRemove
             ) { account in
                 Button("Remove \(account.displayName)", role: .destructive) { try? session.forget(account) }
+                Button("Cancel", role: .cancel) {}
             } message: { account in
                 Text("Are you sure you want to remove the account for \"\(account.displayName)\"? Its key is deleted from this device. Your server isn't changed.")
             }

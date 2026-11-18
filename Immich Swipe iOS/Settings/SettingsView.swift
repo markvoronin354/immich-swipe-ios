@@ -184,14 +184,14 @@ struct SettingsView: View {
             Text("Database")
         }
         .buttonStyle(.plain)
-        .confirmationDialog(
+        .alert(
             databaseAction == .delete ? "Delete data?" : "Export data",
-            isPresented: Binding(get: { databaseAction != nil }, set: { if !$0 { databaseAction = nil } }),
-            titleVisibility: .visible
+            isPresented: Binding(get: { databaseAction != nil }, set: { if !$0 { databaseAction = nil } })
         ) {
             let action = databaseAction
             Button("Only My Account (\(model.account.displayName))", role: action == .delete ? .destructive : nil) { run(action, scope: .account) }
             Button("All Accounts", role: action == .delete ? .destructive : nil) { run(action, scope: .allAccounts) }
+            Button("Cancel", role: .cancel) {}
         } message: {
             if databaseAction == .delete {
                 Text("This permanently erases your local swipe decisions and sync statistics. It can't be undone.")
@@ -223,8 +223,9 @@ struct SettingsView: View {
                 SettingsRow(title: "Clear app cache", subtitle: "Delete temporary files, thumbnails and cached images", systemImage: "xmark.bin", isDestructive: true)
             }
             .buttonStyle(.plain)
-            .confirmationDialog("Clear app cache?", isPresented: $isConfirmingClearCache, titleVisibility: .visible) {
+            .alert("Clear app cache?", isPresented: $isConfirmingClearCache) {
                 Button("Clear Cache", role: .destructive) { Task { await model.clearCache() } }
+                Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This deletes all temporary files and cached images. They'll be downloaded from the server again as needed.")
             }
@@ -277,8 +278,9 @@ struct SettingsView: View {
             Button("Sign Out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
                 isConfirmingSignOut = true
             }
-            .confirmationDialog("Sign out?", isPresented: $isConfirmingSignOut, titleVisibility: .visible) {
+            .alert("Sign out?", isPresented: $isConfirmingSignOut) {
                 Button("Sign Out", role: .destructive) { session.signOut() }
+                Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to sign out of this account? You can switch back to it later without entering the key again.")
             }
@@ -310,21 +312,22 @@ struct SettingsView: View {
                 isConfirmingRemoveAll = true
             }
         }
-        .confirmationDialog(
+        .alert(
             "Remove account?",
             isPresented: Binding(get: { accountToRemove != nil }, set: { if !$0 { accountToRemove = nil } }),
-            titleVisibility: .visible,
             presenting: accountToRemove
         ) { account in
             Button("Remove \(account.displayName)", role: .destructive) { try? session.forget(account) }
+            Button("Cancel", role: .cancel) {}
         } message: { account in
             Text("This removes \(account.displayName) and its API key from this device. Your server isn't changed.")
         }
-        .confirmationDialog("Remove all accounts?", isPresented: $isConfirmingRemoveAll, titleVisibility: .visible) {
+        .alert("Remove all accounts?", isPresented: $isConfirmingRemoveAll) {
             Button("Remove All Accounts", role: .destructive) {
                 for account in session.accounts { try? session.forget(account) }
                 session.signOut()
             }
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text("This removes every saved account and API key from this device and signs you out. Your server isn't changed.")
         }
