@@ -16,7 +16,8 @@ final class DeckModel {
     private(set) var phase = Phase.loading
     /// True while later pages are still arriving. The deck is usable before this finishes.
     private(set) var isLoadingMore = false
-    /// Total from the server's statistics, which is accurate even before every page has loaded.
+    /// Total from the server's statistics, which is accurate even before every page has loaded. Photos
+    /// owned by other users are left out of it, as they are left out of the deck.
     private(set) var serverTotal: Int?
     /// Assets fetched so far in this sync, held back or not, for the loader's "x / y".
     private(set) var syncedCount = 0
@@ -43,6 +44,11 @@ final class DeckModel {
     private var loadedIndex: [String: Int] = [:]
     /// Bumped whenever the pile changes, so a sort that started before the change is redone.
     private var pileVersion = 0
+    /// Photos in this album that belong to other users (shared albums, partner libraries). Immich won't let
+    /// this user change them, so they are left out of the deck instead of failing when changes are applied.
+    private var foreignIDs: Set<String> = []
+    /// The server's own total, which counts those photos too.
+    private var reportedTotal = 0
     /// Deleted or locked by "Apply changes". Pages already in flight predate that, so they're filtered out.
     private var removedIDs: Set<String> = []
     /// As on Android: while only the saved listing is showing, or after the sort order changes, the deck
@@ -92,12 +98,14 @@ final class DeckModel {
         phase = .loading
         pendingJump = true
         syncedCount = 0
+        foreignIDs = []
         stored = (try? decisions.allDecisions(userID: userID)) ?? [:]
         syncedIDs = Set(stored.filter { $0.value.isSynced }.keys)
 
         do {
             if let first = source.firstSearch(order: sortOrder, includeArchived: includeArchived) {
                 try await loadListing(startingWith: first)
+                dropPendingDecisionsOnForeignPhotos()
             } else {
                 let groups = try await client.getAssetDuplicates()
                 let assets = DeckSource.flatten(groups)
@@ -132,13 +140,15 @@ final class DeckModel {
         async let statistics = try? client.searchAssetStatistics(first.statistics)
         let firstPage = try await client.searchAssets(first)
         try Task.checkCancellation()
-        let total = max(await statistics ?? 0, firstPage.total)
+        reportedTotal = max(await statistics ?? 0, firstPage.total)
+        let firstItems = owned(firstPage.items)
+        let total = max(reportedTotal - foreignIDs.count, 0)
         serverTotal = total
 
         // 3. With several pages, a saved listing that matches the server's total and first page is
         //    up to date, so the other pages aren't fetched again.
-        if first.next(after: firstPage) != nil, Self.isComplete(cached, total: total, firstPage: firstPage.items, order: first.order) {
-            await receive(firstPage.items, fromServer: true)
+        if first.next(after: firstPage) != nil, Self.isComplete(cached, total: total, firstPage: firstItems, order: first.order) {
+            await receive(firstItems, fromServer: true)
             return
         }
 
@@ -186,7 +196,8 @@ final class DeckModel {
 
         do {
             while true {
-                fetched.formUnion(page.items.map(\.id))
+                let items = owned(page.items)
+                fetched.formUnion(items.map(\.id))
                 var next = request.next(after: page)
                 if next != nil, request.order != sortOrder.searchDirection, let restart = source.firstSearch(order: sortOrder, includeArchived: includeArchived) {
                     // The sort direction changed mid-load. Like Android, start over so the photos that now
@@ -196,15 +207,15 @@ final class DeckModel {
                 }
                 isLoadingMore = next != nil
                 guard let next else {
-                    await receiveHeld(and: page.items)
+                    await receiveHeld(and: items)
                     return fetched
                 }
                 // The next page downloads while this one is sorted in.
                 async let following = client.searchAssets(next)
                 if Self.showsPagesAsTheyLand(sortOrder) {
-                    await receiveHeld(and: page.items)
+                    await receiveHeld(and: items)
                 } else {
-                    for asset in page.items where heldIDs.insert(asset.id).inserted {
+                    for asset in items where heldIDs.insert(asset.id).inserted {
                         held.append(asset)
                         if loadedIndex[asset.id] == nil { heldNewCount += 1 }
                     }
@@ -225,6 +236,31 @@ final class DeckModel {
             AppLog.e("AssetRepo", "Error page sync: \(error.localizedDescription)")
             await receiveHeld(and: [])
             throw error
+        }
+    }
+
+    /// The photos this user owns. The others are remembered, and take themselves off the deck's total.
+    private func owned(_ assets: [Asset]) -> [Asset] {
+        let user = userID
+        let mine = assets.filter { $0.ownerId == user }
+        if mine.count != assets.count {
+            foreignIDs.formUnion(assets.filter { $0.ownerId != user }.map(\.id))
+            serverTotal = max(reportedTotal - foreignIDs.count, 0)
+        }
+        return mine
+    }
+
+    /// A decision made on another user's photo before it was skipped could never be applied, so it would
+    /// stay pending for good.
+    private func dropPendingDecisionsOnForeignPhotos() {
+        guard !foreignIDs.isEmpty else { return }
+        AppLog.i("AssetRepo", "Skipped \(foreignIDs.count) assets owned by other users in \(source.albumID)")
+        let stuck = foreignIDs.filter { stored[$0]?.isSynced == false }
+        guard !stuck.isEmpty else { return }
+        do {
+            try decisions.remove(assetIDs: stuck, userID: userID)
+        } catch {
+            AppLog.w("SwipeViewModel", "Could not drop pending decisions on skipped photos: \(error.localizedDescription)")
         }
     }
 
@@ -485,7 +521,8 @@ final class DeckModel {
     func loadAlbums() async throws -> [Album] {
         let recentRank = Dictionary(recentAlbumIDs.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
         return try await client.getAllAlbums()
-            .filter { !$0.isVirtual }
+            // Albums shared with you as a viewer would reject the add.
+            .filter { !$0.isVirtual && $0.canAddAssets(userID: userID) }
             .sorted {
                 let lhs = recentRank[$0.id] ?? .max, rhs = recentRank[$1.id] ?? .max
                 if lhs != rhs { return lhs < rhs }

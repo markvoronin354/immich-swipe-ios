@@ -67,8 +67,8 @@ final class RoutingServer: URLProtocol, @unchecked Sendable {
     }
 }
 
-private func assetJSON(_ id: String, date: String, size: Int = 100, type: String = "IMAGE") -> String {
-    #"{"id":"\#(id)","ownerId":"u","fileCreatedAt":"\#(date)","type":"\#(type)","isFavorite":false,"isArchived":false,"isTrashed":false,"exifInfo":{"fileSizeInByte":\#(size)}}"#
+private func assetJSON(_ id: String, date: String, size: Int = 100, type: String = "IMAGE", owner: String = "u") -> String {
+    #"{"id":"\#(id)","ownerId":"\#(owner)","fileCreatedAt":"\#(date)","type":"\#(type)","isFavorite":false,"isArchived":false,"isTrashed":false,"exifInfo":{"fileSizeInByte":\#(size)}}"#
 }
 
 @MainActor
@@ -151,6 +151,44 @@ struct DeckModelTests {
 
         await makeModel(.album(id: "alb1")).load()
         #expect(RoutingServer.searchBodies.last?["visibility"] as? String == "timeline")
+    }
+
+    @Test func photosOwnedByOtherUsersAreSkippedAndTheirPendingDecisionsDropped() async throws {
+        try store.save(.delete, assetID: "theirs", albumID: "shared", userID: "u", fileSize: 100)
+        try store.save(.delete, assetID: "mine", albumID: "shared", userID: "u", fileSize: 100)
+        RoutingServer.route { path, _ in
+            switch path {
+            case "/api/search/statistics":
+                return (200, #"{"total":3}"#)
+            case "/api/search/metadata":
+                return (200, #"{"assets":{"items":[\#(assetJSON("mine", date: "2024-02")),\#(assetJSON("theirs", date: "2024-01", owner: "other")),\#(assetJSON("mine2", date: "2024-03"))],"total":3,"nextPage":null,"nextCursor":null}}"#)
+            default:
+                return (404, "{}")
+            }
+        }
+        let model = makeModel(.album(id: "shared"))
+        await model.load()
+
+        #expect(model.deck.assets.map(\.id) == ["mine2", "mine"])
+        #expect(model.serverTotal == 2)
+        // The decision on the other user's photo could never be applied, so it is gone. The rest stay.
+        let remaining = try store.allDecisions(userID: "u")
+        #expect(remaining["theirs"] == nil)
+        #expect(remaining["mine"] != nil)
+    }
+
+    @Test func albumPickerHidesAlbumsSharedAsViewer() async throws {
+        RoutingServer.route { path, _ in
+            guard path == "/api/albums" else { return (404, "{}") }
+            return (200, #"""
+            [{"id":"own","albumName":"Own","assetCount":1,"ownerId":"u","albumUsers":[]},
+             {"id":"edit","albumName":"Edit","assetCount":1,"ownerId":"o","albumUsers":[{"role":"editor","user":{"id":"u"}}]},
+             {"id":"view","albumName":"View","assetCount":1,"ownerId":"o","albumUsers":[{"role":"viewer","user":{"id":"u"}}]},
+             {"id":"old","albumName":"Old","assetCount":1}]
+            """#)
+        }
+        let albums = try await makeModel(.all).loadAlbums()
+        #expect(Set(albums.map(\.id)) == ["own", "edit", "old"])
     }
 
     @Test func picksUpStoredDecisionsMadeElsewhereAndRestoresUndo() async throws {

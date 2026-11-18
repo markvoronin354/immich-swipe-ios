@@ -138,6 +138,9 @@ nonisolated struct Album: Codable, Hashable, Identifiable, Sendable {
     var description: String?
     var assetCount: Int
     var albumThumbnailAssetId: String?
+    /// Both stay optional: a server that leaves them out (an older Immich) gives no answer about who can edit.
+    var ownerId: String?
+    var albumUsers: [AlbumUser]?
 
     static let virtualAllID = "virtual_all_assets"
     static let virtualOrphansID = "virtual_orphans"
@@ -147,6 +150,22 @@ nonisolated struct Album: Codable, Hashable, Identifiable, Sendable {
     var isVirtual: Bool {
         [Self.virtualAllID, Self.virtualOrphansID, Self.virtualDuplicatesID].contains(id)
             || albumName.caseInsensitiveCompare("SKIP") == .orderedSame
+    }
+
+    /// Whether `userID` can add photos here: the owner, or a member with the editor role. When the server
+    /// doesn't report members that counts as yes, so nothing is hidden.
+    func canAddAssets(userID: String) -> Bool {
+        guard let ownerId, ownerId != userID, let albumUsers else { return true }
+        return albumUsers.contains { $0.user?.id == userID && $0.role?.caseInsensitiveCompare("editor") == .orderedSame }
+    }
+}
+
+nonisolated struct AlbumUser: Codable, Hashable, Sendable {
+    var user: Member?
+    var role: String?
+
+    struct Member: Codable, Hashable, Sendable {
+        var id: String?
     }
 }
 
