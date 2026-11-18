@@ -294,6 +294,7 @@ struct ActionButtonsSettingsView: View {
     @AppStorage(Setting.Key.rotatePosition) private var rotatePosition = Setting.Default.rotatePosition
     @AppStorage(Setting.Key.immichPosition) private var immichPosition = Setting.Default.immichPosition
     @AppStorage(Setting.Key.stackOrientation) private var orientation = Setting.Default.stackOrientation
+    @AppStorage(Setting.Key.stackStyle) private var style = Setting.Default.stackStyle
     @AppStorage(Setting.Key.immichOpenMode) private var openMode = Setting.Default.immichOpenMode
     @AppStorage(Setting.Key.showMuteButton) private var showMute = Setting.Default.showMuteButton
     @AppStorage(Setting.Key.showDownloadButton) private var showDownload = Setting.Default.showDownloadButton
@@ -318,7 +319,8 @@ struct ActionButtonsSettingsView: View {
                 .fullscreen: fullscreenPosition, .info: infoPosition, .rotate: rotatePosition, .immich: immichPosition,
                 .mute: mutePosition, .download: downloadPosition, .share: sharePosition, .fullResolution: fullResolutionPosition,
             ],
-            orientation: orientation
+            orientation: orientation,
+            style: style
         )
     }
 
@@ -331,15 +333,20 @@ struct ActionButtonsSettingsView: View {
             }
 
             Section {
-                Picker("Stacking direction", selection: $orientation) {
+                Picker("Direction", selection: $orientation) {
                     Text("Vertically").tag(ButtonStackOrientation.vertical)
                     Text("Horizontally").tag(ButtonStackOrientation.horizontal)
+                }
+                .pickerStyle(.segmented)
+                Picker("Style", selection: $style) {
+                    Text("Connected").tag(ButtonStackStyle.connected)
+                    Text("Separate").tag(ButtonStackStyle.separate)
                 }
                 .pickerStyle(.segmented)
             } header: {
                 Text("Button Stacking")
             } footer: {
-                Text("How buttons stack when they share a corner.")
+                Text("How buttons behave when they share a corner.")
             }
 
             ButtonSection(title: "Full Screen", systemImage: "arrow.up.left.and.arrow.down.right", show: $showFullscreen, position: $fullscreenPosition)
@@ -413,6 +420,7 @@ struct ActionButtonsSettingsView: View {
         sharePosition = Setting.Default.sharePosition
         fullResolutionPosition = Setting.Default.fullResolutionPosition
         orientation = Setting.Default.stackOrientation
+        style = Setting.Default.stackStyle
         openMode = Setting.Default.immichOpenMode
         keepFullResolution = Setting.Default.keepFullResolution
     }

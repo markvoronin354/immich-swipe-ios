@@ -92,6 +92,7 @@ struct CardButtonLayoutTests {
             layout.position[button] = corner
         }
         layout.orientation = .horizontal
+        layout.style = .separate
         return layout
     }
 
@@ -113,6 +114,24 @@ struct CardButtonLayoutTests {
 
     @Test func buttonsNeverShrinkBelowTheTightestSize() {
         #expect(row(of: 7).metrics(fitting: CGSize(width: 200, height: 500)) == CardButtonLayout.tightestMetrics)
+    }
+
+    @Test func connectedButtonsLeaveNoGapsInsideACorner() {
+        var layout = row(of: 7)
+        layout.style = .connected
+        // Seven 48 pt buttons touching take 336 pt, which fits where separate ones had to shrink.
+        #expect(layout.metrics(fitting: CGSize(width: 345, height: 500)) == CardButtonLayout.fullMetrics)
+    }
+
+    @Test func aConnectedRowTooLongForTheCardStillShrinks() {
+        var layout = row(of: 7)
+        layout.style = .connected
+        let metrics = layout.metrics(fitting: CGSize(width: 300, height: 500))
+        #expect(metrics.spacing == 8 && abs(metrics.size - 300.0 / 7) < 0.01)
+    }
+
+    @Test func connectedIsTheDefaultStyle() {
+        #expect(CardButtonLayout.default.style == .connected)
     }
 
     @Test func twoCornersOnOneEdgeShareItsRoom() {

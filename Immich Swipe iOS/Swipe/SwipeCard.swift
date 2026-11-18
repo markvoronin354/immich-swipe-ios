@@ -139,6 +139,7 @@ struct CardControls: View {
     @State private var topLeftSize: CGSize = .zero
     @State private var topRightSize: CGSize = .zero
     @State private var sizeWidth: CGFloat = 0
+    @State private var sizeHeight: CGFloat = 0
     @State private var bottomLeftSize: CGSize = .zero
     @State private var bottomRightSize: CGSize = .zero
     @State private var infoWidth: CGFloat = 0
@@ -297,6 +298,40 @@ private struct CardPillBackground: ViewModifier {
     }
 }
 
+/// The pill behind a corner's connected buttons, in the same material as the single buttons.
+private struct MergedPill: ViewModifier {
+    let isMerged: Bool
+    let buttonCount: Int
+    let isHorizontal: Bool
+
+    @Environment(\.cardButtonSize) private var buttonSize
+
+    func body(content: Content) -> some View {
+        if isMerged {
+            content
+                .background(.black.opacity(0.35), in: .capsule)
+                .background(.ultraThinMaterial, in: .capsule)
+                .overlay { Capsule().strokeBorder(.white.opacity(0.2), lineWidth: 0.5) }
+                // A hairline at each seam, inset from the pill's edges as on Android. It takes no layout room.
+                .overlay {
+                    Canvas { context, size in
+                        let inset = buttonSize / 4
+                        var seams = Path()
+                        for index in 1..<buttonCount {
+                            let at = buttonSize * CGFloat(index)
+                            seams.move(to: isHorizontal ? CGPoint(x: at, y: inset) : CGPoint(x: inset, y: at))
+                            seams.addLine(to: isHorizontal ? CGPoint(x: at, y: size.height - inset) : CGPoint(x: size.width - inset, y: at))
+                        }
+                        context.stroke(seams, with: .color(.white.opacity(0.2)), lineWidth: 1)
+                    }
+                    .allowsHitTesting(false)
+                }
+        } else {
+            content
+        }
+    }
+}
+
 /// The buttons assigned to one corner, stacked the way the user chose.
 private struct CornerButtons: View {
     let corner: IconPosition
@@ -307,14 +342,19 @@ private struct CornerButtons: View {
     var body: some View {
         let buttons = actions.layout.buttons(in: corner, isVideo: asset.type == .video)
         if !buttons.isEmpty {
+            // Connected buttons sharing a corner touch and sit in one pill; a lone button looks the same either way.
+            let merged = buttons.count > 1 && actions.layout.style == .connected
+            let gap = actions.layout.style == .separate ? spacing : 0
             let stack = actions.layout.orientation == .vertical
-                ? AnyLayout(VStackLayout(alignment: corner.isLeading ? .leading : .trailing, spacing: spacing))
-                : AnyLayout(HStackLayout(alignment: corner.isTop ? .top : .bottom, spacing: spacing))
+                ? AnyLayout(VStackLayout(alignment: corner.isLeading ? .leading : .trailing, spacing: gap))
+                : AnyLayout(HStackLayout(alignment: corner.isTop ? .top : .bottom, spacing: gap))
             stack {
                 ForEach(buttons, id: \.self) { button in
                     view(for: button)
                 }
             }
+            .environment(\.cardButtonMerged, merged)
+            .modifier(MergedPill(isMerged: merged, buttonCount: buttons.count, isHorizontal: actions.layout.orientation == .horizontal))
         }
     }
 
@@ -395,6 +435,8 @@ struct CardGlyph: View {
 extension EnvironmentValues {
     /// The side of the card's round buttons, smaller when a corner's stack wouldn't otherwise fit.
     @Entry var cardButtonSize = CardButtonLayout.fullMetrics.size
+    /// True for a button inside a connected pill: the pill draws the background, so the button doesn't.
+    @Entry var cardButtonMerged = false
 }
 
 /// The look shared by every round button on the card.
@@ -405,6 +447,7 @@ private struct CardIconLabel: View {
     var isBusy = false
 
     @Environment(\.cardButtonSize) private var size
+    @Environment(\.cardButtonMerged) private var merged
 
     var body: some View {
         // The icon shrinks with the circle.
@@ -425,9 +468,9 @@ private struct CardIconLabel: View {
         .frame(width: size, height: size)
         // A blurred material, not Liquid Glass: glass reacts to the card's movement and swelled up while the
         // card was dragged or flew off. A material stays the same size whatever the card does.
-        .background(isActive ? Color.accentColor.opacity(0.6) : .black.opacity(0.35), in: .circle)
-        .background(.ultraThinMaterial, in: .circle)
-        .overlay { Circle().strokeBorder(.white.opacity(0.2), lineWidth: 0.5) }
+        .background(isActive ? Color.accentColor.opacity(0.6) : (merged ? .clear : .black.opacity(0.35)), in: .circle)
+        .background(merged ? AnyShapeStyle(.clear) : AnyShapeStyle(.ultraThinMaterial), in: .circle)
+        .overlay { if !merged { Circle().strokeBorder(.white.opacity(0.2), lineWidth: 0.5) } }
         .accessibilityLabel(Text(title))
     }
 }

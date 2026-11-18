@@ -124,6 +124,11 @@ nonisolated enum ButtonStackOrientation: String, CaseIterable, Sendable {
     case vertical = "VERTICAL", horizontal = "HORIZONTAL"
 }
 
+/// Whether buttons sharing a corner merge into one pill or stay separate circles.
+nonisolated enum ButtonStackStyle: String, CaseIterable, Sendable {
+    case connected = "CONNECTED", separate = "SEPARATE"
+}
+
 nonisolated enum ReminderInterval: String, CaseIterable, Sendable {
     case often = "OFTEN", rarely = "RARELY", custom = "CUSTOM"
 
@@ -155,6 +160,7 @@ nonisolated enum Setting {
         static let rotatePosition = "card_display_icon_pos"
         static let immichPosition = "immich_icon_pos"
         static let stackOrientation = "button_stack_orientation"
+        static let stackStyle = "button_stack_style"
         static let immichOpenMode = "immich_open_mode"
         static let showMuteButton = "show_mute_icon"
         static let showDownloadButton = "show_download_icon"
@@ -205,6 +211,7 @@ nonisolated enum Setting {
         static let rotatePosition = IconPosition.topLeft
         static let immichPosition = IconPosition.bottomLeft
         static let stackOrientation = ButtonStackOrientation.vertical
+        static let stackStyle = ButtonStackStyle.connected
         static let immichOpenMode = ImmichOpenMode.app
         static let showMuteButton = true
         static let showDownloadButton = true
@@ -314,6 +321,7 @@ nonisolated struct CardButtonLayout: Equatable, Sendable {
     var show: [CardButton: Bool]
     var position: [CardButton: IconPosition]
     var orientation: ButtonStackOrientation
+    var style: ButtonStackStyle = Setting.Default.stackStyle
 
     static let `default` = CardButtonLayout(
         show: [
@@ -369,7 +377,7 @@ nonisolated struct CardButtonLayout: Equatable, Sendable {
     /// Shrinks the buttons so every edge's stacks fit in `available`, the card's size inside its padding. Not
     /// on Android, where too many buttons in a row run off the card. First the gap closes from 12 pt to 8 pt,
     /// then every button shrinks alike, never below 36 pt. Two corners along one edge keep one gap between
-    /// them, as between buttons.
+    /// them, as between buttons. Connected buttons touch, so only the gap between two corners is left.
     func metrics(fitting available: CGSize, isVideo: Bool = false) -> Metrics {
         let full = Self.fullMetrics, tightest = Self.tightestMetrics
         guard available.width > 0, available.height > 0 else { return full }
@@ -382,14 +390,16 @@ nonisolated struct CardButtonLayout: Equatable, Sendable {
             let stacksAlong = isRow == (orientation == .horizontal)
             let counts = [first, second].map { buttons(in: $0, isVideo: isVideo).count }.filter { $0 > 0 }
             let buttons = counts.reduce(0) { $0 + (stacksAlong ? $1 : 1) }
-            let gaps = counts.reduce(0) { $0 + (stacksAlong ? $1 - 1 : 0) } + (counts.count == 2 ? 1 : 0)
+            let gaps = counts.reduce(0) { $0 + (stacksAlong && style == .separate ? $1 - 1 : 0) } + (counts.count == 2 ? 1 : 0)
             return (CGFloat(buttons), CGFloat(gaps), isRow ? available.width : available.height)
         }
 
         let spacing = demands.filter { $0.gaps > 0 }
             .map { ($0.room - $0.buttons * full.size) / $0.gaps }
             .reduce(full.spacing, min)
-        if spacing >= tightest.spacing { return Metrics(size: full.size, spacing: spacing) }
+        // Connected buttons have no gaps to close, so a stack can still be too long at full size.
+        let overflows = demands.contains { $0.gaps == 0 && $0.buttons * full.size > $0.room }
+        if !overflows, spacing >= tightest.spacing { return Metrics(size: full.size, spacing: spacing) }
 
         let size = demands.filter { $0.buttons > 0 }
             .map { ($0.room - $0.gaps * tightest.spacing) / $0.buttons }

@@ -12,6 +12,7 @@ struct DeckPreferences: DynamicProperty {
     @AppStorage(Setting.Key.rotatePosition) var rotatePosition = Setting.Default.rotatePosition
     @AppStorage(Setting.Key.immichPosition) var immichPosition = Setting.Default.immichPosition
     @AppStorage(Setting.Key.stackOrientation) var stackOrientation = Setting.Default.stackOrientation
+    @AppStorage(Setting.Key.stackStyle) var stackStyle = Setting.Default.stackStyle
     @AppStorage(Setting.Key.immichOpenMode) var immichOpenMode = Setting.Default.immichOpenMode
     @AppStorage(Setting.Key.showMuteButton) var showMuteButton = Setting.Default.showMuteButton
     @AppStorage(Setting.Key.showDownloadButton) var showDownloadButton = Setting.Default.showDownloadButton
@@ -57,7 +58,8 @@ struct DeckPreferences: DynamicProperty {
                 .fullscreen: fullscreenPosition, .info: infoPosition, .rotate: rotatePosition, .immich: immichPosition,
                 .mute: mutePosition, .download: downloadPosition, .share: sharePosition, .fullResolution: fullResolutionPosition,
             ],
-            orientation: stackOrientation
+            orientation: stackOrientation,
+            style: stackStyle
         )
     }
 }

@@ -1,6 +1,102 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Connected" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Conectados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reliés"
+          }
+        }
+      }
+    },
+    "Direction" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Direction"
+          }
+        }
+      }
+    },
+    "How buttons behave when they share a corner." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Cómo se comportan los botones cuando comparten esquina."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Comportement des boutons lorsqu’ils partagent un coin."
+          }
+        }
+      }
+    },
+    "Separate" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Separados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Séparés"
+          }
+        }
+      }
+    },
+    "Style" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Estilo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Style"
+          }
+        }
+      }
+    },
+    "The toolbar, swipe actions and tap gestures will go back to their defaults." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barra de herramientas, las acciones de deslizamiento y los gestos táctiles volverán a sus valores predeterminados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barre d’outils, les actions de swipe et les gestes tactiles reviendront à leurs valeurs par défaut."
+          }
+        }
+      }
+    },
     "· %@" : {
       "localizations" : {
         "es" : {
@@ -3315,22 +3411,6 @@
         }
       }
     },
-    "How buttons stack when they share a corner." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Cómo apilar los botones colocados en la misma esquina."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Comment empiler les boutons situés dans le même coin."
-          }
-        }
-      }
-    },
     "How to create an API Key?" : {
       "localizations" : {
         "es" : {
@@ -5853,22 +5933,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Collections spéciales"
-          }
-        }
-      }
-    },
-    "Stacking direction" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Dirección de alineación"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Sens d’empilement"
           }
         }
       }
