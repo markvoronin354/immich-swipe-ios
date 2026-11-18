@@ -177,6 +177,24 @@ struct DeckModelTests {
         #expect(remaining["mine"] != nil)
     }
 
+    @Test func anAlbumOfOnlyOtherUsersPhotosIsRecordedAsNothingToSort() async {
+        RoutingServer.route { path, _ in
+            switch path {
+            case "/api/search/statistics": return (200, #"{"total":1}"#)
+            case "/api/search/metadata":
+                return (200, #"{"assets":{"items":[\#(assetJSON("theirs", date: "2024-01", owner: "other"))],"total":1,"nextPage":null,"nextCursor":null}}"#)
+            default: return (404, "{}")
+            }
+        }
+        await makeModel(.album(id: "shared")).load()
+        #expect(NothingToSort.ids(userID: "u", defaults: defaults) == ["shared"])
+
+        // Once it has photos of the user's own again, it is back in the normal groups.
+        serveThreePages()
+        await makeModel(.album(id: "shared")).load()
+        #expect(NothingToSort.ids(userID: "u", defaults: defaults).isEmpty)
+    }
+
     @Test func albumPickerHidesAlbumsSharedAsViewer() async throws {
         RoutingServer.route { path, _ in
             guard path == "/api/albums" else { return (404, "{}") }

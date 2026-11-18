@@ -106,6 +106,7 @@ final class DeckModel {
             if let first = source.firstSearch(order: sortOrder, includeArchived: includeArchived) {
                 try await loadListing(startingWith: first)
                 dropPendingDecisionsOnForeignPhotos()
+                recordNothingToSort()
             } else {
                 let groups = try await client.getAssetDuplicates()
                 let assets = DeckSource.flatten(groups)
@@ -248,6 +249,17 @@ final class DeckModel {
             serverTotal = max(reportedTotal - foreignIDs.count, 0)
         }
         return mine
+    }
+
+    /// Home lists an album with none of this user's photos as having nothing to sort. Only a finished load
+    /// from the server can say so, so a failed or cancelled one leaves the last answer alone.
+    private func recordNothingToSort() {
+        guard case .album(let id) = source else { return }
+        if deck.assets.isEmpty, !foreignIDs.isEmpty {
+            NothingToSort.set(true, albumID: id, userID: userID, defaults: defaults)
+        } else if !deck.assets.isEmpty {
+            NothingToSort.set(false, albumID: id, userID: userID, defaults: defaults)
+        }
     }
 
     /// A decision made on another user's photo before it was skipped could never be applied, so it would

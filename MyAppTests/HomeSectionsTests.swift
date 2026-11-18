@@ -18,6 +18,23 @@ struct HomeSectionsTests {
         HomeSections.make(albums: albums, counts: counts, progress: progress, totalProgress: AlbumProgress(decided: 7, unsynced: 2), names: HomeModel.name(for:), query: query)
     }
 
+    @Test func albumsWithNothingToSortGoUnderCompleted() {
+        let sections = HomeSections.make(albums: albums, counts: .init(all: 1, orphans: 0, duplicates: 0), progress: [:], totalProgress: AlbumProgress(), nothingToSort: ["a"], names: HomeModel.name(for:))
+        #expect(sections.completed.map(\.id) == ["a"])
+        #expect(sections.completed.first?.nothingToSort == true)
+        #expect(!sections.notStarted.contains { $0.id == "a" })
+    }
+
+    @Test func nothingToSortIsRememberedPerAccount() {
+        let defaults = UserDefaults(suiteName: "nothing-to-sort-\(UUID().uuidString)")!
+        NothingToSort.set(true, albumID: "a", userID: "me", defaults: defaults)
+        NothingToSort.set(true, albumID: "b", userID: "other", defaults: defaults)
+        #expect(NothingToSort.ids(userID: "me", defaults: defaults) == ["a"])
+        NothingToSort.set(false, albumID: "a", userID: "me", defaults: defaults)
+        #expect(NothingToSort.ids(userID: "me", defaults: defaults).isEmpty)
+        #expect(NothingToSort.ids(userID: "other", defaults: defaults) == ["b"])
+    }
+
     @Test func groupsAlbumsByProgressKeepingServerOrder() {
         let sections = make(progress: ["a": AlbumProgress(decided: 3, unsynced: 1), "b": AlbumProgress(decided: 4, unsynced: 0)])
         #expect(sections.inProgress.map(\.id) == ["a"])

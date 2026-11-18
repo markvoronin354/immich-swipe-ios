@@ -8,6 +8,8 @@ final class HomeModel {
     private(set) var counts = HomeSections.CollectionCounts()
     private(set) var progress: [String: AlbumProgress] = [:]
     private(set) var totalProgress = AlbumProgress()
+    /// Albums that hold only other users' photos.
+    private(set) var nothingToSort: Set<String> = []
     private(set) var serverVersion: ServerVersion?
     private(set) var isLoading = false
     private(set) var hasLoaded = false
@@ -122,6 +124,7 @@ final class HomeModel {
     /// Re-reads local decision counts. Cheap, so it runs whenever the home screen reappears.
     func refreshProgress() {
         progress = (try? decisions.progressByAlbum(userID: userID)) ?? [:]
+        nothingToSort = NothingToSort.ids(userID: userID, defaults: defaults)
         if let totals = try? decisions.totals(userID: userID) {
             totalProgress = AlbumProgress(decided: totals.decided, unsynced: totals.unsynced)
         }
@@ -147,7 +150,7 @@ final class HomeModel {
     }
 
     func sections(query: String) -> HomeSections {
-        HomeSections.make(albums: albums, counts: counts, progress: progress, totalProgress: totalProgress, names: Self.name(for:), query: query)
+        HomeSections.make(albums: albums, counts: counts, progress: progress, totalProgress: totalProgress, nothingToSort: nothingToSort, names: Self.name(for:), query: query)
     }
 
     nonisolated static func name(for kind: HomeEntry.Kind) -> String {

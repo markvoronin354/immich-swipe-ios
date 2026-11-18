@@ -176,7 +176,9 @@ private struct ProgressLine: View {
     let entry: HomeEntry
 
     var body: some View {
-        if let total = entry.assetCount {
+        if entry.nothingToSort {
+            Text("Nothing to sort")
+        } else if let total = entry.assetCount {
             if entry.isCompleted {
                 Label("Completed", systemImage: "checkmark.circle.fill")
                     .labelStyle(.titleAndIcon)
