@@ -21,8 +21,11 @@ final class DeckVideoPlayer {
     @ObservationIgnored private var pollTask: Task<Void, Never>?
     /// Seeks started but not yet finished; while any are, the polled time is stale.
     @ObservationIgnored private var pendingSeeks = 0
-    // TEMPORARY: buffering diagnostics, see VideoDiagnostics.swift.
+    #if DEBUG
+    // TEMPORARY: buffering diagnostics, see VideoDiagnostics.swift. Debug builds only, so a release build
+    // doesn't send its extra request for every video or log four times a second.
     @ObservationIgnored private let diagnostics = VideoDiagnostics()
+    #endif
 
     /// The asset for a video, signed with the account's API key.
     ///
@@ -45,9 +48,12 @@ final class DeckVideoPlayer {
         stop()
         let urlAsset = Self.makeAsset(for: asset, using: client)
         let item = AVPlayerItem(asset: urlAsset)
+        #if DEBUG
         let looperStart = Date()
+        #endif
         let looper = AVPlayerLooper(player: player, templateItem: item)
         self.looper = looper
+        #if DEBUG
         diagnostics.start(
             asset: asset,
             urlAsset: urlAsset,
@@ -55,6 +61,7 @@ final class DeckVideoPlayer {
             looperInitSeconds: Date().timeIntervalSince(looperStart),
             headers: client.authorizationHeaders
         )
+        #endif
         player.isMuted = isMuted
         assetID = asset.id
         Self.activateAudioSession()
@@ -65,7 +72,9 @@ final class DeckVideoPlayer {
     }
 
     func stop() {
+        #if DEBUG
         diagnostics.stop()
+        #endif
         pollTask?.cancel()
         pollTask = nil
         player.pause()
@@ -124,7 +133,9 @@ final class DeckVideoPlayer {
     }
 
     private func poll() {
+        #if DEBUG
         diagnostics.poll(player)
+        #endif
         let item = player.currentItem
         let time = player.currentTime().seconds
         let length = item?.duration.seconds ?? 0

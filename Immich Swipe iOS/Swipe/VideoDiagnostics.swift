@@ -2,7 +2,9 @@ import AVFoundation
 import os
 
 // TEMPORARY: diagnostics for slow video buffering. Delete this file and the `diagnostics` lines in
-// DeckVideoPlayer once the cause is known. Every line starts with "[VideoDiag]".
+// DeckVideoPlayer once the cause is known. Every line starts with "[VideoDiag]". Built into Debug builds only.
+
+#if DEBUG
 
 /// Logs what the deck's video player is doing: what the server sends, how many copies of the video the
 /// looper downloads, how long playback takes to start, how much is buffered, and every stall.
@@ -221,3 +223,4 @@ final class VideoDiagnostics {
         }
     }
 }
+#endif
