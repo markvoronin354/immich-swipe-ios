@@ -176,48 +176,97 @@ struct InteractionsSettingsView: View {
     }
 
     /// As on Android, the buttons are rearranged by dragging them sideways in a toolbar preview, in the
-    /// order they sit between Undo and Sort.
+    /// order they sit between Undo and Sort. iOS 26 can only drag to reorder inside a list, so there the
+    /// preview just shows the order and a list on its own page rearranges it.
     private var toolbarPreview: some View {
         VStack(spacing: 8) {
-            HStack(spacing: 0) {
-                ForEach(shownButtons, id: \.self) { button in
-                    VStack(spacing: 4) {
-                        Image(systemName: button.systemImage)
-                            .font(.title3)
-                            .frame(height: 28)
-                        Text(button.title)
-                            .font(.caption.weight(.medium))
-                            .lineLimit(1)
+            if #available(iOS 27, *) {
+                previewBar {
+                    ForEach(shownButtons, id: \.self, content: previewButton)
+                        .reorderable()
+                }
+                .reorderContainer(for: SortingBarButton.self, itemID: \.self) { difference in
+                    let source = IndexSet(difference.sources.compactMap { shownButtons.firstIndex(of: $0) })
+                    let destination = switch difference.destination.position {
+                    case .before(let button): shownButtons.firstIndex(of: button) ?? shownButtons.count
+                    case .end: shownButtons.count
                     }
-                    .foregroundStyle(.tint)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .contentShape(.dragPreview, .rect(cornerRadius: 12))
-                    .contentShape(.rect)
-                    .frame(maxWidth: .infinity)
+                    moveButtons(from: source, to: destination)
                 }
-                .reorderable()
-            }
-            .padding(.vertical, 10)
-            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 26))
-            .reorderContainer(for: SortingBarButton.self, itemID: \.self) { difference in
-                let source = IndexSet(difference.sources.compactMap { shownButtons.firstIndex(of: $0) })
-                let destination = switch difference.destination.position {
-                case .before(let button): shownButtons.firstIndex(of: button) ?? shownButtons.count
-                case .end: shownButtons.count
-                }
-                withAnimation {
-                    savedOrder = SortingBarButton.saved(SortingBarButton.moving(order, shown: shownButtons, from: source, to: destination))
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Toolbar preview")
 
-            Text("Long-press and drag to rearrange buttons")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+                Text("Long-press and drag to rearrange buttons")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                previewBar {
+                    ForEach(shownButtons, id: \.self, content: previewButton)
+                }
+
+                NavigationLink {
+                    ToolbarOrderList(buttons: shownButtons, move: moveButtons)
+                } label: {
+                    Label("Rearrange buttons", systemImage: "arrow.left.arrow.right")
+                        .font(.footnote)
+                }
+            }
         }
         .padding(.vertical, 8)
+    }
+
+    private func previewBar(@ViewBuilder buttons: () -> some View) -> some View {
+        HStack(spacing: 0) { buttons() }
+            .padding(.vertical, 10)
+            .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 26))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Toolbar preview")
+    }
+
+    private func previewButton(_ button: SortingBarButton) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: button.systemImage)
+                .font(.title3)
+                .frame(height: 28)
+            Text(button.title)
+                .font(.caption.weight(.medium))
+                .lineLimit(1)
+        }
+        .foregroundStyle(.tint)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .contentShape(.dragPreview, .rect(cornerRadius: 12))
+        .contentShape(.rect)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// Moves shown buttons as `Array.move(fromOffsets:toOffset:)` would, keeping hidden ones where they were.
+    private func moveButtons(from source: IndexSet, to destination: Int) {
+        withAnimation {
+            savedOrder = SortingBarButton.saved(SortingBarButton.moving(order, shown: shownButtons, from: source, to: destination))
+        }
+    }
+}
+
+/// The toolbar's buttons in a list with the system's drag handles, for rearranging them on iOS 26, which
+/// can't drag them in the toolbar preview as iOS 27 and Android do.
+private struct ToolbarOrderList: View {
+    let buttons: [SortingBarButton]
+    let move: (IndexSet, Int) -> Void
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(buttons, id: \.self) { button in
+                    Label { Text(button.title) } icon: { Image(systemName: button.systemImage) }
+                }
+                .onMove(perform: move)
+            } footer: {
+                Text("The order the buttons sit in between Undo and Sort.")
+            }
+        }
+        // Always in edit mode, so the handles show without an Edit button first.
+        .environment(\.editMode, .constant(.active))
+        .navigationTitle("Rearrange Buttons")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

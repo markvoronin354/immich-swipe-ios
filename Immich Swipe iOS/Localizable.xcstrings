@@ -5191,6 +5191,38 @@
         }
       }
     },
+    "Rearrange buttons" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reordenar botones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Réorganiser les boutons"
+          }
+        }
+      }
+    },
+    "Rearrange Buttons" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Reordenar botones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Réorganiser les boutons"
+          }
+        }
+      }
+    },
     "Reminder" : {
       "localizations" : {
         "es" : {
@@ -6480,6 +6512,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Cette adresse a répondu, mais il ne semble pas s’agir d’un serveur Immich."
+          }
+        }
+      }
+    },
+    "The order the buttons sit in between Undo and Sort." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "El orden de los botones entre Deshacer y Ordenar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "L’ordre des boutons entre Annuler et Trier."
           }
         }
       }
