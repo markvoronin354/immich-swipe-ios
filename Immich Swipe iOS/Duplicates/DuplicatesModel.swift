@@ -41,11 +41,13 @@ final class DuplicatesModel {
     let client: ImmichClient
     private let userID: String
     private let store: DecisionStore
+    private let listingCache: AssetListCache
 
-    init(client: ImmichClient, userID: String, decisions: DecisionStore) {
+    init(client: ImmichClient, userID: String, decisions: DecisionStore, listingCache: AssetListCache = .shared) {
         self.client = client
         self.userID = userID
         self.store = decisions
+        self.listingCache = listingCache
     }
 
     // MARK: Counts
@@ -215,6 +217,10 @@ final class DuplicatesModel {
                 let ids = toDelete.map(\.id)
                 try await client.deleteAssets(ids: ids, force: false)
                 try? store.remove(assetIDs: ids, userID: userID)
+                // Trashed photos would otherwise still be in the decks' saved listings, and show up, swipeable,
+                // until each deck's next full sync drops them. Android cleans these up after a swipe deck's
+                // deletes (`AssetRepository.deleteAssets`), though not after its duplicates screen's.
+                await listingCache.remove(assetIDs: Set(ids), userID: userID)
                 // Decisions stay after an apply, so only kept photos still waiting are counted, as on Android.
                 let stored = (try? await store.allDecisionsInBackground(userID: userID)) ?? [:]
                 let newlyKept = toKeep.count { stored[$0]?.isSynced == false }

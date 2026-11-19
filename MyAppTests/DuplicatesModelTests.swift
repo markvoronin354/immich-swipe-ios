@@ -18,6 +18,7 @@ private func asset(_ id: String, size: Int64? = 100, type: AssetType = .image, c
 struct DuplicatesModelTests {
     let client: ImmichClient
     let store: DecisionStore
+    let listingCache = AssetListCache.temporary()
 
     init() throws {
         let configuration = URLSessionConfiguration.ephemeral
@@ -27,7 +28,7 @@ struct DuplicatesModelTests {
     }
 
     private func makeModel() -> DuplicatesModel {
-        DuplicatesModel(client: client, userID: "u", decisions: store)
+        DuplicatesModel(client: client, userID: "u", decisions: store, listingCache: listingCache)
     }
 
     /// A pair of photos and a group of three, one of them a video and one a favorite.
@@ -207,6 +208,20 @@ struct DuplicatesModelTests {
         let history = try store.syncHistory(userID: "u")
         #expect(history.first?.deletedCount == 1 && history.first?.bytesSaved == 10 && history.first?.keptCount == 1)
         #expect(!model.isSyncing && model.syncError == nil)
+    }
+
+    @Test func deletedAssetsLeaveTheDecksSavedListings() async throws {
+        serveGroups()
+        let saved = ["p1", "p2", "other"].map { Asset(id: $0, ownerId: "u", fileCreatedAt: "2024", type: .image) }
+        await listingCache.save(saved, userID: "u", albumID: Album.virtualAllID)
+        let model = makeModel()
+        await model.load()
+        let p1 = try #require(model.allAssets.first { $0.id == "p1" })
+        model.toggle(p1); model.toggle(p1) // delete
+
+        await model.deleteMarked()
+
+        #expect(await listingCache.assets(userID: "u", albumID: Album.virtualAllID).map(\.id) == ["p2", "other"])
     }
 
     @Test func alreadySyncedKeptAssetsAreNotCountedAgain() async throws {
