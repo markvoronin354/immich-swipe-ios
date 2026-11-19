@@ -115,7 +115,7 @@ final class VideoDiagnostics {
         observers.append(center.addObserver(forName: AVPlayerItem.newErrorLogEntryNotification, object: item, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 _ = Task {
-                    guard let event = await item.errorLog?.events.last else { return }
+                    guard let event = await Self.errorLog(of: item)?.events.last else { return }
                     self?.log("ERROR r\(index): \(event.errorStatusCode) \(event.errorDomain) \(event.errorComment ?? "")")
                 }
             }
@@ -130,9 +130,18 @@ final class VideoDiagnostics {
         })
     }
 
+    /// The item's logs: async properties from iOS 27, the synchronous methods they replace before it.
+    private static func errorLog(of item: AVPlayerItem) async -> AVPlayerItemErrorLog? {
+        if #available(iOS 27, *) { await item.errorLog } else { item.errorLog() }
+    }
+
+    private static func accessLog(of item: AVPlayerItem) async -> AVPlayerItemAccessLog? {
+        if #available(iOS 27, *) { await item.accessLog } else { item.accessLog() }
+    }
+
     /// Fetches the item's access log, keeps it for the synchronous summaries, and logs its newest entry.
     private func logAccess(of item: AVPlayerItem, index: Int) async {
-        guard let accessLog = await item.accessLog else { return }
+        guard let accessLog = await Self.accessLog(of: item) else { return }
         accessLogs[ObjectIdentifier(item)] = accessLog
         guard let event = accessLog.events.last else { return }
         log("ACCESS r\(index): uri=\(event.uri ?? "?") indicated=\(Self.mbps(event.indicatedBitrate)) observed=\(Self.mbps(event.observedBitrate)) bytes=\(Int64(event.numberOfBytesTransferred).formatted(.byteCount(style: .file))) transfer=\(String(format: "%.1f", event.transferDuration))s startup=\(String(format: "%.2f", event.startupTime))s stalls=\(event.numberOfStalls) server=\(event.serverAddress ?? "?")")
