@@ -85,7 +85,7 @@ struct HomeView: View {
         .task { if !model.hasLoaded { await model.load() } }
         // The counts change with "Include external archives", so Home reloads, as on Android.
         .task(id: includeArchived) { if model.hasLoaded { await model.load() } }
-        .onAppear { model.refreshProgress() }
+        .task { await model.refreshProgress() }
     }
 }
 

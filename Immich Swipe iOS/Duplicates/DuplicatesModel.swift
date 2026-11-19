@@ -87,7 +87,7 @@ final class DuplicatesModel {
     func load() async {
         isLoading = true
         loadError = nil
-        reloadDecisions()
+        await reloadDecisions()
         do {
             let groups = try await client.getAssetDuplicates()
             // Android gives every group a fresh random ID; the server's ID is used when there is one.
@@ -106,8 +106,8 @@ final class DuplicatesModel {
     }
 
     /// Archive and Lock decisions made elsewhere show as undecided here, as on Android.
-    private func reloadDecisions() {
-        let stored = (try? store.allDecisions(userID: userID)) ?? [:]
+    private func reloadDecisions() async {
+        let stored = (try? await store.allDecisionsInBackground(userID: userID)) ?? [:]
         decisions = stored.compactMapValues { [.keep, .delete].contains($0.decision) ? $0.decision : nil }
     }
 
@@ -216,7 +216,7 @@ final class DuplicatesModel {
                 try await client.deleteAssets(ids: ids, force: false)
                 try? store.remove(assetIDs: ids, userID: userID)
                 // Decisions stay after an apply, so only kept photos still waiting are counted, as on Android.
-                let stored = (try? store.allDecisions(userID: userID)) ?? [:]
+                let stored = (try? await store.allDecisionsInBackground(userID: userID)) ?? [:]
                 let newlyKept = toKeep.count { stored[$0]?.isSynced == false }
                 if !toKeep.isEmpty { try? store.markSynced(assetIDs: toKeep, userID: userID) }
                 try? store.recordSync(

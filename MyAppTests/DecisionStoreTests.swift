@@ -47,6 +47,29 @@ struct DecisionStoreTests {
         #expect(try store.totals(userID: "u").unsynced == 1)
     }
 
+    @Test func backgroundReadsSeeWhatWasJustSavedAndMatchTheMainReads() async throws {
+        try store.save(.keep, assetID: "x1", albumID: "a", userID: "u", fileSize: 10)
+        try store.save(.delete, assetID: "x2", albumID: "b", userID: "u", fileSize: 20)
+        try store.save(.archive, assetID: "x3", albumID: "b", userID: "other", fileSize: nil)
+        try store.markSynced(assetIDs: ["x1"], userID: "u")
+
+        let all = try await store.allDecisionsInBackground(userID: "u")
+        #expect(all == (try store.allDecisions(userID: "u")))
+        #expect(all.keys.sorted() == ["x1", "x2"])
+
+        let progress = try await store.progressByAlbumInBackground(userID: "u")
+        #expect(progress == (try store.progressByAlbum(userID: "u")))
+        #expect(progress["b"] == AlbumProgress(decided: 1, unsynced: 1))
+        // Home adds the albums up for its totals, which must match counting directly.
+        let totals = try store.totals(userID: "u")
+        #expect(progress.values.reduce(0) { $0 + $1.decided } == totals.decided)
+        #expect(progress.values.reduce(0) { $0 + $1.unsynced } == totals.unsynced)
+
+        // A change after the first read shows up in the next one.
+        try store.remove(assetIDs: ["x2"], userID: "u")
+        #expect(try await store.allDecisionsInBackground(userID: "u").keys.sorted() == ["x1"])
+    }
+
     @Test func bulkSaveCrossesBatchBoundaries() throws {
         let sizes = Dictionary(uniqueKeysWithValues: (0..<1200).map { ("b\($0)", Int64?.some(Int64($0))) })
         try store.save(sizes, decision: .delete, albumID: "albumB", userID: "u")

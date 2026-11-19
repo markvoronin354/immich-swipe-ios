@@ -79,7 +79,7 @@ struct PerformanceBenchmarks {
 
     // MARK: Database
 
-    @Test func database() throws {
+    @Test func database() async throws {
         // A tenth of the rows, to see whether the cost of a bulk save grows linearly or faster.
         let small = try DecisionStore.inMemory()
         let tenth = Dictionary(uniqueKeysWithValues: Self.decisions.keys.prefix(Self.decided / 10).map { ($0, Int64?(1_000_000)) })
@@ -95,9 +95,16 @@ struct PerformanceBenchmarks {
         measure("DecisionStore: save 30,000 decisions in one call", runs: 1) {
             try? store.save(Self.decisions.mapValues { _ in Int64(1_000_000) }, decision: .keep, albumID: Album.virtualAllID, userID: "u")
         }
-        measure("DecisionStore.allDecisions (deck opens)") { try? store.allDecisions(userID: "u") }
-        measure("DecisionStore.progressByAlbum + totals (Home appears)") {
+        measure("DecisionStore.allDecisions, on the main actor") { try? store.allDecisions(userID: "u") }
+        measure("DecisionStore.progressByAlbum + totals, on the main actor") {
             (try? store.progressByAlbum(userID: "u"), try? store.totals(userID: "u"))
+        }
+        // What the deck and Home now use: the same reads, with the main actor free while they run.
+        await measureAsync("DecisionStore.allDecisionsInBackground (deck opens)", runs: 5) {
+            _ = try? await store.allDecisionsInBackground(userID: "u")
+        }
+        await measureAsync("DecisionStore.progressByAlbumInBackground (Home appears)", runs: 5) {
+            _ = try? await store.progressByAlbumInBackground(userID: "u")
         }
         var index = 0
         measure("DecisionStore.save one decision (each swipe)", runs: 11) {

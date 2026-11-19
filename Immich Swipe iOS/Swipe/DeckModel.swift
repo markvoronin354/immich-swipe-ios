@@ -99,12 +99,16 @@ final class DeckModel {
         pendingJump = true
         syncedCount = 0
         foreignIDs = []
-        stored = (try? decisions.allDecisions(userID: userID)) ?? [:]
+        // The saved listing and the stored decisions both take a while with a large library, so they're
+        // read side by side, off the main actor. Duplicates have no saved listing; that read finds no file.
+        let (cache, user, listing) = (listingCache, userID, listingID)
+        async let savedListing = cache.assets(userID: user, albumID: listing)
+        stored = (try? await decisions.allDecisionsInBackground(userID: userID)) ?? [:]
         syncedIDs = Set(stored.filter { $0.value.isSynced }.keys)
 
         do {
             if let first = source.firstSearch(order: sortOrder, includeArchived: includeArchived) {
-                try await loadListing(startingWith: first)
+                try await loadListing(startingWith: first, cached: await savedListing)
                 dropPendingDecisionsOnForeignPhotos()
                 recordNothingToSort()
             } else {
@@ -129,9 +133,9 @@ final class DeckModel {
     }
 
     /// Port of Android's `AssetRepository.getAssetsByAlbum` (spec §3.5).
-    private func loadListing(startingWith first: MetadataSearch) async throws {
+    /// `cached` is the listing saved last time, already read by `load()`.
+    private func loadListing(startingWith first: MetadataSearch, cached: [Asset]) async throws {
         // 1. Show the listing saved last time right away, sorted. The server may still change it.
-        let cached = await listingCache.assets(userID: userID, albumID: listingID)
         if !cached.isEmpty {
             isLoadingMore = true
             await receive(cached, fromServer: false)

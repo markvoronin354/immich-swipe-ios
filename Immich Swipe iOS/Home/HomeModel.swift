@@ -59,7 +59,7 @@ final class HomeModel {
             duplicates: Self.value(of: await duplicatesResult, failure: "Could not load the duplicates count")
         )
         serverVersion = try? await versionResult.get()
-        refreshProgress()
+        await refreshProgress()
 
         // An album's count includes its archived photos, which its deck leaves out without the setting.
         if !includeArchived, !albums.isEmpty {
@@ -129,12 +129,16 @@ final class HomeModel {
         }
     }
 
-    /// Re-reads local decision counts. Cheap, so it runs whenever the home screen reappears.
-    func refreshProgress() {
-        progress = (try? decisions.progressByAlbum(userID: userID)) ?? [:]
+    /// Re-reads local decision counts whenever the home screen reappears. The read runs off the main actor:
+    /// with tens of thousands of decisions it takes about half a second.
+    func refreshProgress() async {
         nothingToSort = NothingToSort.ids(userID: userID, defaults: defaults)
-        if let totals = try? decisions.totals(userID: userID) {
-            totalProgress = AlbumProgress(decided: totals.decided, unsynced: totals.unsynced)
+        guard let byAlbum = try? await decisions.progressByAlbumInBackground(userID: userID) else { return }
+        progress = byAlbum
+        // Every decision belongs to exactly one album, so the albums add up to the totals.
+        totalProgress = byAlbum.values.reduce(into: AlbumProgress()) { total, album in
+            total.decided += album.decided
+            total.unsynced += album.unsynced
         }
     }
 

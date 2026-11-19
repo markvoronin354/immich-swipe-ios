@@ -84,6 +84,8 @@ nonisolated struct AlbumProgress: Hashable, Sendable {
 /// in every album that contains it. So album queries take the album's asset IDs as well as its ID.
 final class DecisionStore {
     private let context: ModelContext
+    /// For reads off the main actor, each on a context of its own.
+    private nonisolated let container: ModelContainer
 
     /// SwiftData `IN` predicates get slow with very long lists, so ID batches are split.
     private static let batchSize = 500
@@ -91,6 +93,7 @@ final class DecisionStore {
     static let schema = Schema([DecisionRecord.self, SyncHistoryRecord.self])
 
     init(container: ModelContainer) {
+        self.container = container
         context = ModelContext(container)
     }
 
@@ -118,8 +121,7 @@ final class DecisionStore {
     /// Every decision the user has, keyed by asset ID. One fetch, so a deck of tens of thousands of
     /// photos can pick out its own decisions in memory instead of querying in batches.
     func allDecisions(userID: String) throws -> [String: StoredDecision] {
-        let descriptor = FetchDescriptor<DecisionRecord>(predicate: #Predicate { $0.userID == userID })
-        return Dictionary(try context.fetch(descriptor).map { ($0.assetID, Self.value(of: $0)) }, uniquingKeysWith: { first, _ in first })
+        try Self.allDecisions(userID: userID, in: context)
     }
 
     /// Distinct decided assets, and how many of them are still waiting for "Apply changes".
@@ -134,6 +136,31 @@ final class DecisionStore {
     /// This undercounts real albums whose photos were decided elsewhere (for example in "All"),
     /// because that needs the album's asset list. The swipe deck uses the full rule.
     func progressByAlbum(userID: String) throws -> [String: AlbumProgress] {
+        try Self.progressByAlbum(userID: userID, in: context)
+    }
+
+    // MARK: Reading off the main actor
+
+    // Reading every decision takes over half a second once there are tens of thousands, which froze the
+    // screen when a deck opened or Home appeared. These read on a context of their own instead. Every
+    // write here saves straight away, so they see everything written before they were called.
+
+    @concurrent
+    nonisolated func allDecisionsInBackground(userID: String) async throws -> [String: StoredDecision] {
+        try Self.allDecisions(userID: userID, in: ModelContext(container))
+    }
+
+    @concurrent
+    nonisolated func progressByAlbumInBackground(userID: String) async throws -> [String: AlbumProgress] {
+        try Self.progressByAlbum(userID: userID, in: ModelContext(container))
+    }
+
+    private nonisolated static func allDecisions(userID: String, in context: ModelContext) throws -> [String: StoredDecision] {
+        let descriptor = FetchDescriptor<DecisionRecord>(predicate: #Predicate { $0.userID == userID })
+        return Dictionary(try context.fetch(descriptor).map { ($0.assetID, value(of: $0)) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    private nonisolated static func progressByAlbum(userID: String, in context: ModelContext) throws -> [String: AlbumProgress] {
         var descriptor = FetchDescriptor<DecisionRecord>(predicate: #Predicate { $0.userID == userID })
         descriptor.propertiesToFetch = [\.albumID, \.isSynced]
         var result: [String: AlbumProgress] = [:]
@@ -337,7 +364,7 @@ final class DecisionStore {
         return result
     }
 
-    private static func value(of record: DecisionRecord) -> StoredDecision {
+    private nonisolated static func value(of record: DecisionRecord) -> StoredDecision {
         StoredDecision(decision: record.decision, albumID: record.albumID, fileSize: record.fileSize, createdAt: record.createdAt, isSynced: record.isSynced)
     }
 }
