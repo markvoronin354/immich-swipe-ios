@@ -652,12 +652,17 @@ struct MetadataPanel: View {
         return text
     }
 
-    private var date: String {
-        // Immich dates are ISO 8601, with or without fractional seconds.
-        let parsed = (try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(asset.fileCreatedAt))
-            ?? (try? Date.ISO8601FormatStyle().parse(asset.fileCreatedAt))
-        guard let date = parsed else { return String(localized: "N/A") }
-        return date.formatted(date: .long, time: .omitted)
+    private var date: String { Self.dateText(fileCreatedAt: asset.fileCreatedAt) }
+
+    /// As on Android: the calendar date written in `fileCreatedAt`, read as it stands rather than moved into
+    /// this device's time zone, which could show the day before or after near midnight. If it can't be read,
+    /// the text before the time.
+    static func dateText(fileCreatedAt: String) -> String {
+        let day = String(fileCreatedAt.prefix { $0 != "T" })
+        guard let date = try? Date.ISO8601FormatStyle(timeZone: .gmt).year().month().day().parse(day) else { return day }
+        var style = Date.FormatStyle(date: .long, time: .omitted)
+        style.timeZone = .gmt
+        return date.formatted(style)
     }
 
     /// "Image (.PNG)", or just "Image" when the file name has no extension.

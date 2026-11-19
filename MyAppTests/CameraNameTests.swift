@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Immich_Swipe_iOS
 
@@ -31,5 +32,25 @@ struct CameraNameTests {
         #expect(MetadataPanel.cameraName(make: nil, model: "iPhone 15 Pro") == "iPhone 15 Pro")
         // A make that is only a company word is kept rather than emptied.
         #expect(MetadataPanel.cameraName(make: "Imaging", model: "X1") == "Imaging X1")
+    }
+}
+
+struct MetadataDateTests {
+    /// 1 May 2024 in the panel's long style.
+    private var firstOfMay: String {
+        var style = Date.FormatStyle(date: .long, time: .omitted)
+        style.timeZone = .gmt
+        return Date(timeIntervalSince1970: 1_714_521_600).formatted(style)
+    }
+
+    /// As on Android, the date written before the time, whatever the time and offset after it.
+    @Test(arguments: ["2024-05-01T23:30:00.000-05:00", "2024-05-01T00:30:00Z", "2024-05-01T12:00:00.123456+14:00", "2024-05-01"])
+    func showsTheWrittenDateWithoutMovingItToAnotherDay(fileCreatedAt: String) {
+        #expect(MetadataPanel.dateText(fileCreatedAt: fileCreatedAt) == firstOfMay)
+    }
+
+    @Test func anUnreadableDateShowsTheTextBeforeTheTime() {
+        #expect(MetadataPanel.dateText(fileCreatedAt: "sometime") == "sometime")
+        #expect(MetadataPanel.dateText(fileCreatedAt: "2024-13-45T10:00:00Z") == "2024-13-45")
     }
 }

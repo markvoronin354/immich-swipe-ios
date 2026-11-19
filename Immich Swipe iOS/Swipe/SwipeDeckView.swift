@@ -1069,8 +1069,10 @@ private struct SortMenu: View {
         .sheet(isPresented: $isShowing) {
             SortSheet(picked: $picked)
         }
+        // Every close applies the pick, as Android's `handleDismiss` does: picking the order already in use
+        // takes the deck back to its first undecided photo.
         .onChange(of: isShowing) { _, showing in
-            guard !showing, picked != model.sortOrder else { return }
+            guard !showing else { return }
             let order = picked
             Task { await model.setSortOrder(order) }
         }
