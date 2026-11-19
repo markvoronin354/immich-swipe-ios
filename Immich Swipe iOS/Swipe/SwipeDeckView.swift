@@ -14,6 +14,7 @@ struct SwipeDeckView: View {
     @State private var model: DeckModel
     @State private var motion = CardMotion()
     @State private var videoPlayer = DeckVideoPlayer()
+    @State private var livePhotoPlayer = LivePhotoPlayer()
     @State private var isConfirmingReset = false
     @State private var isReviewing = false
     @State private var albumAsset: Asset?
@@ -119,7 +120,10 @@ struct SwipeDeckView: View {
             updateVideo()
             await model.loadCurrentDetails()
         }
-        .onDisappear { videoPlayer.stop() }
+        .onDisappear {
+            videoPlayer.stop()
+            livePhotoPlayer.stop()
+        }
         #if os(iOS)
         // Swiping a card right to keep could start the system "swipe back" instead. The back button still works.
         .background { BackSwipeBlocker() }
@@ -160,6 +164,11 @@ struct SwipeDeckView: View {
         } else {
             videoPlayer.stop()
         }
+        if let current = model.deck.current, current.isLivePhoto {
+            livePhotoPlayer.play(current, using: model.client)
+        } else {
+            livePhotoPlayer.stop()
+        }
     }
 
     @ViewBuilder
@@ -190,7 +199,7 @@ struct SwipeDeckView: View {
                 ContentUnavailableView("No photos here", systemImage: "photo.on.rectangle")
             } else {
                 if let current = model.deck.current {
-                    CardStack(model: model, motion: motion, videoPlayer: videoPlayer, actions: cardActions(for: current))
+                    CardStack(model: model, motion: motion, videoPlayer: videoPlayer, livePhotoPlayer: livePhotoPlayer, actions: cardActions(for: current))
                 }
             }
         }
@@ -243,6 +252,7 @@ private struct CardStack: View {
     let model: DeckModel
     let motion: CardMotion
     let videoPlayer: DeckVideoPlayer
+    let livePhotoPlayer: LivePhotoPlayer
     let actions: SwipeCardActions
 
     private let prefs = DeckPreferences()
@@ -302,7 +312,7 @@ private struct CardStack: View {
                     imageRequest: model.previewRequest(for: current),
                     rotation: model.rotation(of: current),
                     fullResolutionRequest: showsOriginal(current) ? model.originalRequest(for: current) : nil,
-                    player: videoPlayer.assetID == current.id ? videoPlayer.player : nil,
+                    player: videoPlayer.assetID == current.id ? videoPlayer.player : livePhotoPlayer.assetID == current.id ? livePhotoPlayer.player : nil,
                     intent: intent,
                     intentStrength: intentStrength,
                     buttonLayout: controlActions.layout,

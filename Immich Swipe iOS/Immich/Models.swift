@@ -50,6 +50,8 @@ nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
     var originalFileName: String?
     var checksum: String?
     var exifInfo: ExifInfo?
+    /// The clip of a Live Photo or motion photo, which Immich stores as a separate video asset.
+    var livePhotoVideoId: String?
 
     /// Capture date when EXIF has one, else the file creation date. Sorting compares this as a string.
     var effectiveDate: String {
@@ -57,13 +59,14 @@ nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
         return fileCreatedAt
     }
 
+    var isLivePhoto: Bool { type == .image && livePhotoVideoId != nil }
     var isGIF: Bool { originalFileName?.lowercased().hasSuffix(".gif") ?? false }
     var isLocked: Bool { visibility == .locked }
     var fileSize: Int64? { exifInfo?.fileSizeInByte }
 
     private enum CodingKeys: String, CodingKey {
         case id, ownerId, fileCreatedAt, type, isFavorite, isArchived, isTrashed, isEdited
-        case visibility, originalFileName, checksum, exifInfo
+        case visibility, originalFileName, checksum, exifInfo, livePhotoVideoId
         case durationMilliseconds = "duration"
     }
 
@@ -80,7 +83,8 @@ nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
         visibility: AssetVisibility? = nil,
         originalFileName: String? = nil,
         checksum: String? = nil,
-        exifInfo: ExifInfo? = nil
+        exifInfo: ExifInfo? = nil,
+        livePhotoVideoId: String? = nil
     ) {
         self.id = id
         self.ownerId = ownerId
@@ -95,6 +99,7 @@ nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
         self.originalFileName = originalFileName
         self.checksum = checksum
         self.exifInfo = exifInfo
+        self.livePhotoVideoId = livePhotoVideoId
     }
 
     init(from decoder: Decoder) throws {
@@ -111,6 +116,7 @@ nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
         originalFileName = try c.decodeIfPresent(String.self, forKey: .originalFileName)
         checksum = try c.decodeIfPresent(String.self, forKey: .checksum)
         exifInfo = try c.decodeIfPresent(ExifInfo.self, forKey: .exifInfo)
+        livePhotoVideoId = try c.decodeIfPresent(String.self, forKey: .livePhotoVideoId)
 
         if let ms = try? c.decodeIfPresent(Int.self, forKey: .durationMilliseconds) {
             durationMilliseconds = ms

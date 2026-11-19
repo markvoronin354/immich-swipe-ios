@@ -15,10 +15,13 @@ struct DeckTimelineStrip: View {
                     ForEach(model.deck.assets) { asset in
                         TimelineThumb(
                             request: model.thumbnailRequest(for: asset),
+                            revision: model.imageRevision,
+                            videoFallback: asset.type == .video ? model.client.authorizedRequest(for: .videoPlayback(assetID: asset.id)) : nil,
                             decision: model.deck.decision(for: asset.id),
                             isCurrent: asset.id == currentID,
                             isVideo: asset.type == .video,
                             isGIF: asset.isGIF,
+                            isLivePhoto: asset.isLivePhoto,
                             isFavorite: model.isFavorite(asset),
                             isArchived: asset.isArchived,
                             isLocked: asset.isLocked
@@ -50,10 +53,13 @@ struct DeckTimelineStrip: View {
 
 private struct TimelineThumb: View {
     let request: URLRequest
+    let revision: Int
+    let videoFallback: URLRequest?
     let decision: SwipeDecision?
     let isCurrent: Bool
     let isVideo: Bool
     let isGIF: Bool
+    let isLivePhoto: Bool
     let isFavorite: Bool
     let isArchived: Bool
     let isLocked: Bool
@@ -62,7 +68,7 @@ private struct TimelineThumb: View {
         // Already archived or locked on the server, without a matching decision this session.
         let showArchive = isArchived && decision != .archive
         let showLock = isLocked && decision != .lock
-        RemoteThumbnail(request: request, size: 58)
+        RemoteThumbnail(request: request, size: 58, revision: revision, videoFallback: videoFallback)
             .overlay(alignment: .bottomLeading) {
                 if isVideo {
                     Image(systemName: "play.fill")
@@ -72,6 +78,11 @@ private struct TimelineThumb: View {
                 } else if isGIF {
                     Text("GIF")
                         .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(4)
+                } else if isLivePhoto {
+                    Image(systemName: "livephoto")
+                        .font(.caption2)
                         .foregroundStyle(.white)
                         .padding(4)
                 }

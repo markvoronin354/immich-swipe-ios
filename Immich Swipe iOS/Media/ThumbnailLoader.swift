@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
@@ -65,6 +66,21 @@ actor ThumbnailLoader {
         let image = try await task.value
         memory.setObject(image, forKey: key as NSString, cost: image.bytesPerRow * image.height)
         if let url = request.url?.absoluteString { keysByURL[url, default: []].insert(key) }
+        return image
+    }
+
+    /// The first frame of a video, for when the server has no thumbnail for it (it makes none for the clip
+    /// inside a motion photo, for one).
+    func videoFrame(for request: URLRequest, maxPixelSize: Int) async throws -> CGImage {
+        let key = Self.key(for: request, maxPixelSize: maxPixelSize)
+        if let cached = memory.object(forKey: key as NSString) { return cached }
+        guard let url = request.url else { throw UndecodableImage() }
+        let asset = AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": request.allHTTPHeaderFields ?? [:]])
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: maxPixelSize, height: maxPixelSize)
+        let (image, _) = try await generator.image(at: .zero)
+        memory.setObject(image, forKey: key as NSString, cost: image.bytesPerRow * image.height)
         return image
     }
 

@@ -664,6 +664,8 @@ final class DeckModel {
     private var syncedIDs: Set<String> = []
     private(set) var isApplying = false
     private(set) var lastOutcome: ApplyOutcome?
+    /// Goes up when cached images were dropped because photos changed on the server.
+    private(set) var imageRevision = 0
 
     /// What applying would do right now.
     var plan: ApplyPlan {
@@ -726,7 +728,11 @@ final class DeckModel {
             for index in loaded.indices { markEdited(&loaded[index]) }
             deck.updateAssets(markEdited)
             let stale = rotated.flatMap { [client.authorizedRequest(for: .preview(assetID: $0)), client.authorizedRequest(for: .thumbnail(assetID: $0))] }
-            Task { await ThumbnailLoader.shared.invalidate(stale) }
+            // The views keep showing the image they already loaded, so they reload once the old ones are gone.
+            Task {
+                await ThumbnailLoader.shared.invalidate(stale)
+                imageRevision += 1
+            }
         }
 
         // Applied decisions can't be undone, and the deck returns to the first photo still to sort.
