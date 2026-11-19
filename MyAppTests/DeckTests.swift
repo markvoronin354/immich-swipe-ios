@@ -145,4 +145,44 @@ struct DeckTests {
         #expect(!deck.canUndo)
         #expect(deck.decidedCount == 0)
     }
+
+    /// The running counts must always equal a count of the pile done from scratch.
+    @Test func runningCountsMatchARecountAfterEveryChange() {
+        func expectCountsMatch(_ deck: Deck, _ step: String) {
+            let decided = deck.assets.compactMap { deck.decision(for: $0.id) }
+            #expect(deck.decidedCount == decided.count, "\(step)")
+            for decision in SwipeDecision.allCases {
+                #expect(deck.pileCount(of: [decision]) == decided.count { $0 == decision }, "\(step): \(decision)")
+            }
+            #expect(deck.pileCount(of: [.keep, .delete]) == decided.count { $0 == .keep || $0 == .delete }, "\(step): keep and delete")
+        }
+
+        // "x" is decided but not in the pile, so it's never counted.
+        var deck = Deck(assets: pile("a", "b", "c", "d", "e"), decisions: ["b": .keep, "x": .delete])
+        expectCountsMatch(deck, "init")
+        deck.decideCurrent(.delete) // a
+        expectCountsMatch(deck, "decide")
+        deck.move(to: 0)
+        deck.decideCurrent(.archive) // a again, replacing delete
+        expectCountsMatch(deck, "re-decide")
+        deck.decide(.lock, assetIDs: ["c", "d", "x"])
+        expectCountsMatch(deck, "bulk")
+        deck.undo() // x, not in the pile
+        expectCountsMatch(deck, "undo outside the pile")
+        deck.undo() // d
+        expectCountsMatch(deck, "undo")
+        deck.removeDecision(for: "b")
+        expectCountsMatch(deck, "remove decision")
+        // "c" leaves the pile and comes back; "f" arrives with a stored decision.
+        deck.replaceAssets(pile("a", "b", "d", "e", "f"), keepPosition: true)
+        expectCountsMatch(deck, "replace, dropping c")
+        deck.mergeStoredDecisions(["f": .keep, "c": .delete], unsyncedHistory: [])
+        expectCountsMatch(deck, "merge")
+        deck.replaceAssets(pile("a", "b", "c", "d", "e", "f"), keepPosition: true)
+        expectCountsMatch(deck, "replace, c back")
+        deck.removeAssets(["a", "f"])
+        expectCountsMatch(deck, "remove assets")
+        deck.reset()
+        expectCountsMatch(deck, "reset")
+    }
 }

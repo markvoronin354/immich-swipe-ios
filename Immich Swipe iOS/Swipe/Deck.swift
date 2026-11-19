@@ -11,12 +11,17 @@ nonisolated struct Deck: Equatable, Sendable {
     /// Asset IDs in the order they were decided, for undo. Cleared after "Apply changes".
     private(set) var history: [String] = []
     private(set) var currentIndex = 0
+    /// How many assets in the pile have each decision. Kept up to date as decisions and the pile change, so
+    /// the counts the deck screen reads after every swipe don't walk a pile of tens of thousands of photos.
+    /// `decisions` can also hold assets that have left the pile, which these leave out.
+    private var pileCounts: [SwipeDecision: Int] = [:]
 
     init(assets: [Asset] = [], decisions: [String: SwipeDecision] = [:], history: [String] = []) {
         self.assets = assets
         self.decisions = decisions
         self.history = history.filter { decisions[$0] != nil }
         currentIndex = firstUndecidedIndex(from: 0)
+        recountPile()
     }
 
     // MARK: Reading
@@ -43,11 +48,11 @@ nonisolated struct Deck: Equatable, Sendable {
     }
 
     /// Decided assets that are in the pile, so a decision for an asset no longer on the server isn't counted.
-    var decidedCount: Int { assets.lazy.filter { decisions[$0.id] != nil }.count }
+    var decidedCount: Int { pileCounts.values.reduce(0, +) }
 
     /// Assets in the pile with one of these decisions.
     func pileCount(of kinds: Set<SwipeDecision>) -> Int {
-        assets.lazy.filter { self.decisions[$0.id].map(kinds.contains) ?? false }.count
+        kinds.reduce(0) { $0 + pileCounts[$1, default: 0] }
     }
 
     /// Shows a specific card, as when tapping the thumbnail strip. It may already be decided;
@@ -64,6 +69,8 @@ nonisolated struct Deck: Equatable, Sendable {
     @discardableResult
     mutating func decideCurrent(_ decision: SwipeDecision) -> Asset? {
         guard let asset = current else { return nil }
+        // The current card is always in the pile.
+        adjustPileCounts(from: decisions[asset.id], to: decision)
         decisions[asset.id] = decision
         history.removeAll { $0 == asset.id }
         history.append(asset.id)
@@ -82,14 +89,16 @@ nonisolated struct Deck: Equatable, Sendable {
         }
         let lastIndex = assets.lastIndex { ids.contains($0.id) } ?? currentIndex
         currentIndex = nextUndecidedIndex(after: lastIndex)
+        recountPile()
     }
 
     /// Undoes the most recent decision and shows that asset again. Returns its ID.
     @discardableResult
     mutating func undo() -> String? {
         guard let id = history.popLast() else { return nil }
-        decisions[id] = nil
+        let undone = decisions.removeValue(forKey: id)
         if let index = assets.firstIndex(where: { $0.id == id }) {
+            adjustPileCounts(from: undone, to: nil)
             currentIndex = index
         }
         return id
@@ -97,9 +106,11 @@ nonisolated struct Deck: Equatable, Sendable {
 
     /// Removes one decision without moving the deck, as from the review list.
     mutating func removeDecision(for assetID: String) {
-        decisions[assetID] = nil
+        let removed = decisions.removeValue(forKey: assetID)
         history.removeAll { $0 == assetID }
-        if assets.firstIndex(where: { $0.id == assetID }).map({ $0 < currentIndex }) ?? false {
+        guard let index = assets.firstIndex(where: { $0.id == assetID }) else { return }
+        adjustPileCounts(from: removed, to: nil)
+        if index < currentIndex {
             // The card is behind the current one, so it would never be reached again without this.
             currentIndex = firstUndecidedIndex(from: 0)
         }
@@ -109,6 +120,7 @@ nonisolated struct Deck: Equatable, Sendable {
     mutating func reset() {
         decisions = [:]
         history = []
+        pileCounts = [:]
         currentIndex = firstUndecidedIndex(from: 0)
     }
 
@@ -122,6 +134,7 @@ nonisolated struct Deck: Equatable, Sendable {
     mutating func replaceAssets(_ newAssets: [Asset], keepPosition: Bool) {
         let currentID = current?.id
         assets = newAssets
+        recountPile()
         if keepPosition, let currentID, let index = assets.firstIndex(where: { $0.id == currentID }) {
             currentIndex = index
         } else {
@@ -131,9 +144,12 @@ nonisolated struct Deck: Equatable, Sendable {
 
     /// Merges decisions loaded from storage. Decisions already made in memory win.
     mutating func mergeStoredDecisions(_ stored: [String: SwipeDecision], unsyncedHistory: [String]) {
+        var added = false
         for (id, decision) in stored where decisions[id] == nil {
             decisions[id] = decision
+            added = true
         }
+        if added { recountPile() }
         let known = Set(history)
         history = unsyncedHistory.filter { !known.contains($0) && decisions[$0] != nil } + history
         if let current, decisions[current.id] != nil {
@@ -148,6 +164,7 @@ nonisolated struct Deck: Equatable, Sendable {
         assets.removeAll { assetIDs.contains($0.id) }
         for id in assetIDs { decisions[id] = nil }
         history.removeAll { assetIDs.contains($0) }
+        recountPile()
         currentIndex = currentID.flatMap { id in assets.firstIndex { $0.id == id } } ?? firstUndecidedIndex(from: 0)
     }
 
@@ -155,12 +172,27 @@ nonisolated struct Deck: Equatable, Sendable {
     mutating func clearHistory() { history = [] }
 
     /// Edits assets in place, for example to show a favourite that has now reached the server.
-    /// Decisions and the current card are untouched.
+    /// Decisions and the current card are untouched, so `transform` must not change an asset's ID.
     mutating func updateAssets(_ transform: (inout Asset) -> Void) {
         for index in assets.indices { transform(&assets[index]) }
     }
 
     // MARK: Helpers
+
+    /// Counts the pile's decisions from scratch, after a change that already walks the pile.
+    private mutating func recountPile() {
+        var counts: [SwipeDecision: Int] = [:]
+        for asset in assets {
+            if let decision = decisions[asset.id] { counts[decision, default: 0] += 1 }
+        }
+        pileCounts = counts
+    }
+
+    /// Moves one asset in the pile from one decision's count to another's. Nil is undecided.
+    private mutating func adjustPileCounts(from old: SwipeDecision?, to new: SwipeDecision?) {
+        if let old { pileCounts[old, default: 0] -= 1 }
+        if let new { pileCounts[new, default: 0] += 1 }
+    }
 
     /// The next undecided card after `index`, wrapping to the top. Pages that load mid-session can sort
     /// photos in ahead of the current card; wrapping means those are still reached instead of skipped.
