@@ -295,7 +295,10 @@ nonisolated struct ImmichClient: Sendable {
         return query.isEmpty ? url : url.appending(queryItems: query)
     }
 
-    private func send<Response: Decodable>(
+    /// `@concurrent` so the response is decoded off the caller's actor: without it, decoding ran on the main
+    /// thread for every caller there, and a page of 500 assets or the duplicates list is a lot of JSON.
+    @concurrent
+    private func send<Response: Decodable & Sendable>(
         _ method: Method,
         _ path: String,
         query: [URLQueryItem] = [],
