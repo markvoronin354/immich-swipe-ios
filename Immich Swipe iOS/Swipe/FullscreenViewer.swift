@@ -410,7 +410,7 @@ private struct ViewerPage: View {
             let frame = mediaFrame ?? CGRect(origin: .zero, size: geometry.size)
             let sideways = rotation % 180 != 0
             ZStack {
-                RemoteImage(request: model.previewRequest(for: asset)) { size in
+                RemoteImage(request: model.previewRequest(for: asset), animates: isCurrent && asset.isGIF) { size in
                     guard size.width > 0, size.height > 0 else { return }
                     aspectRatio = sideways ? size.height / size.width : size.width / size.height
                 }

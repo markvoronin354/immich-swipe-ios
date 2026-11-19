@@ -308,7 +308,8 @@ private struct CardStack: View {
                     buttonLayout: controlActions.layout,
                     zoom: zoom,
                     pan: zoomOffset,
-                    isLoadingOriginal: loadingBinding(for: current)
+                    isLoadingOriginal: loadingBinding(for: current),
+                    animates: current.isGIF
                 )
                 .id(current.id)
                 .opacity(motion.fade)

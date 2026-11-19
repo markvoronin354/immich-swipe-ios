@@ -10,6 +10,9 @@ struct RemoteImage: View {
     var isOverlay = false
     /// Set while the image is downloading, so the screen can show progress somewhere other than the image.
     var isLoading: Binding<Bool>?
+    /// Plays the image if it's animated, as the Android app's GIF decoder does. Its first frame shows until the
+    /// file is in; a still image is unaffected. The animation runs until the view goes away.
+    var animates = false
     /// Told the image's pixel size once it has loaded, for views that lay out around the picture.
     var onLoad: ((CGSize) -> Void)?
 
@@ -46,9 +49,36 @@ struct RemoteImage: View {
             } catch {
                 failed = true
             }
+            if animates, !failed, let data = try? await ThumbnailLoader.shared.animationData(for: request) {
+                await play(data)
+            }
         }
         .onDisappear { isLoading?.wrappedValue = false }
     }
+
+    /// Shows each frame as ImageIO hands it over, at the file's own timing, until this view's task is cancelled.
+    private func play(_ data: Data) async {
+        let stop = AnimationStop()
+        // ImageIO calls this on the main queue, one decoded frame at a time.
+        let status = CGAnimateImageDataWithBlock(data as CFData, nil) { _, frame, shouldStop in
+            if stop.isRequested {
+                shouldStop.pointee = true
+            } else {
+                MainActor.assumeIsolated { image = frame }
+            }
+        }
+        guard status == noErr else { return }
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(3600))
+        }
+        stop.isRequested = true
+    }
+}
+
+/// Tells a running animation to stop at its next frame. Only touched on the main thread: by the task that
+/// started the animation, and by ImageIO's frame block, which runs on the main queue.
+private nonisolated final class AnimationStop: @unchecked Sendable {
+    var isRequested = false
 }
 
 extension ThumbnailLoader {

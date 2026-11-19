@@ -68,6 +68,17 @@ actor ThumbnailLoader {
         return image
     }
 
+    /// The file itself when it's an animated image (a GIF or animated PNG), for playing it; nil for a still
+    /// one. Usually comes from the disk cache, since `image(for:maxPixelSize:)` has just downloaded it.
+    func animationData(for request: URLRequest) async throws -> Data? {
+        let (data, response) = try await session.data(for: request, delegate: APIKeyRedirectGuard.shared)
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw ImmichError.http(status: http.statusCode, message: nil)
+        }
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil), CGImageSourceGetCount(source) > 1 else { return nil }
+        return data
+    }
+
     /// Bytes the image cache is using on disk.
     var diskUsage: Int { session.configuration.urlCache?.currentDiskUsage ?? 0 }
 

@@ -26,13 +26,15 @@ struct SwipeCard: View {
     var pan: CGSize = .zero
     /// Reports whether the original is still downloading.
     var isLoadingOriginal: Binding<Bool>?
+    /// Plays the photo if it's a GIF. Only the top card does, so two aren't decoded at once.
+    var animates = false
 
     /// How far the size pill reaches down from the card's top edge, so the swipe badges can stay clear of it.
     @State private var sizePillBottom: CGFloat = 0
 
     var body: some View {
         ZStack {
-            CardMedia(preview: imageRequest, original: fullResolutionRequest, player: player, rotation: rotation, isLoadingOriginal: isLoadingOriginal)
+            CardMedia(preview: imageRequest, original: fullResolutionRequest, player: player, rotation: rotation, isLoadingOriginal: isLoadingOriginal, animates: animates)
                 .scaleEffect(zoom)
                 .offset(pan)
 
@@ -106,12 +108,13 @@ private struct CardMedia: View {
     let player: AVPlayer?
     let rotation: Int
     var isLoadingOriginal: Binding<Bool>?
+    var animates = false
 
     var body: some View {
         GeometryReader { geometry in
             let sideways = rotation % 180 != 0
             ZStack {
-                RemoteImage(request: preview)
+                RemoteImage(request: preview, animates: animates)
                 if let original {
                     RemoteImage(request: original, maxPixelSize: 4096, isOverlay: true, isLoading: isLoadingOriginal)
                 }

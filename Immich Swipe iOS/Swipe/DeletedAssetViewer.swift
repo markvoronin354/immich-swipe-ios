@@ -270,7 +270,8 @@ private struct DeletedAssetMedia: View {
                 let frame = mediaFrame ?? CGRect(origin: .zero, size: geometry.size)
                 ZStack {
                     RemoteImage(
-                        request: client.authorizedRequest(for: isCurrent && asset.isGIF ? .original(assetID: asset.id) : .preview(assetID: asset.id))
+                        request: client.authorizedRequest(for: isCurrent && asset.isGIF ? .original(assetID: asset.id) : .preview(assetID: asset.id)),
+                        animates: isCurrent && asset.isGIF
                     ) { size in
                         guard size.width > 0, size.height > 0 else { return }
                         aspectRatio = size.width / size.height
