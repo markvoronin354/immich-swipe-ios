@@ -2,7 +2,7 @@ import Foundation
 
 /// The sort menu's two parts, as on Android: what to sort by, and in which order.
 /// Every combination maps to one `DeckSortOrder`.
-extension DeckSortOrder {
+nonisolated extension DeckSortOrder {
     enum Attribute: CaseIterable, Sendable { case date, size, type }
     enum Direction: CaseIterable, Sendable { case descending, ascending, shuffled }
     enum TypeFirst: CaseIterable, Sendable { case videos, photos }
@@ -66,7 +66,7 @@ extension DeckSortOrder {
     }
 }
 
-extension DeckSortOrder.Attribute {
+nonisolated extension DeckSortOrder.Attribute {
     /// Where the sort popup starts when you switch to this category (Android's `onCategorySelected`).
     var defaultOrder: DeckSortOrder {
         switch self {
@@ -85,7 +85,7 @@ extension DeckSortOrder.Attribute {
     }
 }
 
-extension DeckSortOrder.TypeFirst {
+nonisolated extension DeckSortOrder.TypeFirst {
     var title: LocalizedStringResource {
         switch self {
         case .videos: "Videos First"
@@ -94,7 +94,7 @@ extension DeckSortOrder.TypeFirst {
     }
 }
 
-extension DeckSortOrder.Direction {
+nonisolated extension DeckSortOrder.Direction {
     func title(for attribute: DeckSortOrder.Attribute) -> LocalizedStringResource {
         switch (self, attribute) {
         case (.descending, .size): "Largest First"
@@ -114,7 +114,7 @@ extension DeckSortOrder.Direction {
     }
 }
 
-extension DeckSortOrder {
+nonisolated extension DeckSortOrder {
     /// The Sort button's icon for this order, matching Android's choice per mode.
     var systemImage: String {
         switch self {

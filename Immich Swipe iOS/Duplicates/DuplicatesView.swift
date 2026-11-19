@@ -234,7 +234,8 @@ struct DuplicatesView: View {
         }
     }
 
-    private static let listSpace = "duplicateClusters"
+    /// Nonisolated, as it's read in the geometry closure, which may run off the main actor.
+    private nonisolated static let listSpace = "duplicateClusters"
 
     /// Android's wording (`duplicates_autoselect_msg`, `duplicates_autoselect_all_msg`).
     private var autoSelectMessage: LocalizedStringKey {

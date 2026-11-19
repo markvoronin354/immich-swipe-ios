@@ -2,7 +2,7 @@ import Foundation
 
 /// Marketing names for Samsung model codes, ported from Android (`SamsungModels.kt`). Samsung's EXIF only
 /// carries the code, e.g. "SM-G900A", which few people recognise.
-enum SamsungModels {
+nonisolated enum SamsungModels {
     /// "Galaxy S5" for "SM-G900A", or nil if the code is unknown.
     static func name(for model: String) -> String? {
         // Prefix + letters + first three digits, e.g. "SM-G900A" -> "SM-G900", "GT-I9300" -> "GT-I930".

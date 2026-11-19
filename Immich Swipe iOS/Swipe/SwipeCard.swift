@@ -494,7 +494,7 @@ private struct CardIconButton: View {
 }
 
 /// What releasing the drag would do right now: the action, and the edge the card is heading for.
-struct SwipeIntent: Equatable {
+nonisolated struct SwipeIntent: Equatable {
     let action: SwipeAction
     let edge: Edge
 
@@ -563,7 +563,7 @@ struct IntentStamp: View {
     /// corner, so any top row pushes every badge down. A column stays at its own side, so it only pushes in
     /// the badge that shares its corner: a swipe right's top-left, a swipe left's top-right. A swipe down's
     /// and a swipe up's sit in the middle, which a column never reaches.
-    static func cardInsets(for intent: SwipeIntent, layout: CardButtonLayout?, isVideo: Bool) -> (top: CGFloat, side: CGFloat) {
+    nonisolated static func cardInsets(for intent: SwipeIntent, layout: CardButtonLayout?, isVideo: Bool) -> (top: CGFloat, side: CGFloat) {
         // A corner's buttons are 48 pt circles, 16 pt from the edge; the badge keeps 12 pt from them.
         let clear: CGFloat = 16 + 48 + 12
         let android: CGFloat = 60
@@ -657,7 +657,7 @@ struct MetadataPanel: View {
     /// As on Android: the calendar date written in `fileCreatedAt`, read as it stands rather than moved into
     /// this device's time zone, which could show the day before or after near midnight. If it can't be read,
     /// the text before the time.
-    static func dateText(fileCreatedAt: String) -> String {
+    nonisolated static func dateText(fileCreatedAt: String) -> String {
         let day = String(fileCreatedAt.prefix { $0 != "T" })
         guard let date = try? Date.ISO8601FormatStyle(timeZone: .gmt).year().month().day().parse(day) else { return day }
         var style = Date.FormatStyle(date: .long, time: .omitted)
@@ -696,14 +696,14 @@ struct MetadataPanel: View {
     }
 
     /// Words companies tack onto the EXIF make, dropped from its end: "OLYMPUS IMAGING CORP." reads "OLYMPUS".
-    private static let companySuffixes: Set<String> = [
+    private nonisolated static let companySuffixes: Set<String> = [
         "corporation", "corp", "co", "company", "ltd", "limited", "inc", "incorporated", "llc", "plc",
         "gmbh", "ag", "ab", "sa", "imaging", "optical", "photo", "electronics", "camera",
     ]
 
     /// "Apple iPhone 15 Pro". The make loses company words, and is dropped when the model already starts
     /// with one of its words, so "NIKON CORPORATION" and "NIKON D7000" read "NIKON D7000".
-    static func cameraName(make: String?, model: String?) -> String? {
+    nonisolated static func cameraName(make: String?, model: String?) -> String? {
         var words = (make ?? "").split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
         while words.count > 1, let last = words.last,
               companySuffixes.contains(last.lowercased().trimmingCharacters(in: .punctuationCharacters)) {

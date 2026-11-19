@@ -302,19 +302,19 @@ nonisolated struct ImmichClient: Sendable {
         _ method: Method,
         _ path: String,
         query: [URLQueryItem] = [],
-        body: (any Encodable)? = nil
+        body: (any Encodable & Sendable)? = nil
     ) async throws -> Response {
         let data = try await perform(method, path, query: query, body: body)
         return try JSONDecoder().decode(Response.self, from: data)
     }
 
-    private func sendWithoutResponse(_ method: Method, _ path: String, body: (any Encodable)? = nil) async throws {
+    private func sendWithoutResponse(_ method: Method, _ path: String, body: (any Encodable & Sendable)? = nil) async throws {
         _ = try await perform(method, path, body: body)
     }
 
     /// Sends the request, retrying transient failures when the request is safe to replay.
     @concurrent
-    private func perform(_ method: Method, _ path: String, query: [URLQueryItem] = [], body: (any Encodable)?) async throws -> Data {
+    private func perform(_ method: Method, _ path: String, query: [URLQueryItem] = [], body: (any Encodable & Sendable)?) async throws -> Data {
         var request = URLRequest(url: endpoint(path, query: query))
         request.httpMethod = method.rawValue
         for (name, value) in authorizationHeaders { request.setValue(value, forHTTPHeaderField: name) }

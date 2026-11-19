@@ -121,9 +121,11 @@ final class VideoDiagnostics {
             }
         })
         observers.append(center.addObserver(forName: AVPlayerItem.failedToPlayToEndTimeNotification, object: item, queue: .main) { [weak self] notification in
+            // Read before the hop: the notification itself can't be sent to the main actor.
+            let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
+            let reason = error.map { String(describing: $0) } ?? "?"
             MainActor.assumeIsolated {
-                let error = notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error
-                self?.log("FAILED r\(index): \(error.map { String(describing: $0) } ?? "?")")
+                self?.log("FAILED r\(index): \(reason)")
             }
         })
     }
