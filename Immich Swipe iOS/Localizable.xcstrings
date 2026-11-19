@@ -1545,23 +1545,6 @@
         }
       }
     },
-    "Archive %lld." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Archivar %lld."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Archiver %lld."
-          }
-        }
-      }
-    },
     "Archive button" : {
       "localizations" : {
         "es" : {
@@ -1878,83 +1861,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Annuler"
-          }
-        }
-      }
-    },
-    "Change %lld favorites." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Change %lld favorite."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Change %lld favorites."
-                }
-              },
-              "zero" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Change %lld favorites."
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Cambiar %lld favorito."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Cambiar %lld favoritos."
-                }
-              },
-              "zero" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Cambiar %lld favoritos."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Modifier %lld favori."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Modifier %lld favoris."
-                }
-              },
-              "zero" : {
-                "stringUnit" : {
-                  "state" : "machine_translated",
-                  "value" : "Modifier %lld favori."
-                }
-              }
-            }
           }
         }
       }
@@ -4222,23 +4128,6 @@
         }
       }
     },
-    "Mark %lld as kept." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Conservar %lld."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Garder %lld."
-          }
-        }
-      }
-    },
     "Maximum days: %lld" : {
       "localizations" : {
         "es" : {
@@ -4267,46 +4156,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Jours minimum : %lld"
-          }
-        }
-      }
-    },
-    "Move %lld to the Immich trash%@." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Move %1$lld to the Immich trash%2$@."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Mover %1$lld a la papelera de Immich%2$@."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Placer %1$lld dans la corbeille d’Immich%2$@."
-          }
-        }
-      }
-    },
-    "Move %lld to the locked folder." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Mover %lld a la carpeta bloqueada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Placer %lld dans le dossier verrouillé."
           }
         }
       }
@@ -5571,23 +5420,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Pivoter"
-          }
-        }
-      }
-    },
-    "Rotate %lld." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Rotar %lld."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Pivoter %lld."
           }
         }
       }
