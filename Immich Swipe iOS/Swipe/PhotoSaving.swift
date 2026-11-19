@@ -20,7 +20,9 @@ struct PhotoLibrarySaver: PhotoSaving {
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else { throw PhotoLibraryAccessDenied() }
 
-        try await PHPhotoLibrary.shared().performChanges {
+        // `@Sendable` keeps the closure off the main actor: Photos runs it on a background queue, and a
+        // main-actor closure there traps at runtime under Swift 6.
+        try await PHPhotoLibrary.shared().performChanges { @Sendable in
             let options = PHAssetResourceCreationOptions()
             options.originalFilename = url.lastPathComponent
             // The caller deletes its temporary file itself, so Photos must copy it.
