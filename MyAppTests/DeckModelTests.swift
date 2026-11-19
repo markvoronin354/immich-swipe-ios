@@ -358,6 +358,29 @@ struct DeckModelTests {
         #expect(model.deck.current?.id == "e" && model.decidedCount == 0)
     }
 
+    @Test func aSwipeLandsOnThePhotoItStartedOnEvenIfAnotherBecameCurrent() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        // The card "e" is thrown; while it flies, a page lands and makes "c" current.
+        model.move(toAssetID: "c")
+        model.swipe(.delete, on: "e")
+
+        #expect(model.deck.decision(for: "e") == .delete)
+        #expect(model.deck.decision(for: "c") == nil)
+        // The deck carries on after the photo that was swiped, as the card behind it showed.
+        #expect(model.deck.current?.id == "d")
+    }
+
+    @Test func aSwipeOnAPhotoThatLeftTheDeckDoesNothing() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        model.swipe(.delete, on: "gone")
+        #expect(model.decidedCount == 0)
+        #expect(model.deck.current?.id == "e")
+    }
+
     @Test func countsAndStripNavigation() async {
         serveThreePages()
         let model = makeModel(.all)

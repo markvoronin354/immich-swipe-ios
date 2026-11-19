@@ -188,7 +188,7 @@ struct FullscreenViewer: View {
     /// Throws the page off towards the edge in 180 ms, as on Android, then carries out the action. The next
     /// page is already in place underneath.
     private func swipe(_ action: SwipeAction, toward edge: Edge) {
-        guard !isFlying, !isHolding, model.deck.current != nil else { return }
+        guard !isFlying, !isHolding, let assetID = model.deck.current?.id else { return }
         isFlying = true
         let target: CGSize = switch edge {
         case .trailing: CGSize(width: Self.flyDistance, height: 0)
@@ -202,7 +202,7 @@ struct FullscreenViewer: View {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                model.swipe(action)
+                model.swipe(action, on: assetID)
                 dragOffset = .zero
             }
             isFlying = false

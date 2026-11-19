@@ -430,6 +430,17 @@ final class DeckModel {
         }
     }
 
+    /// Carries out a swipe on the photo it was started on. A page landing while the card flies off can
+    /// make another photo current (say, a newer one sorted in ahead), and the swipe must not land on that
+    /// one instead. Does nothing if the photo has left the deck meanwhile.
+    func swipe(_ action: SwipeAction, on assetID: String) {
+        if deck.current?.id != assetID {
+            guard let index = deck.assets.firstIndex(where: { $0.id == assetID }) else { return }
+            deck.move(to: index)
+        }
+        swipe(action)
+    }
+
     func undo() {
         guard let assetID = deck.undo() else { return }
         lastOutcome = nil

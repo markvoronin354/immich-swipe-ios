@@ -743,7 +743,7 @@ final class CardMotion {
     /// Throws the card off screen towards the edge, then carries out the action and brings the next card in
     /// place. Undo pulls the previous card back instead, and Details only settles the card.
     func fly(_ action: SwipeAction, toward edge: Edge, in model: DeckModel) {
-        guard !isFlying, model.deck.current != nil else { return }
+        guard !isFlying, let assetID = model.deck.current?.id else { return }
         switch action {
         case .undo where model.deck.canUndo:
             undo(in: model)
@@ -770,7 +770,7 @@ final class CardMotion {
             var transaction = Transaction()
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                model.swipe(action)
+                model.swipe(action, on: assetID)
                 self.offset = .zero
             }
             self.isFlying = false
