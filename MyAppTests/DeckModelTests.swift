@@ -570,6 +570,17 @@ struct DeckModelTests {
         #expect(await listingCache.assets(userID: "u", albumID: Album.virtualAllID).map(\.id).sorted() == ["a", "b", "d", "e", "f"])
     }
 
+    @Test func aSavedPhotoWhoseDateChangedMovesToItsNewPlace() async {
+        serveNewestFirst(library)
+        await makeModel(.all).load()
+
+        // "a" now has a later date, so the server sends it first; the saved copy still has the old one.
+        serveNewestFirst([("a", "2024-09"), ("e", "2024-05"), ("d", "2024-04"), ("c", "2024-03"), ("b", "2024-02")])
+        let model = makeModel(.all)
+        await model.load()
+        #expect(model.deck.assets.map(\.id) == ["a", "e", "d", "c", "b"])
+    }
+
     @Test func savedListingIsShownWhenTheServerIsUnreachable() async {
         serveNewestFirst(library)
         await makeModel(.all).load()

@@ -81,4 +81,28 @@ struct DeckSortOrderTests {
         #expect(DeckSortOrder.default.rawValue == "CHRONOLOGICAL_DESC")
         #expect(DeckSortOrder.allCases.count == 11)
     }
+
+    /// Merging pages in one at a time must give exactly what sorting everything at once gives, ties included.
+    @Test(arguments: [DeckSortOrder.chronologicalDescending, .chronologicalAscending])
+    func mergingPagesMatchesSortingEverything(order: DeckSortOrder) {
+        // Nine dates scattered across the pages, so most photos tie; every seventh has a capture date that
+        // sorts it elsewhere.
+        let all = (0..<600).map { index in
+            var photo = asset("a\(index)", "2024-0\(index * 4 % 9 + 1)")
+            if index % 7 == 0 { photo.exifInfo = ExifInfo(dateTimeOriginal: "2023-0\(index * 5 % 9 + 1)") }
+            return photo
+        }
+        var merged = order.sorted([], seed: 1)
+        for start in stride(from: 0, to: all.count, by: 50) {
+            merged = order.merging(Array(all[start..<min(start + 50, all.count)]), into: merged, seed: 1) ?? []
+        }
+        #expect(merged.map(\.id) == order.sorted(all, seed: 1).map(\.id))
+    }
+
+    @Test func onlyTheDateOrdersMerge() {
+        for order in DeckSortOrder.allCases {
+            let canMerge = order == .chronologicalDescending || order == .chronologicalAscending
+            #expect((order.merging(pile, into: [], seed: 1) != nil) == canMerge, "\(order)")
+        }
+    }
 }

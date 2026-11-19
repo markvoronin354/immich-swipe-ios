@@ -40,9 +40,9 @@ nonisolated enum DeckSortOrder: String, CaseIterable, Codable, Sendable {
     func sorted(_ assets: [Asset], seed: Int64) -> [Asset] {
         switch self {
         case .chronologicalDescending:
-            stableSorted(assets) { $0.effectiveDate > $1.effectiveDate }
+            stableSorted(assets, by: Self.newerFirst)
         case .chronologicalAscending:
-            stableSorted(assets) { $0.effectiveDate < $1.effectiveDate }
+            stableSorted(assets, by: Self.olderFirst)
         case .sizeDescending:
             stableSorted(assets) { ($0.fileSize ?? 0) > ($1.fileSize ?? 0) }
         case .sizeAscending:
@@ -54,6 +54,40 @@ nonisolated enum DeckSortOrder: String, CaseIterable, Codable, Sendable {
             typeSorted(assets, seed: seed)
         }
     }
+
+    /// `sorted`, an earlier result of `sorted(_:seed:)`, with `added` put in: the same as sorting all of them
+    /// again with `added` after the others, so among equal dates the photos already there stay first.
+    /// Only the date orders sort each page in as it lands, and only they can merge; the others return nil.
+    ///
+    /// Each added photo is placed by binary search, so a page of 500 goes into a pile of 100,000 in a small
+    /// fraction of what sorting the whole pile again costs.
+    func merging(_ added: [Asset], into sorted: [Asset], seed: Int64) -> [Asset]? {
+        let goesBefore: (Asset, Asset) -> Bool
+        switch self {
+        case .chronologicalDescending: goesBefore = Self.newerFirst
+        case .chronologicalAscending: goesBefore = Self.olderFirst
+        default: return nil
+        }
+        var result: [Asset] = []
+        result.reserveCapacity(sorted.count + added.count)
+        var rest = sorted[...]
+        for asset in self.sorted(added, seed: seed) {
+            // The photos it goes before start where the pile stops going before or level with it.
+            var low = rest.startIndex, high = rest.endIndex
+            while low < high {
+                let middle = low + (high - low) / 2
+                if goesBefore(asset, rest[middle]) { high = middle } else { low = middle + 1 }
+            }
+            result.append(contentsOf: rest[..<low])
+            result.append(asset)
+            rest = rest[low...]
+        }
+        result.append(contentsOf: rest)
+        return result
+    }
+
+    private static func newerFirst(_ lhs: Asset, _ rhs: Asset) -> Bool { lhs.effectiveDate > rhs.effectiveDate }
+    private static func olderFirst(_ lhs: Asset, _ rhs: Asset) -> Bool { lhs.effectiveDate < rhs.effectiveDate }
 
     private func typeSorted(_ assets: [Asset], seed: Int64) -> [Asset] {
         let target: AssetType = [.videosFirst, .videosFirstAscending, .videosFirstShuffled].contains(self) ? .video : .image

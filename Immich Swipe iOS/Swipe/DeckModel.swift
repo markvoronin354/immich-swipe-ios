@@ -130,6 +130,7 @@ final class DeckModel {
             }
         }
         isLoadingMore = false
+        lastSort = nil
     }
 
     /// Port of Android's `AssetRepository.getAssetsByAlbum` (spec §3.5).
@@ -301,29 +302,73 @@ final class DeckModel {
     /// Adds assets to the pile, re-sorts all of it, and picks up stored decisions for the new ones.
     /// An asset already in the pile is replaced, so one from the saved listing gets the server's latest.
     private func receive(_ items: [Asset], fromServer: Bool) async {
-        var newIDs: [String] = []
+        var change = PileChange(since: pileVersion)
+        // Where each asset new to the pile sits in `change.added`, for an asset sent twice in one batch.
+        var addedPositions: [String: Int] = [:]
         for asset in items where !removedIDs.contains(asset.id) {
             if let index = loadedIndex[asset.id] {
+                if let position = addedPositions[asset.id] {
+                    change.added[position] = asset
+                } else {
+                    // A photo that moves in the order can't be merged; the whole pile is sorted again instead.
+                    if loaded[index].effectiveDate != asset.effectiveDate { change.keepsOrder = false }
+                    change.replaced[asset.id] = asset
+                }
                 loaded[index] = asset
             } else {
                 loadedIndex[asset.id] = loaded.count
                 loaded.append(asset)
-                newIDs.append(asset.id)
+                addedPositions[asset.id] = change.added.count
+                change.added.append(asset)
             }
         }
-        await resort()
+        await resort(change)
         if fromServer { pendingJump = false }
-        mergeStoredDecisions(for: newIDs)
+        mergeStoredDecisions(for: change.added.map(\.id))
     }
+
+    /// What one `receive` did to the pile, so its assets can be merged into the last sort.
+    private nonisolated struct PileChange: Sendable {
+        /// `pileVersion` before the change.
+        let since: Int
+        /// New to the pile, in the order they arrived.
+        var added: [Asset] = []
+        /// Already in the pile, replaced by the server's copy.
+        var replaced: [String: Asset] = [:]
+        /// False once a replaced asset's date changed, which can move it in the order.
+        var keepsOrder = true
+    }
+
+    /// The pile as last sorted while loading, with the `pileVersion` and order it was sorted at. Kept only
+    /// during a load, so the deck doesn't hold a second copy of a large pile once it's done.
+    private var lastSort: (version: Int, order: DeckSortOrder, assets: [Asset])?
 
     /// Sorts the whole pile and shows it. A sort that the pile or the order changed under is redone,
     /// as Android cancels an outdated sort, so a stale result never overwrites a newer one.
-    private func resort() async {
+    ///
+    /// With `change`, when the last sort is of the pile just before it and nothing in it moves, the change
+    /// is merged into that sort instead. The order is the same; the time is a fraction, which matters when
+    /// a large library's pages are each sorted in as they land.
+    private func resort(_ change: PileChange? = nil) async {
+        var change = change
         while true {
             let version = pileVersion
             let order = sortOrder
-            let ordered = source.supportsSorting ? await Self.sorted(loaded, by: order, seed: shuffleSeed) : loaded
-            guard version == pileVersion, order == sortOrder else { continue }
+            let ordered: [Asset]
+            if !source.supportsSorting {
+                ordered = loaded
+            } else if let change, change.keepsOrder, let last = lastSort, last.version == change.since, last.order == order,
+                      let merged = await Self.merged(change, into: last.assets, by: order, seed: shuffleSeed) {
+                ordered = merged
+            } else {
+                ordered = await Self.sorted(loaded, by: order, seed: shuffleSeed)
+            }
+            guard version == pileVersion, order == sortOrder else {
+                // The pile changed again while this ran, so the change no longer describes it.
+                change = nil
+                continue
+            }
+            lastSort = phase == .loading && source.supportsSorting ? (version, order, ordered) : nil
             deck.replaceAssets(ordered, keepPosition: !pendingJump)
             return
         }
@@ -382,6 +427,14 @@ final class DeckModel {
     @concurrent
     private nonisolated static func sorted(_ assets: [Asset], by order: DeckSortOrder, seed: Int64) async -> [Asset] {
         order.sorted(assets, seed: seed)
+    }
+
+    /// The last sort with the server's copies of replaced assets swapped in and the new ones merged, off the
+    /// main actor. Nil for an order that can't merge.
+    @concurrent
+    private nonisolated static func merged(_ change: PileChange, into sorted: [Asset], by order: DeckSortOrder, seed: Int64) async -> [Asset]? {
+        let refreshed = change.replaced.isEmpty ? sorted : sorted.map { change.replaced[$0.id] ?? $0 }
+        return order.merging(change.added, into: refreshed, seed: seed)
     }
 
     // MARK: Sorting
