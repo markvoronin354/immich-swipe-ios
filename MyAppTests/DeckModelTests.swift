@@ -250,10 +250,23 @@ struct DeckModelTests {
         await model.load()
         model.decide(.keep) // e
 
-        await model.setSortOrder(.chronologicalAscending, defaults: defaults)
+        await model.setSortOrder(.chronologicalAscending)
         #expect(model.deck.assets.map(\.id) == ["a", "b", "c", "d", "e"])
         #expect(model.deck.current?.id == "a")
         #expect(makeModel(.all).sortOrder == .chronologicalAscending)
+    }
+
+    /// As on Android, picking the order already in use goes back to the first undecided photo.
+    @Test func repickingTheSortOrderGoesBackToTheFirstUndecidedPhoto() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        model.decide(.keep) // e
+        model.move(toAssetID: "b")
+
+        await model.setSortOrder(model.sortOrder)
+        #expect(model.deck.current?.id == "d")
+        #expect(model.deck.assets.map(\.id) == ["e", "d", "c", "b", "a"])
     }
 
     @Test func resetForgetsDecisionsForThisDeck() async throws {
@@ -282,7 +295,7 @@ struct DeckModelTests {
         #expect(model.deck.assets.map(\.id) == ["b2", "b1", "b3", "s2", "s1"])
         #expect(model.serverTotal == 5)
 
-        await model.setSortOrder(.chronologicalAscending, defaults: defaults)
+        await model.setSortOrder(.chronologicalAscending)
         #expect(model.deck.assets.map(\.id) == ["b2", "b1", "b3", "s2", "s1"])
     }
 

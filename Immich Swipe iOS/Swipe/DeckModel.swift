@@ -439,7 +439,7 @@ final class DeckModel {
 
     // MARK: Sorting
 
-    func setSortOrder(_ order: DeckSortOrder, defaults: UserDefaults = .standard) async {
+    func setSortOrder(_ order: DeckSortOrder) async {
         if order == sortOrder || !source.supportsSorting {
             // Re-picking the current order jumps back to the first undecided card.
             deck.replaceAssets(deck.assets, keepPosition: false)

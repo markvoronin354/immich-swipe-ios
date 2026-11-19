@@ -65,7 +65,7 @@ struct StatisticsSheet: View {
                     Button("Close", systemImage: "xmark") { dismiss() }
                 }
             }
-            .task { stats = Stats(decisions: decisions, userID: userID) }
+            .task { stats = await Stats(decisions: decisions, userID: userID) }
         }
     }
 
@@ -108,9 +108,10 @@ struct StatisticsSheet: View {
 
         init() {}
 
-        init(decisions: DecisionStore, userID: String) {
+        /// Every decision is read off the main thread: with tens of thousands it takes about half a second.
+        init(decisions: DecisionStore, userID: String) async {
             let history = (try? decisions.syncHistory(userID: userID)) ?? []
-            let all = ((try? decisions.allDecisions(userID: userID)) ?? [:]).values
+            let all = ((try? await decisions.allDecisionsInBackground(userID: userID)) ?? [:]).values
             let weekAgo = Date.now.addingTimeInterval(-7 * 24 * 60 * 60)
             let week = history.filter { $0.timestamp >= weekAgo }
 

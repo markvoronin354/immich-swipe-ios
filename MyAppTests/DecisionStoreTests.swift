@@ -114,14 +114,14 @@ struct DecisionStoreTests {
 
     /// Android's `HomeViewModelTest`: deleted and locked come from the history, kept and archived from the
     /// decisions, synced or not, so an apply doesn't count them a second time.
-    @Test func statsTakeKeptAndArchivedFromTheDecisions() throws {
+    @Test func statsTakeKeptAndArchivedFromTheDecisions() async throws {
         try store.save(.keep, assetID: "k1", albumID: "a", userID: "u", fileSize: nil)
         try store.save(.keep, assetID: "k2", albumID: "a", userID: "u", fileSize: nil)
         try store.save(.archive, assetID: "a1", albumID: "a", userID: "u", fileSize: nil)
         try store.markSynced(assetIDs: ["k1", "a1"], userID: "u")
         try store.recordSync(userID: "u", deletedCount: 2, bytesSaved: 1000, keptCount: 4, archivedCount: 1, lockedCount: 1)
 
-        let stats = StatisticsSheet.Stats(decisions: store, userID: "u")
+        let stats = await StatisticsSheet.Stats(decisions: store, userID: "u")
         #expect(stats.totalKept == 2)
         #expect(stats.totalArchived == 1)
         #expect(stats.totalDeleted == 2)

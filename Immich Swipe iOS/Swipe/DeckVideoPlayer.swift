@@ -126,7 +126,9 @@ final class DeckVideoPlayer {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
-                self?.poll()
+                // A player that has gone away without being stopped would otherwise leave this looping for good.
+                guard let self else { return }
+                self.poll()
                 try? await Task.sleep(for: .milliseconds(250))
             }
         }
