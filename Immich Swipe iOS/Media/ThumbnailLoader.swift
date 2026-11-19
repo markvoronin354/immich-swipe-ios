@@ -29,6 +29,9 @@ actor ThumbnailLoader {
             self.session = URLSession(configuration: configuration)
         }
         memory.countLimit = 400
+        // Decoded bytes, not file size: a 1440 px preview is about 6 MB and a 4096 px original about 50 MB,
+        // so the count alone would let a long swipe session hold gigabytes.
+        memory.totalCostLimit = 150 << 20
     }
 
     private nonisolated static func key(for request: URLRequest, maxPixelSize: Int) -> String {
@@ -60,7 +63,7 @@ actor ThumbnailLoader {
         defer { inFlight[key] = nil }
 
         let image = try await task.value
-        memory.setObject(image, forKey: key as NSString)
+        memory.setObject(image, forKey: key as NSString, cost: image.bytesPerRow * image.height)
         if let url = request.url?.absoluteString { keysByURL[url, default: []].insert(key) }
         return image
     }
