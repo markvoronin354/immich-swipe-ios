@@ -210,7 +210,11 @@ final class DuplicatesModel {
         let toDelete = assetsToDelete
         let toKeep = allAssets.filter { decisions[$0.id] == .keep }.map(\.id)
         isSyncing = true
-        defer { isSyncing = false }
+        let background = BackgroundTime("Delete duplicates")
+        defer {
+            isSyncing = false
+            background.end()
+        }
         AppLog.i("Duplicates", "Syncing duplicate resolutions: \(toDelete.count) to delete, \(toKeep.count) to keep")
         do {
             if !toDelete.isEmpty {

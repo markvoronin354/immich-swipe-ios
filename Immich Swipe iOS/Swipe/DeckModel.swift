@@ -678,6 +678,8 @@ final class DeckModel {
         guard !isApplying else { return }
         isApplying = true
         lastOutcome = nil
+        let background = BackgroundTime("Apply changes")
+        defer { background.end() }
         let outcome = await ApplyChanges(client: client, decisions: decisions, userID: userID).run(plan)
         integrate(outcome)
         lastOutcome = outcome
