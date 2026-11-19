@@ -95,6 +95,9 @@ struct PerformanceBenchmarks {
         measure("DecisionStore: save 30,000 decisions in one call", runs: 1) {
             try? store.save(Self.decisions.mapValues { _ in Int64(1_000_000) }, decision: .keep, albumID: Album.virtualAllID, userID: "u")
         }
+        measure("DecisionStore.markSynced 30,000 (Apply changes)", runs: 1) {
+            try? store.markSynced(assetIDs: Array(Self.decisions.keys), userID: "u")
+        }
         measure("DecisionStore.allDecisions, on the main actor") { try? store.allDecisions(userID: "u") }
         measure("DecisionStore.progressByAlbum + totals, on the main actor") {
             (try? store.progressByAlbum(userID: "u"), try? store.totals(userID: "u"))

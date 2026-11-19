@@ -186,23 +186,25 @@ final class DecisionStore {
 
     /// Records or replaces the same decision for many assets at once (bulk mode). Keys are asset IDs.
     func save(_ fileSizes: [String: Int64?], decision: SwipeDecision, albumID: String, userID: String) throws {
-        let existing = Dictionary(
-            try records(userID: userID, assetIDs: Set(fileSizes.keys)).map { ($0.assetID, $0) },
-            uniquingKeysWith: { first, _ in first }
-        )
         let now = Date.now
-        for (assetID, fileSize) in fileSizes {
-            if let record = existing[assetID] {
-                record.albumID = albumID
-                record.decisionRawValue = decision.rawValue
-                record.fileSize = fileSize
-                record.createdAt = now
-                record.isSynced = false
-            } else {
-                context.insert(DecisionRecord(assetID: assetID, albumID: albumID, userID: userID, decision: decision, fileSize: fileSize, createdAt: now))
+        try inSavedBatches(Array(fileSizes.keys)) { batch in
+            let existing = Dictionary(
+                try records(userID: userID, assetIDs: Set(batch)).map { ($0.assetID, $0) },
+                uniquingKeysWith: { first, _ in first }
+            )
+            for assetID in batch {
+                let fileSize = fileSizes[assetID] ?? nil
+                if let record = existing[assetID] {
+                    record.albumID = albumID
+                    record.decisionRawValue = decision.rawValue
+                    record.fileSize = fileSize
+                    record.createdAt = now
+                    record.isSynced = false
+                } else {
+                    context.insert(DecisionRecord(assetID: assetID, albumID: albumID, userID: userID, decision: decision, fileSize: fileSize, createdAt: now))
+                }
             }
         }
-        try context.save()
     }
 
     func remove(assetIDs: some Collection<String>, userID: String) throws {
@@ -219,10 +221,11 @@ final class DecisionStore {
     }
 
     func markSynced(assetIDs: some Collection<String>, userID: String) throws {
-        for record in try records(userID: userID, assetIDs: Set(assetIDs)) {
-            record.isSynced = true
+        try inSavedBatches(Array(Set(assetIDs))) { batch in
+            for record in try records(userID: userID, assetIDs: Set(batch)) {
+                record.isSynced = true
+            }
         }
-        try context.save()
     }
 
     func recordSync(userID: String, deletedCount: Int, bytesSaved: Int64, keptCount: Int, archivedCount: Int, lockedCount: Int) throws {
@@ -298,25 +301,27 @@ final class DecisionStore {
 
         let usable = backup.decisions.filter { !$0.isSkip }
         for (userID, rows) in Dictionary(grouping: usable, by: \.userId) {
-            let existing = Dictionary(
-                try records(userID: userID, assetIDs: Set(rows.map(\.assetId))).map { ($0.assetID, $0) },
-                uniquingKeysWith: { first, _ in first }
-            )
-            for row in rows {
-                guard let decision = row.swipeDecision else {
-                    result.unreadableDecisions += 1
-                    continue
+            try inSavedBatches(rows) { batch in
+                let existing = Dictionary(
+                    try records(userID: userID, assetIDs: Set(batch.map(\.assetId))).map { ($0.assetID, $0) },
+                    uniquingKeysWith: { first, _ in first }
+                )
+                for row in batch {
+                    guard let decision = row.swipeDecision else {
+                        result.unreadableDecisions += 1
+                        continue
+                    }
+                    if let record = existing[row.assetId] {
+                        record.albumID = row.albumId
+                        record.decisionRawValue = decision.rawValue
+                        record.fileSize = row.fileSize
+                        record.createdAt = row.createdDate
+                        record.isSynced = row.isSynced ?? false
+                    } else {
+                        context.insert(DecisionRecord(assetID: row.assetId, albumID: row.albumId, userID: userID, decision: decision, fileSize: row.fileSize, createdAt: row.createdDate, isSynced: row.isSynced ?? false))
+                    }
+                    result.decisionsByUser[userID, default: 0] += 1
                 }
-                if let record = existing[row.assetId] {
-                    record.albumID = row.albumId
-                    record.decisionRawValue = decision.rawValue
-                    record.fileSize = row.fileSize
-                    record.createdAt = row.createdDate
-                    record.isSynced = row.isSynced ?? false
-                } else {
-                    context.insert(DecisionRecord(assetID: row.assetId, albumID: row.albumId, userID: userID, decision: decision, fileSize: row.fileSize, createdAt: row.createdDate, isSynced: row.isSynced ?? false))
-                }
-                result.decisionsByUser[userID, default: 0] += 1
             }
         }
 
@@ -351,6 +356,16 @@ final class DecisionStore {
     }
 
     // MARK: Helpers
+
+    /// Runs `change` over `items` a batch at a time, saving after each batch. One SwiftData save of many
+    /// inserted or changed records gets disproportionately slow: 30,000 took about 25 seconds, against
+    /// about 2 in batches of 500. A failure keeps the batches already saved.
+    private func inSavedBatches<Item>(_ items: [Item], _ change: (ArraySlice<Item>) throws -> Void) throws {
+        for start in stride(from: 0, to: items.count, by: Self.batchSize) {
+            try change(items[start..<min(start + Self.batchSize, items.count)])
+            try context.save()
+        }
+    }
 
     private func records(userID: String, assetIDs: Set<String>) throws -> [DecisionRecord] {
         guard !assetIDs.isEmpty else { return [] }

@@ -79,6 +79,20 @@ struct DecisionStoreTests {
         #expect(try store.totals(userID: "u").decided == 500)
     }
 
+    /// Bulk writes save in batches of 500; every batch must land, whether its rows are new or already stored.
+    @Test func bulkWritesMixingNewAndStoredRowsLandInEveryBatch() throws {
+        try store.save(Dictionary(uniqueKeysWithValues: (0..<600).map { ("m\($0)", Int64?.some(1)) }), decision: .keep, albumID: "a", userID: "u")
+        // 600 already stored, 700 new, across three batches.
+        try store.save(Dictionary(uniqueKeysWithValues: (0..<1300).map { ("m\($0)", Int64?.some(2)) }), decision: .delete, albumID: "b", userID: "u")
+
+        let all = try store.allDecisions(userID: "u")
+        #expect(all.count == 1300)
+        #expect(all.values.allSatisfy { $0.decision == .delete && $0.albumID == "b" && $0.fileSize == 2 })
+
+        try store.markSynced(assetIDs: (0..<1100).map { "m\($0)" }, userID: "u")
+        #expect(try store.totals(userID: "u").unsynced == 200)
+    }
+
     @Test func resetRemovesDecisionsMadeInOrApplyingToTheAlbum() throws {
         try store.save(.keep, assetID: "x1", albumID: "albumA", userID: "u", fileSize: nil)
         try store.save(.keep, assetID: "x2", albumID: Album.virtualAllID, userID: "u", fileSize: nil)
