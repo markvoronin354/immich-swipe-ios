@@ -76,7 +76,12 @@ struct SettingsView: View {
             NavigationLink {
                 InteractionsSettingsView()
             } label: {
-                SettingsRow(title: "Interactions", subtitle: "Sorting bar actions, auto-advance, and tap gestures", systemImage: "hand.tap")
+                SettingsRow(title: "Interactions", subtitle: "Toolbar buttons, auto-advance, and tap gestures", systemImage: "hand.tap")
+            }
+            NavigationLink {
+                SwipeActionsSettingsView()
+            } label: {
+                SettingsRow(title: "Swipe actions", subtitle: "Choose what each swipe direction does", systemImage: "hand.draw")
             }
             NavigationLink {
                 ActionButtonsSettingsView()

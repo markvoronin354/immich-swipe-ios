@@ -1229,6 +1229,22 @@
         }
       }
     },
+    "All four swipe directions will go back to their default actions." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las cuatro direcciones de deslizamiento volverán a sus acciones predeterminadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les quatre directions de swipe reviendront à leurs actions par défaut."
+          }
+        }
+      }
+    },
     "All Photos" : {
       "localizations" : {
         "es" : {
@@ -1893,6 +1909,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Vérifiez avant suppression"
+          }
+        }
+      }
+    },
+    "Choose what each swipe direction does" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige qué hace cada dirección de deslizamiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir l’action de chaque direction de swipe"
           }
         }
       }
@@ -5296,6 +5328,22 @@
         }
       }
     },
+    "Reset Swipe Actions?" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Restablecer acciones de deslizamiento?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les actions de swipe ?"
+          }
+        }
+      }
+    },
     "Reset this album?" : {
       "localizations" : {
         "es" : {
@@ -5932,22 +5980,6 @@
         }
       }
     },
-    "Sorting bar actions, auto-advance, and tap gestures" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Acciones de la barra de clasificación, avance automático y gestos táctiles"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Actions de la barre de tri, avance automatique et gestes tactiles"
-          }
-        }
-      }
-    },
     "Sound behavior" : {
       "localizations" : {
         "es" : {
@@ -6396,18 +6428,18 @@
         }
       }
     },
-    "The toolbar, swipe actions and tap gestures will go back to their defaults." : {
+    "The toolbar and tap gestures will go back to their defaults." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La barra de herramientas, las acciones de deslizamiento y los gestos táctiles volverán a sus valores predeterminados."
+            "value" : "La barra de herramientas y los gestos táctiles volverán a sus valores predeterminados."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La barre d’outils, les actions de swipe et les gestes tactiles reviendront à leurs valeurs par défaut."
+            "value" : "La barre d’outils et les gestes tactiles reviendront à leurs valeurs par défaut."
           }
         }
       }
@@ -6622,6 +6654,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Barre d’outils"
+          }
+        }
+      }
+    },
+    "Toolbar buttons, auto-advance, and tap gestures" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Botones de la barra, avance automático y gestos táctiles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boutons de la barre, défilement auto et gestes tactiles"
           }
         }
       }
