@@ -1,11 +1,11 @@
 # Privacy Policy for Immich Swipe (iOS)
 
-**Last Updated:** November 15, 2026
+**Last Updated:** November 21, 2026
 
 ## 1. Overview
 
-**Immich Swipe** ("the Application") is an open-source iPhone and iPad app that helps you sort, manage and clean up
-the photos and videos on your own self-hosted [Immich](https://immich.app/) server.
+**Immich Swipe** ("the Application") is an open-source iPhone and iPad app (which also runs on Apple silicon Macs as the iPad app) that helps you
+sort, manage and clean up the photos and videos on your own self-hosted [Immich](https://immich.app/) server.
 
 **Immich Swipe does not collect, store, transmit, sell or share any personal data, usage analytics or telemetry
 with the developer or any third party.** The only server it talks to is the Immich server you enter.
@@ -15,10 +15,13 @@ with the developer or any third party.** The only server it talks to is the Immi
 ## 2. Information Handled by the Application
 
 ### A. Server Connection Credentials
-* **What is stored:** Your Immich server URL and your API key.
+* **What is stored:** Your Immich server URL, your API key and any custom request headers you add for your server.
 * **How it is used:** Only to authenticate requests between your device and your Immich server.
-* **Storage location:** The API key is stored in the iOS Keychain, available only on this device after it has been
-  unlocked. It is never sent anywhere except the Immich server you entered.
+* **Storage location:** The API key and custom headers are stored in the iOS Keychain, available only on this device
+  after it has been unlocked. They are never sent anywhere except the Immich server you entered.
+* **Unencrypted connections:** You can enter an `http://` server address. Over plain HTTP your API key and media
+  travel unencrypted. The app asks you to confirm before connecting this way to a server that isn't on a private
+  network.
 
 ### B. Photos, Videos and Media Metadata
 * **What is processed:** Thumbnails, photos, videos, metadata (such as EXIF and dates), album information and
@@ -32,7 +35,7 @@ with the developer or any third party.** The only server it talks to is the Immi
 * **Decisions:** Your swipe decisions are stored in a local database on your device.
 * **Media cache:** Images are cached on your device so the app runs smoothly.
 * **Logs:** A small diagnostic log is kept on your device. It is never uploaded; you can view it, share it yourself
-  or clear it in the app.
+  or clear it in the app. The same messages are also written to the iOS system log on your device.
 * **Control:** You can export, import or reset your decisions and clear caches from **Settings**.
 
 ---
