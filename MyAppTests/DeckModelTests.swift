@@ -177,6 +177,25 @@ struct DeckModelTests {
         #expect(remaining["mine"] != nil)
     }
 
+    @Test func aLivePhotosHiddenMotionClipIsSkipped() async {
+        RoutingServer.route { path, _ in
+            switch path {
+            case "/api/search/statistics": return (200, #"{"total":2}"#)
+            case "/api/search/metadata":
+                let photo = #"{"id":"photo","ownerId":"u","fileCreatedAt":"2024-02","type":"IMAGE","isFavorite":false,"isArchived":false,"isTrashed":false,"livePhotoVideoId":"clip"}"#
+                let clip = #"{"id":"clip","ownerId":"u","fileCreatedAt":"2024-02","type":"VIDEO","isFavorite":false,"isArchived":false,"isTrashed":false,"visibility":"hidden"}"#
+                return (200, #"{"assets":{"items":[\#(photo),\#(clip)],"total":2,"nextPage":null,"nextCursor":null}}"#)
+            default: return (404, "{}")
+            }
+        }
+        let model = makeModel(.album(id: "alb1"))
+        await model.load()
+
+        #expect(model.deck.assets.map(\.id) == ["photo"])
+        #expect(model.deck.assets.first?.livePhotoVideoId == "clip")
+        #expect(model.serverTotal == 1)
+    }
+
     @Test func anAlbumOfOnlyOtherUsersPhotosIsRecordedAsNothingToSort() async {
         RoutingServer.route { path, _ in
             switch path {

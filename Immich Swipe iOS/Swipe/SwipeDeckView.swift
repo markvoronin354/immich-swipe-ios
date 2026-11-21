@@ -105,11 +105,11 @@ struct SwipeDeckView: View {
         }
         #if os(iOS)
         .fullScreenCover(isPresented: $isFullscreen) {
-            FullscreenViewer(model: model, videoPlayer: videoPlayer)
+            FullscreenViewer(model: model, videoPlayer: videoPlayer, livePhotoPlayer: livePhotoPlayer)
         }
         #else
         .sheet(isPresented: $isFullscreen) {
-            FullscreenViewer(model: model, videoPlayer: videoPlayer)
+            FullscreenViewer(model: model, videoPlayer: videoPlayer, livePhotoPlayer: livePhotoPlayer)
                 .frame(minWidth: 700, minHeight: 500)
         }
         #endif
@@ -164,11 +164,8 @@ struct SwipeDeckView: View {
         } else {
             videoPlayer.stop()
         }
-        if let current = model.deck.current, current.isLivePhoto {
-            livePhotoPlayer.play(current, using: model.client)
-        } else {
-            livePhotoPlayer.stop()
-        }
+        // A live photo's clip plays only from its pill, so a new card never starts one.
+        livePhotoPlayer.stop()
     }
 
     @ViewBuilder
@@ -478,6 +475,10 @@ private struct CardStack: View {
         var actions = actions
         actions.isLoadingFullResolution = loadingOriginalID == model.deck.current?.id
         actions.video = videoPlayer.assetID == model.deck.current?.id ? videoPlayer : nil
+        actions.showsLivePill = true
+        actions.toggleLivePhoto = {
+            if let current = model.deck.current { livePhotoPlayer.toggle(current, using: model.client) }
+        }
         actions.toggleDetails = { setPanel(open: panelProgress <= 0.5) }
         return actions
     }

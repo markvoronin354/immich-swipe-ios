@@ -47,6 +47,9 @@ final class DeckModel {
     /// Photos in this album that belong to other users (shared albums, partner libraries). Immich won't let
     /// this user change them, so they are left out of the deck instead of failing when changes are applied.
     private var foreignIDs: Set<String> = []
+    /// Hidden assets are the motion clips of live photos, which the photo already plays. They're left out
+    /// of the deck, and off its total like the foreign ones.
+    private var hiddenIDs: Set<String> = []
     /// The server's own total, which counts those photos too.
     private var reportedTotal = 0
     /// Deleted or locked by "Apply changes". Pages already in flight predate that, so they're filtered out.
@@ -99,6 +102,7 @@ final class DeckModel {
         pendingJump = true
         syncedCount = 0
         foreignIDs = []
+        hiddenIDs = []
         // The saved listing and the stored decisions both take a while with a large library, so they're
         // read side by side, off the main actor. Duplicates have no saved listing; that read finds no file.
         let (cache, user, listing) = (listingCache, userID, listingID)
@@ -148,7 +152,7 @@ final class DeckModel {
         try Task.checkCancellation()
         reportedTotal = max(await statistics ?? 0, firstPage.total)
         let firstItems = owned(firstPage.items)
-        let total = max(reportedTotal - foreignIDs.count, 0)
+        let total = max(reportedTotal - foreignIDs.count - hiddenIDs.count, 0)
         serverTotal = total
 
         // 3. With several pages, a saved listing that matches the server's total and first page is
@@ -249,11 +253,13 @@ final class DeckModel {
     private func owned(_ assets: [Asset]) -> [Asset] {
         let user = userID
         let mine = assets.filter { $0.ownerId == user }
-        if mine.count != assets.count {
+        let visible = mine.filter { $0.visibility != .hidden }
+        if mine.count != assets.count || visible.count != mine.count {
             foreignIDs.formUnion(assets.filter { $0.ownerId != user }.map(\.id))
-            serverTotal = max(reportedTotal - foreignIDs.count, 0)
+            hiddenIDs.formUnion(mine.filter { $0.visibility == .hidden }.map(\.id))
+            serverTotal = max(reportedTotal - foreignIDs.count - hiddenIDs.count, 0)
         }
-        return mine
+        return visible
     }
 
     /// Home lists an album with none of this user's photos as having nothing to sort. Only a finished load

@@ -14,6 +14,7 @@ import SwiftUI
 struct FullscreenViewer: View {
     let model: DeckModel
     let videoPlayer: DeckVideoPlayer
+    let livePhotoPlayer: LivePhotoPlayer
 
     @Environment(\.dismiss) private var dismiss
     private let prefs = DeckPreferences()
@@ -52,7 +53,7 @@ struct FullscreenViewer: View {
                 .ignoresSafeArea()
 
             if let next = model.deck.upcoming(1).first {
-                ViewerPage(asset: next, model: model, videoPlayer: videoPlayer, scale: 0.85 + 0.15 * nextProgress, controlsVisible: controlsVisible && !isHolding)
+                ViewerPage(asset: next, model: model, videoPlayer: videoPlayer, livePhotoPlayer: livePhotoPlayer, scale: 0.85 + 0.15 * nextProgress, controlsVisible: controlsVisible && !isHolding)
                     .id(next.id)
                     .opacity((0.6 + 0.4 * nextProgress) * fade)
                     .allowsHitTesting(false)
@@ -64,6 +65,7 @@ struct FullscreenViewer: View {
                     asset: current,
                     model: model,
                     videoPlayer: videoPlayer,
+                    livePhotoPlayer: livePhotoPlayer,
                     isCurrent: true,
                     offset: dragOffset,
                     fade: fade,
@@ -90,7 +92,9 @@ struct FullscreenViewer: View {
         .onChange(of: model.deck.current?.id) {
             isHolding = false
             isZoomed = false
+            livePhotoPlayer.stop()
         }
+        .onDisappear { livePhotoPlayer.stop() }
         // The last photo has been sorted.
         .onChange(of: model.deck.current == nil) { _, isFinished in
             if isFinished { dismiss() }
@@ -126,6 +130,7 @@ struct FullscreenViewer: View {
             undo: { model.undo() },
             favorite: { model.toggleFavoriteForCurrent() },
             mute: { videoPlayer.toggleMute() },
+            toggleLivePhoto: { livePhotoPlayer.toggle(asset, using: model.client) },
             fullResolution: { model.toggleFullResolution(keepWhileSwiping: prefs.keepFullResolution) },
             info: { infoAsset = asset }
         )
@@ -269,6 +274,7 @@ struct ViewerActions {
     var undo: () -> Void = {}
     var favorite: () -> Void = {}
     var mute: () -> Void = {}
+    var toggleLivePhoto: () -> Void = {}
     var fullResolution: () -> Void = {}
     var info: () -> Void = {}
 }
@@ -281,6 +287,7 @@ private struct ViewerPage: View {
     let asset: Asset
     let model: DeckModel
     let videoPlayer: DeckVideoPlayer
+    let livePhotoPlayer: LivePhotoPlayer
     var isCurrent = false
     /// Applied inside each layer rather than to the whole page: a page scaled from outside no longer
     /// reaches the screen edges, so its media stops ignoring the safe area and is centred 12 pt lower,
@@ -308,6 +315,11 @@ private struct ViewerPage: View {
     /// The deck's shared player, once it is playing this page's video.
     private var player: AVPlayer? {
         isCurrent && videoPlayer.assetID == asset.id ? videoPlayer.player : nil
+    }
+
+    /// The live photo player, while it is playing this page's clip.
+    private var livePhotoClip: AVPlayer? {
+        isCurrent && livePhotoPlayer.assetID == asset.id ? livePhotoPlayer.player : nil
     }
 
     /// The preview is shown, and the original drawn over it only while full resolution is on, as on
@@ -417,7 +429,7 @@ private struct ViewerPage: View {
                 if let originalRequest {
                     RemoteImage(request: originalRequest, maxPixelSize: 4096, isOverlay: true, isLoading: $isLoadingOriginal)
                 }
-                if let player {
+                if let player = player ?? livePhotoClip {
                     PlayerSurface(player: player)
                 }
             }
@@ -500,9 +512,16 @@ private struct ViewerControls: View {
                 VideoControls(asset: asset, player: videoPlayer, sizeText: sizeText, onTogglePlay: actions.playPause)
                     .padding(.horizontal, 12)
                     .padding(.bottom, 12)
-            } else if let sizeText {
-                SizePill(text: sizeText)
-                    .padding(.bottom, 12)
+            } else {
+                VStack(spacing: 8) {
+                    if asset.isLivePhoto {
+                        LivePill(action: actions.toggleLivePhoto)
+                    }
+                    if let sizeText {
+                        SizePill(text: sizeText)
+                    }
+                }
+                .padding(.bottom, 12)
             }
 
             bottomBar

@@ -1,7 +1,7 @@
 import AVFoundation
 import Observation
 
-/// Plays a Live Photo's clip once, muted, when its card comes to the front. The card draws it over the
+/// Plays a Live Photo's clip once, muted, when the LIVE pill is tapped. The card draws it over the
 /// still, which shows again when the clip ends. Separate from `DeckVideoPlayer`, which loops and has controls.
 @Observable
 final class LivePhotoPlayer {
@@ -13,8 +13,13 @@ final class LivePhotoPlayer {
 
     init() { player.isMuted = true }
 
-    func play(_ asset: Asset, using client: ImmichClient) {
-        guard let clipID = asset.livePhotoVideoId, assetID != asset.id else { return }
+    /// Plays the photo's clip, or stops it while it plays, like Android's pill.
+    func toggle(_ asset: Asset, using client: ImmichClient) {
+        if assetID == asset.id { stop() } else { play(asset, using: client) }
+    }
+
+    private func play(_ asset: Asset, using client: ImmichClient) {
+        guard let clipID = asset.livePhotoVideoId else { return }
         stop()
         let urlAsset = AVURLAsset(
             url: client.url(for: .videoPlayback(assetID: clipID)),

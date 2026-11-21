@@ -98,6 +98,9 @@ struct SwipeCardActions {
     var video: DeckVideoPlayer?
     /// Opens the details panel, or shuts it if it's open. Set by the card stack, which owns the panel.
     var toggleDetails: () -> Void = {}
+    /// Set only on the top card, which is the only one with a LIVE pill.
+    var showsLivePill = false
+    var toggleLivePhoto: () -> Void = {}
 }
 
 /// The preview, the original over it when asked for, and the playing video over both, all turned in
@@ -209,6 +212,12 @@ struct CardControls: View {
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { infoWidth = $0 }
                     .padding(.bottom, clearance)
                     .animation(.snappy, value: clearance)
+            } else if asset.isLivePhoto, actions.showsLivePill {
+                let clearance = clearance(of: infoWidth, cardWidth: cardWidth, from: (.bottomLeft, bottomLeftSize), (.bottomRight, bottomRightSize))
+                LivePill(action: actions.toggleLivePhoto)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { infoWidth = $0 }
+                    .padding(.bottom, clearance)
+                    .animation(.snappy, value: clearance)
             }
         }
         .overlay {
@@ -240,6 +249,24 @@ struct CardControls: View {
         let room = (cardWidth - pillWidth) / 2 - 8
         guard corner > 0, corner > room else { return 8 }
         return 8 + (sizes.map(\.height).max() ?? 0) + 8
+    }
+}
+
+/// The "LIVE" pill on a live photo's card. A tap plays the motion clip, or stops it while it plays.
+struct LivePill: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(verbatim: "LIVE")
+                .font(.subheadline.bold())
+                .padding(.horizontal, 14)
+                .padding(.vertical, 4)
+                .frame(minHeight: 32)
+                .modifier(CardPillBackground())
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
     }
 }
 
