@@ -628,8 +628,15 @@ struct MetadataPanel: View {
     let onClose: () -> Void
     /// Sends the new description to the server; throws when it couldn't be saved.
     let saveDescription: (String) async throws -> Void
+    /// Whether the rows are scrolled to their top and to their bottom; both when they all fit.
+    var onScrollEdges: ((_ atTop: Bool, _ atBottom: Bool) -> Void)?
 
     @State private var isEditingDescription = false
+
+    private struct ScrollEdges: Equatable {
+        let atTop: Bool
+        let atBottom: Bool
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -655,27 +662,19 @@ struct MetadataPanel: View {
             .padding(.top, 10)
             .padding(.bottom, 6)
 
-            VStack(spacing: 0) {
-                DescriptionRow(description: description) { isEditingDescription = true }
-                Divider().padding(.leading, 36)
-                MetadataRow(title: "Date", systemImage: "calendar", value: date)
-                Divider().padding(.leading, 36)
-                MetadataRow(title: "Format", systemImage: "info.circle", value: format)
-                Divider().padding(.leading, 36)
-                MetadataRow(title: "Size", systemImage: "internaldrive", value: size)
-                Divider().padding(.leading, 36)
-                MetadataRow(title: "Resolution", systemImage: "aspectratio", value: resolution)
-                Divider().padding(.leading, 36)
-                MetadataRow(title: "Camera", systemImage: "camera", value: camera)
-                // Only once the details are in, like the rows above, which say "Loading…" until then.
-                if asset.exifInfo != nil, asset.starRating > 0 || onRate != nil {
-                    Divider().padding(.leading, 36)
-                    StarRatingRow(stars: asset.starRating, onRate: onRate)
-                }
-                if showsAlbums {
-                    Divider().padding(.leading, 36)
-                    MetadataRow(title: "Albums", systemImage: "rectangle.stack", value: albums)
-                }
+            // Scrolls once the rows are taller than the card, with the header staying put, as on Android.
+            // Which edges the rows are scrolled to goes to the deck, which hands a drag to the panel only from there.
+            ViewThatFits(in: .vertical) {
+                rows
+                    .onAppear { onScrollEdges?(true, true) }
+                ScrollView { rows }
+                    .onAppear { onScrollEdges?(true, false) }
+                    .onScrollGeometryChange(for: ScrollEdges.self) {
+                        ScrollEdges(atTop: $0.contentOffset.y <= 0.5,
+                                    atBottom: $0.contentOffset.y + $0.containerSize.height >= $0.contentSize.height - 0.5)
+                    } action: { _, edges in
+                        onScrollEdges?(edges.atTop, edges.atBottom)
+                    }
             }
         }
         .padding(.horizontal, 20)
@@ -686,6 +685,31 @@ struct MetadataPanel: View {
         .background(.regularMaterial, in: .rect(cornerRadius: 28))
         .sheet(isPresented: $isEditingDescription) {
             DescriptionEditor(initial: asset.exifInfo?.description ?? "", save: saveDescription)
+        }
+    }
+
+    private var rows: some View {
+        VStack(spacing: 0) {
+            DescriptionRow(description: description) { isEditingDescription = true }
+            Divider().padding(.leading, 36)
+            MetadataRow(title: "Date", systemImage: "calendar", value: date)
+            Divider().padding(.leading, 36)
+            MetadataRow(title: "Format", systemImage: "info.circle", value: format)
+            Divider().padding(.leading, 36)
+            MetadataRow(title: "Size", systemImage: "internaldrive", value: size)
+            Divider().padding(.leading, 36)
+            MetadataRow(title: "Resolution", systemImage: "aspectratio", value: resolution)
+            Divider().padding(.leading, 36)
+            MetadataRow(title: "Camera", systemImage: "camera", value: camera)
+            // Only once the details are in, like the rows above, which say "Loading…" until then.
+            if asset.exifInfo != nil, asset.starRating > 0 || onRate != nil {
+                Divider().padding(.leading, 36)
+                StarRatingRow(stars: asset.starRating, onRate: onRate)
+            }
+            if showsAlbums {
+                Divider().padding(.leading, 36)
+                MetadataRow(title: "Albums", systemImage: "rectangle.stack", value: albums)
+            }
         }
     }
 

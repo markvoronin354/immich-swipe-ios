@@ -400,7 +400,12 @@ private struct CardStack: View {
     /// From the long press until just after the finger lifts, so lifting it isn't also taken as a tap.
     @State private var isLongPressing = false
 
-    private enum DragMode { case undecided, card, panel }
+    /// Whether the panel's rows are scrolled to their top and bottom; both when they all fit.
+    @State private var panelScrollAtTop = true
+    @State private var panelScrollAtBottom = true
+
+    /// `scroll` is a drag on the open panel that scrolls its rows, so it moves neither the panel nor the card.
+    private enum DragMode { case undecided, card, panel, scroll }
 
     private static let zoomRange: ClosedRange<CGFloat> = 0.7...10
     /// Past this the card counts as zoomed in: drags pan the photo instead of swiping the card.
@@ -536,12 +541,14 @@ private struct CardStack: View {
                     showsAlbums: model.source != .orphans,
                     onRate: onRate,
                     onClose: { setPanel(open: false) },
-                    saveDescription: { try await model.saveDescription($0, for: current.id) }
+                    saveDescription: { try await model.saveDescription($0, for: current.id) },
+                    onScrollEdges: { panelScrollAtTop = $0; panelScrollAtBottom = $1 }
                 )
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { panelHeight = $0 }
                 .scaleEffect(x: 1, y: 1 + (panelHeight > 0 ? panelStretch / panelHeight : 0), anchor: .bottom)
                 .offset(y: panelHeight * (1 - panelProgress))
-                .gesture(drag)
+                // Alongside the rows' own scrolling, which takes the drags that `dragMode` leaves to it.
+                .simultaneousGesture(drag)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                 .clipShape(.rect(cornerRadius: 28))
                 .allowsHitTesting(panelProgress > 0)
@@ -707,8 +714,15 @@ private struct CardStack: View {
                     // upward one, unless swiping up is an action of its own.
                     panelStartProgress = panelProgress
                     let isPanel = (panelStartProgress > 0.1 && abs(dy) > 5) || (abs(dy) > abs(dx) && dy < 0 && swipes.up == .details)
-                    dragMode = isPanel ? .panel : .card
+                    // Fully open with rows to scroll, as on Android: down moves the panel only from the top of the
+                    // rows and up only from the bottom (to stretch it); otherwise the rows scroll.
+                    if isPanel, panelStartProgress >= 1, dy > 0 ? !panelScrollAtTop : !panelScrollAtBottom {
+                        dragMode = .scroll
+                    } else {
+                        dragMode = isPanel ? .panel : .card
+                    }
                 }
+                if dragMode == .scroll { return }
                 if dragMode == .panel {
                     dragPanel(by: dy)
                     return
@@ -734,6 +748,7 @@ private struct CardStack: View {
                     if !isTouching { isZoomSession = false }
                     return
                 }
+                if mode == .scroll { return }
                 if mode == .panel {
                     releasePanel(velocity: value.velocity.height)
                 } else if isDropping {
