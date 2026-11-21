@@ -67,7 +67,7 @@ Following the principle of least privilege, give the API key only these permissi
 
 ## 🛠️ Build
 
-- Xcode 27 or later, iOS/iPadOS 27.2 or later.
+- Xcode 27 or later, iOS/iPadOS 26 or later.
 - Open `Immich Swipe iOS.xcodeproj`, choose the **MyApp** scheme and run.
 - To sign for a device, set your own team under *Signing & Capabilities*.
 - Tests use Swift Testing:
