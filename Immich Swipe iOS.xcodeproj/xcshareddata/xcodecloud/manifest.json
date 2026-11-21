@@ -1,0 +1,9 @@
+{
+  "id" : "60b51297-c969-4cca-8b14-4bfb924ce587",
+  "targets" : [
+    {
+      "id" : "e709198e-25fe-4dd6-8730-44ef7c979b53",
+      "name" : "Immich Swipe iOS"
+    }
+  ]
+}
