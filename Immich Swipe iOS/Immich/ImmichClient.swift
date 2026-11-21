@@ -178,13 +178,13 @@ nonisolated struct ImmichClient: Sendable {
         AppLog.i("AssetRepo", "Successfully deleted \(ids.count) assets from Immich server")
     }
 
-    /// Sets favourite and/or visibility. Sent in chunks of 500 ids, like the Android app.
-    func updateAssets(ids: [String], isFavorite: Bool? = nil, visibility: AssetVisibility? = nil) async throws {
-        AppLog.i("AssetRepo", "Updating \(ids.count) assets on Immich server (isFavorite=\(isFavorite.map(String.init) ?? "nil"), visibility=\(visibility.map { "\($0)" } ?? "nil"))...")
+    /// Sets favourite, visibility and/or star rating. Sent in chunks of 500 ids, like the Android app.
+    func updateAssets(ids: [String], isFavorite: Bool? = nil, visibility: AssetVisibility? = nil, rating: Int? = nil) async throws {
+        AppLog.i("AssetRepo", "Updating \(ids.count) assets on Immich server (isFavorite=\(isFavorite.map(String.init) ?? "nil"), visibility=\(visibility.map { "\($0)" } ?? "nil"), rating=\(rating.map(String.init) ?? "nil"))...")
         do {
             for start in stride(from: 0, to: ids.count, by: 500) {
                 let chunk = Array(ids[start..<min(start + 500, ids.count)])
-                try await sendWithoutResponse(.put, "assets", body: UpdateAssetsRequest(ids: chunk, isFavorite: isFavorite, visibility: visibility))
+                try await sendWithoutResponse(.put, "assets", body: UpdateAssetsRequest(ids: chunk, isFavorite: isFavorite, visibility: visibility, rating: rating))
             }
         } catch {
             AppLog.e("AssetRepo", "Failed to update \(ids.count) assets on Immich server: \(error.localizedDescription)", error)

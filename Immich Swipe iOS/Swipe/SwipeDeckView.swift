@@ -18,10 +18,12 @@ struct SwipeDeckView: View {
     @State private var isConfirmingReset = false
     @State private var isReviewing = false
     @State private var albumAsset: Asset?
-    /// The albums a card pulled down is dropped on, with the finger's place over them.
+    @State private var ratingAsset: Asset?
+    /// The albums or stars a card pulled down is dropped on, with the finger's place over them.
     @State private var drop = DropStripState()
-    /// Why a card dropped on an album couldn't be added to it. The card has gone by then, so this says so.
-    @State private var dropFailure: String?
+    /// Why a card dropped on an album couldn't be added to it, or a rating couldn't be set. The card has often
+    /// gone by then, so this says so.
+    @State private var failure: DropFailure?
     /// The viewer follows the deck's current photo, so it stays open as photos are kept or deleted in it.
     @State private var isFullscreen = false
 
@@ -107,6 +109,9 @@ struct SwipeDeckView: View {
         .sheet(item: $albumAsset) { asset in
             AddToAlbumSheet(model: model, asset: asset)
         }
+        .sheet(item: $ratingAsset) { asset in
+            RatingSheet(model: model, asset: asset)
+        }
         #if os(iOS)
         .fullScreenCover(isPresented: $isFullscreen) {
             FullscreenViewer(model: model, videoPlayer: videoPlayer, livePhotoPlayer: livePhotoPlayer)
@@ -143,21 +148,21 @@ struct SwipeDeckView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        // Over the bottom bar, as on Android, while a card is pulled down to be dropped on an album.
+        // Over the bottom bar, as on Android, while a card is pulled down to be dropped on an album or a star.
         .overlay(alignment: .bottom) {
             ZStack {
                 if drop.isActive {
-                    AlbumDropStrip(state: drop, showsMore: !prefs.showAddToAlbumButton, cover: model.coverRequest(for:))
+                    dropStrip
                         .padding(.bottom, 8)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .animation(.snappy, value: drop.isActive)
         }
-        .alert("Couldn't Add to Album", isPresented: Binding(get: { dropFailure != nil }, set: { if !$0 { dropFailure = nil } })) {
+        .alert(failure?.title ?? "", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } }), presenting: failure) { _ in
             Button("OK") {}
-        } message: {
-            Text(dropFailure ?? "")
+        } message: { failure in
+            Text(failure.message)
         }
         .animation(.snappy, value: model.transfer)
         .task(id: model.transfer) {
@@ -224,7 +229,8 @@ struct SwipeDeckView: View {
                         actions: cardActions(for: current),
                         drop: drop,
                         onDropBegan: loadDropAlbums,
-                        onDrop: dropOnAlbum
+                        onDrop: dropOnTarget,
+                        onRate: { rate(current, stars: $0) }
                     )
                 }
             }
@@ -251,8 +257,19 @@ struct SwipeDeckView: View {
         )
     }
 
-    /// The albums reload as a drag starts, so the one just used is first, as in the picker.
+    /// The strip the card is dropped on: stars for a rating, albums otherwise.
+    @ViewBuilder
+    private var dropStrip: some View {
+        if prefs.swipes.down == .rating {
+            RatingDropStrip(state: drop, currentRating: model.deck.current?.starRating ?? 0)
+        } else {
+            AlbumDropStrip(state: drop, showsMore: !prefs.showAddToAlbumButton, cover: model.coverRequest(for:))
+        }
+    }
+
+    /// The albums reload as a drag starts, so the one just used is first, as in the picker. Stars need no loading.
     private func loadDropAlbums() {
+        guard prefs.swipes.down == .album else { return }
         Task {
             do {
                 drop.albums = try await model.loadAlbums()
@@ -262,10 +279,19 @@ struct SwipeDeckView: View {
         }
     }
 
-    /// A card was let go over a tile. The More tile opens the picker and the card stays; an album takes the
-    /// photo, and the card goes (and is kept, as on Android). Returns whether it went.
-    private func dropOnAlbum(_ id: String) -> Bool {
+    /// A card was let go over a tile. The More tile opens the picker (the rating sheet for stars) and the card
+    /// stays; an album or a star takes the photo, and the card goes (and is kept, as on Android). Returns
+    /// whether it went.
+    private func dropOnTarget(_ id: String) -> Bool {
         guard let asset = model.deck.current else { return false }
+        if prefs.swipes.down == .rating {
+            guard let stars = Int(id) else {
+                ratingAsset = asset
+                return false
+            }
+            rate(asset, stars: stars)
+            return true
+        }
         if id == DropStripState.moreID {
             albumAsset = asset
             return false
@@ -275,10 +301,21 @@ struct SwipeDeckView: View {
             do {
                 try await model.add(asset, to: album)
             } catch {
-                dropFailure = AddToAlbumSheet.failureMessage(for: error, albumName: album.albumName)
+                failure = DropFailure(title: "Couldn't Add to Album", message: AddToAlbumSheet.failureMessage(for: error, albumName: album.albumName))
             }
         }
         return true
+    }
+
+    /// Sets the rating from a drop or from the stars in the details panel.
+    private func rate(_ asset: Asset, stars: Int) {
+        Task {
+            do {
+                try await model.rate(asset, stars: stars)
+            } catch {
+                failure = DropFailure(title: "Couldn't Set the Rating", message: RatingSheet.failureMessage(for: error))
+            }
+        }
     }
 
     /// Opens the current photo in the Immich app, or its web page. If the app isn't installed the web page opens instead.
@@ -302,6 +339,12 @@ struct SwipeDeckView: View {
     }
 }
 
+/// What the alert after a failed drop or rating says.
+private struct DropFailure {
+    let title: LocalizedStringKey
+    let message: String
+}
+
 // MARK: - Card stack and gesture
 
 private struct CardStack: View {
@@ -316,6 +359,8 @@ private struct CardStack: View {
     let onDropBegan: () -> Void
     /// A card has been released over a tile. True if it was dropped on an album, and so is gone.
     let onDrop: (String) -> Bool
+    /// A star was tapped in the details panel.
+    let onRate: (Int) -> Void
 
     private let prefs = DeckPreferences()
     @State private var cardSize: CGSize = .zero
@@ -460,9 +505,9 @@ private struct CardStack: View {
                     if videoPlayer.assetID == current.id {
                         Button(videoPlayer.isPlaying ? "Pause" : "Play") { videoPlayer.togglePlayPause() }
                     }
-                    // Dropping the card on an album takes a drag, so VoiceOver opens the picker instead.
-                    if prefs.swipes.down == .album {
-                        Button("Album") { _ = onDrop(DropStripState.moreID) }
+                    // Dropping the card on an album or a star takes a drag, so VoiceOver opens the picker instead.
+                    if prefs.swipes.down.isDropTarget {
+                        Button(prefs.swipes.down.title) { _ = onDrop(DropStripState.moreID) }
                     }
                 }
                 .transition(.identity)
@@ -489,6 +534,7 @@ private struct CardStack: View {
                     asset: current,
                     albumNames: albums?.assetID == current.id ? albums?.names : nil,
                     showsAlbums: model.source != .orphans,
+                    onRate: onRate,
                     onClose: { setPanel(open: false) },
                     saveDescription: { try await model.saveDescription($0, for: current.id) }
                 )
@@ -894,14 +940,14 @@ final class CardMotion {
     }
 
     /// Throws the card off screen towards the edge, then carries out the action and brings the next card in
-    /// place. Undo pulls the previous card back instead, and Details and Album only settle the card.
+    /// place. Undo pulls the previous card back instead, and Details, Album and Rating only settle the card.
     func fly(_ action: SwipeAction, toward edge: Edge, in model: DeckModel) {
         guard !isFlying, let assetID = model.deck.current?.id else { return }
         switch action {
         case .undo where model.deck.canUndo:
             undo(in: model)
             return
-        case .undo, .details, .album:
+        case .undo, .details, .album, .rating:
             withAnimation(.bouncy) { offset = .zero }
             return
         default:

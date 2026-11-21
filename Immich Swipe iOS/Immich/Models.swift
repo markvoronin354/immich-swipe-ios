@@ -32,6 +32,8 @@ nonisolated struct ExifInfo: Codable, Hashable, Sendable {
     var model: String?
     /// The caption set in Immich; empty or absent when there is none.
     var description: String?
+    /// 1 to 5 stars; absent when unrated, and -1 on servers that mark rejects.
+    var rating: Int?
 }
 
 nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
@@ -63,6 +65,8 @@ nonisolated struct Asset: Codable, Hashable, Identifiable, Sendable {
     var isGIF: Bool { originalFileName?.lowercased().hasSuffix(".gif") ?? false }
     var isLocked: Bool { visibility == .locked }
     var fileSize: Int64? { exifInfo?.fileSizeInByte }
+    /// The star rating, 1 to 5, or 0 when the photo is unrated (or marked as a reject, which has no stars).
+    var starRating: Int { exifInfo?.rating.flatMap { (1...5).contains($0) ? $0 : nil } ?? 0 }
 
     private enum CodingKeys: String, CodingKey {
         case id, ownerId, fileCreatedAt, type, isFavorite, isArchived, isTrashed, isEdited

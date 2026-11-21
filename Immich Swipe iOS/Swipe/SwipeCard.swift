@@ -572,17 +572,18 @@ struct IntentStamp: View {
         case .undo: "UNDO"
         case .details: "Details"
         case .album: "ALBUM"
+        case .rating: "RATING"
         }
     }
 
     /// Android's `indicatorColor()`, with system colours for its theme colours: blue for primary, purple
-    /// for the tertiary it gives Lock, teal for the secondary it gives Album.
+    /// for the tertiary it gives Lock and Rating, teal for the secondary it gives Album.
     private var color: Color {
         switch action {
         case .keep: .green
         case .delete, .favorite: .red
         case .archive, .undo, .details: .blue
-        case .lock: .purple
+        case .lock, .rating: .purple
         case .album: .teal
         }
     }
@@ -620,6 +621,9 @@ struct MetadataPanel: View {
     let albumNames: [String]?
     /// Off in Orphans, where no photo is in an album, so the row has nothing to list.
     var showsAlbums = true
+    /// Sets the star rating. With it the rating row is always there and its stars can be tapped; without it
+    /// the row only shows a rating the photo already has.
+    var onRate: ((Int) -> Void)?
     let onClose: () -> Void
     /// Sends the new description to the server; throws when it couldn't be saved.
     let saveDescription: (String) async throws -> Void
@@ -662,6 +666,11 @@ struct MetadataPanel: View {
                 MetadataRow(title: "Resolution", systemImage: "aspectratio", value: resolution)
                 Divider().padding(.leading, 36)
                 MetadataRow(title: "Camera", systemImage: "camera", value: camera)
+                // Only once the details are in, like the rows above, which say "Loading…" until then.
+                if asset.exifInfo != nil, asset.starRating > 0 || onRate != nil {
+                    Divider().padding(.leading, 36)
+                    StarRatingRow(stars: asset.starRating, onRate: onRate)
+                }
                 if showsAlbums {
                     Divider().padding(.leading, 36)
                     MetadataRow(title: "Albums", systemImage: "rectangle.stack", value: albums)
@@ -868,6 +877,52 @@ private struct DescriptionEditor: View {
                 failed = true
             }
         }
+    }
+}
+
+/// The star rating in the details panel: five stars, the first `stars` of them filled. With `onRate` each is a
+/// button that sets that many stars; without it the row only shows a rating.
+private struct StarRatingRow: View {
+    let stars: Int
+    let onRate: ((Int) -> Void)?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "star")
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+            Text("Rating")
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 12)
+            if let onRate {
+                HStack(spacing: 0) {
+                    ForEach(1...5, id: \.self) { star in
+                        // A tap gesture rather than a Button, which holds on to the touch, so a drag starting
+                        // here still moves the panel.
+                        starImage(star)
+                            .onTapGesture { onRate(star) }
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityLabel(Text("\(star) of 5 stars"))
+                            .accessibilityAction { onRate(star) }
+                    }
+                }
+            } else {
+                HStack(spacing: 0) {
+                    ForEach(1...5, id: \.self) { starImage($0) }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text("\(stars) of 5 stars"))
+            }
+        }
+        .font(.subheadline)
+    }
+
+    /// The icons are small, so each target is wider, and as tall as the row.
+    private func starImage(_ star: Int) -> some View {
+        Image(systemName: star <= stars ? "star.fill" : "star")
+            .foregroundStyle(.primary.opacity(star <= stars ? 1 : 0.4))
+            .frame(width: 28, height: 40)
+            .contentShape(.rect)
     }
 }
 

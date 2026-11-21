@@ -29,8 +29,9 @@ struct FullscreenViewer: View {
     @State private var controlsVisible = true
     /// The asset whose details are showing.
     @State private var infoAsset: Asset?
-    /// The photo the album picker is open for, over the viewer, which stays open.
+    /// The photo the album picker or the rating sheet is open for, over the viewer, which stays open.
     @State private var albumAsset: Asset?
+    @State private var ratingAsset: Asset?
     /// While the photo brought back by a swipe down rises in from below, so it shows no badge.
     @State private var isRestoring = false
 
@@ -93,6 +94,9 @@ struct FullscreenViewer: View {
         }
         .sheet(item: $albumAsset) { asset in
             AddToAlbumSheet(model: model, asset: asset)
+        }
+        .sheet(item: $ratingAsset) { asset in
+            RatingSheet(model: model, asset: asset)
         }
         .onChange(of: model.deck.current?.id) {
             isHolding = false
@@ -221,11 +225,11 @@ struct FullscreenViewer: View {
 
     /// A swipe down that runs the card's swipe down action. Undo keeps the viewer open, as on Android: this
     /// photo drops away and the one brought back rises in from below. So does Album: the picker opens over the
-    /// photo, which springs back, as there is no strip to drop it on here.
+    /// photo, which springs back, as there is no strip to drop it on here. Rating opens its sheet the same way.
     private func swipeDown() {
         let action = prefs.swipeDownAction
-        if action == .album {
-            albumAsset = model.deck.current
+        if action.isDropTarget {
+            if action == .rating { ratingAsset = model.deck.current } else { albumAsset = model.deck.current }
             snapBack()
             return
         }

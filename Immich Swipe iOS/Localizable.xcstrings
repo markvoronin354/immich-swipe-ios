@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "· %@" : {
       "localizations" : {
         "es" : {
@@ -447,6 +450,22 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld of 5 stars" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld de 5 estrellas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld étoiles sur 5"
           }
         }
       }
@@ -2408,6 +2427,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impossible d’enregistrer la description"
+          }
+        }
+      }
+    },
+    "Couldn't Set the Rating" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo guardar la valoración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de définir la note"
+          }
+        }
+      }
+    },
+    "Couldn't set the rating. Your API key is missing the %@ permission." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo guardar la valoración. A tu clave de API le falta el permiso %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de définir la note. Il manque la permission %@ à votre clé API."
           }
         }
       }
@@ -5100,6 +5151,54 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Rarement"
+          }
+        }
+      }
+    },
+    "Rate this photo" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valorar esta foto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter cette photo"
+          }
+        }
+      }
+    },
+    "Rating" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valoración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        }
+      }
+    },
+    "RATING" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALORAR"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOTE"
           }
         }
       }

@@ -193,6 +193,15 @@ struct ImmichClientTests {
         #expect(MockServer.requests.allSatisfy { $0.method == "PUT" && $0.body.contains(#""visibility":"archive""#) })
     }
 
+    @Test func updateSendsARatingAndLeavesOutWhatItDoesNotChange() async throws {
+        MockServer.reset()
+        try await client.updateAssets(ids: ["a1"], rating: 4)
+        let request = try #require(MockServer.requests.first)
+        #expect(request.method == "PUT" && request.path == "/api/assets")
+        #expect(request.body.contains(#""rating":4"#))
+        #expect(!request.body.contains("isFavorite") && !request.body.contains("visibility"))
+    }
+
     @Test func mediaURLs() {
         #expect(client.url(for: .preview(assetID: "a1")).absoluteString == "https://photos.example.com/api/assets/a1/thumbnail?size=preview&edited=true")
         #expect(client.url(for: .original(assetID: "a1")).absoluteString == "https://photos.example.com/api/assets/a1/original")

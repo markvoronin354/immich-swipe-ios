@@ -482,6 +482,36 @@ struct DeckModelTests {
         }
     }
 
+    @Test func ratingAPhotoSendsItAndShowsItOnTheCardWithoutDecidingAnything() async throws {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        let photo = try #require(model.deck.current)
+        #expect(photo.starRating == 0)
+
+        RoutingServer.route { path, _ in path == "/api/assets" ? (200, "{}") : (404, "{}") }
+        try await model.rate(photo, stars: 4)
+
+        let put = try #require(RoutingServer.requests().first)
+        #expect(put.method == "PUT" && put.path == "/api/assets")
+        #expect(put.body["rating"] as? Int == 4 && put.body["ids"] as? [String] == [photo.id])
+        #expect(model.deck.current?.starRating == 4)
+        #expect(model.decidedCount == 0)
+    }
+
+    @Test func aRatingTheServerRefusesLeavesThePhotoAsItWasAndNamesThePermission() async throws {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        let photo = try #require(model.deck.current)
+
+        RoutingServer.route { _, _ in (403, #"{"message":"Missing required permission: asset.update"}"#) }
+        let error = await #expect(throws: ImmichError.self) { try await model.rate(photo, stars: 2) }
+
+        #expect(model.deck.current?.starRating == 0)
+        #expect(RatingSheet.failureMessage(for: try #require(error)).contains("asset.update"))
+    }
+
     @Test func albumsLastAddedToComeFirst() async throws {
         RoutingServer.route { path, body in
             switch path {

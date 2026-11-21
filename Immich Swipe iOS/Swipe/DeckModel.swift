@@ -415,6 +415,21 @@ final class DeckModel {
         deck.updateAssets(apply)
     }
 
+    /// Sets the star rating on the server right away, as on Android (`rateCurrentAsset`): like adding to an
+    /// album it isn't a decision to review, and nothing is lost by sending it. The deck's copy takes it too, so
+    /// the details panel shows it without a reload.
+    func rate(_ asset: Asset, stars: Int) async throws {
+        try await client.updateAssets(ids: [asset.id], rating: stars)
+        let apply: (inout Asset) -> Void = { copy in
+            guard copy.id == asset.id else { return }
+            var exif = copy.exifInfo ?? ExifInfo()
+            exif.rating = stars
+            copy.exifInfo = exif
+        }
+        if let index = loadedIndex[asset.id] { apply(&loaded[index]) }
+        deck.updateAssets(apply)
+    }
+
     /// Stored decisions that apply here: made for an asset in this deck, wherever they were made.
     private func mergeStoredDecisions(for assetIDs: [String]) {
         var relevant: [String: SwipeDecision] = [:]
@@ -482,9 +497,9 @@ final class DeckModel {
         case .details:
             // The panel belongs to the card, which opens it itself.
             break
-        case .album:
+        case .album, .rating:
             // The picker, and the strip the card is dropped on, belong to the view. Dropping the card on an
-            // album keeps it.
+            // album or a star keeps it.
             break
         case .favorite:
             guard let asset = deck.current else { return }

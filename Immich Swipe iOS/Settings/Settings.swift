@@ -22,31 +22,32 @@ nonisolated enum DoubleTapAction: String, CaseIterable, Sendable {
 
 /// What a swipe does (Android's `SwipeAction`). Favorite favourites the photo, then keeps it so the deck moves
 /// on. Undo only makes sense for a swipe down and Details for a swipe up, which is what they do by default.
-/// Album only makes sense for a swipe down too: the card is dropped on an album, or the album picker opens.
+/// Album and Rating only make sense for a swipe down too: the card is dropped on an album or a star, or the
+/// album picker or the rating sheet opens.
 nonisolated enum SwipeAction: String, CaseIterable, Sendable {
-    case keep = "KEEP", delete = "DELETE", archive = "ARCHIVE", lock = "LOCK", favorite = "FAVORITE", undo = "UNDO", details = "DETAILS", album = "ALBUM"
+    case keep = "KEEP", delete = "DELETE", archive = "ARCHIVE", lock = "LOCK", favorite = "FAVORITE", undo = "UNDO", details = "DETAILS", album = "ALBUM", rating = "RATING"
 
-    /// The choices for each direction, in Android's order. Undo, Details and Album are left out of the sides.
+    /// The choices for each direction, in Android's order. Undo, Details, Album and Rating are left out of the sides.
     static let sideChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .lock]
-    static let downChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .undo, .lock, .album]
+    static let downChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .undo, .lock, .album, .rating]
     static let upChoices: [SwipeAction] = [.keep, .delete, .favorite, .archive, .details, .lock]
 
     /// Whether pulling the card down shrinks it to be dropped on a strip of targets, rather than swiping it away.
-    var isDropTarget: Bool { self == .album }
+    var isDropTarget: Bool { self == .album || self == .rating }
 
-    /// The decision it records. Favorite keeps the photo; Undo, Details and Album record nothing, though
-    /// dropping the card on an album keeps it.
+    /// The decision it records. Favorite keeps the photo; Undo, Details, Album and Rating record nothing, though
+    /// dropping the card on an album or a star keeps it.
     var decision: SwipeDecision? {
         switch self {
         case .keep, .favorite: .keep
         case .delete: .delete
         case .archive: .archive
         case .lock: .lock
-        case .undo, .details, .album: nil
+        case .undo, .details, .album, .rating: nil
         }
     }
 
-    /// Android's `swipe_keep`, `swipe_delete`, `swipe_archive`, `swipe_locked`, `swipe_label_favorite`, `swipe_undo`, `swipe_details`, `swipe_label_album`.
+    /// Android's `swipe_keep`, `swipe_delete`, `swipe_archive`, `swipe_locked`, `swipe_label_favorite`, `swipe_undo`, `swipe_details`, `swipe_label_album`, `swipe_label_rating`.
     var title: LocalizedStringKey {
         switch self {
         case .keep: "Keep"
@@ -57,6 +58,7 @@ nonisolated enum SwipeAction: String, CaseIterable, Sendable {
         case .undo: "Undo"
         case .details: "Details"
         case .album: "Album"
+        case .rating: "Rating"
         }
     }
 
@@ -70,6 +72,7 @@ nonisolated enum SwipeAction: String, CaseIterable, Sendable {
         case .undo: "arrow.uturn.backward"
         case .details: "info.circle"
         case .album: "plus.rectangle.on.rectangle"
+        case .rating: "star"
         }
     }
 }

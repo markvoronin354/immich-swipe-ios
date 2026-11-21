@@ -78,6 +78,8 @@ nonisolated struct UpdateAssetsRequest: Encodable, Sendable {
     var ids: [String]
     var isFavorite: Bool?
     var visibility: AssetVisibility?
+    /// 1 to 5 stars.
+    var rating: Int?
 }
 
 /// Body for `PUT /assets/{id}/edits` with a single rotation.

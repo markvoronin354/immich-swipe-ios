@@ -23,6 +23,19 @@ struct ModelCodingTests {
         #expect(!asset.isGIF)
     }
 
+    @Test func readsTheStarRatingAndGivesRejectsAndMissingOnesNone() throws {
+        func stars(_ exif: String) throws -> Int {
+            try decodeAsset(#"{"id":"a","ownerId":"u","fileCreatedAt":"2024-01-02","type":"IMAGE"\#(exif)}"#).starRating
+        }
+        #expect(try stars(#","exifInfo":{"rating":4}"#) == 4)
+        #expect(try stars(#","exifInfo":{"rating":5}"#) == 5)
+        // -1 marks a reject on servers that have them; there are no stars to show.
+        #expect(try stars(#","exifInfo":{"rating":-1}"#) == 0)
+        #expect(try stars(#","exifInfo":{"rating":9}"#) == 0)
+        #expect(try stars(#","exifInfo":{"fileSizeInByte":1}"#) == 0)
+        #expect(try stars("") == 0)
+    }
+
     @Test func decodesLegacyServerAsset() throws {
         let asset = try decodeAsset("""
         {"id":"b","ownerId":"u","fileCreatedAt":"2024-01-02T03:04:05.000Z","type":"IMAGE",
