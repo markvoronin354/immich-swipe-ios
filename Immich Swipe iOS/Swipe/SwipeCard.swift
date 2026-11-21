@@ -252,7 +252,8 @@ struct CardControls: View {
     }
 }
 
-/// The "LIVE" pill on a live photo's card. A tap plays the motion clip, or stops it while it plays.
+/// The "LIVE" pill on a live photo, on the card and in the fullscreen viewer. A tap plays the motion clip, or
+/// stops it while it plays. As tall as the video time pill and wider than the size pill, so it is easy to hit.
 struct LivePill: View {
     let action: () -> Void
 
@@ -260,9 +261,9 @@ struct LivePill: View {
         Button(action: action) {
             Text(verbatim: "LIVE")
                 .font(.subheadline.bold())
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 4)
-                .frame(minHeight: 32)
+                .frame(minWidth: 72, minHeight: 32)
                 .modifier(CardPillBackground())
                 .contentShape(.capsule)
         }
