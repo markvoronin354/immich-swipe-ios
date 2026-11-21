@@ -264,3 +264,92 @@ struct IntentStampPlacementTests {
         #expect(IntentStamp.cardInsets(for: SwipeIntent(action: .undo, edge: .bottom), layout: layout(.topRight, .horizontal), isVideo: false).top == 76)
     }
 }
+
+/// Which tile of the strip a card dragged down is over, and how the strip scrolls for it (Android's `AlbumDropStateTest`).
+@MainActor
+struct DropStripStateTests {
+    private func state() -> DropStripState {
+        let state = DropStripState()
+        state.tileFrames["a"] = CGRect(x: 0, y: 1000, width: 100, height: 100)
+        state.tileFrames["b"] = CGRect(x: 120, y: 1000, width: 100, height: 100)
+        return state
+    }
+
+    @Test func aFingerAboveTheStripIsOverNothing() {
+        let state = state()
+        state.move(to: CGPoint(x: 160, y: 400))
+        #expect(state.hoveredID == nil)
+    }
+
+    @Test func aFingerInTheStripIsOverTheNearestTile() {
+        let state = state()
+        state.move(to: CGPoint(x: 180, y: 1050))
+        #expect(state.hoveredID == "b")
+    }
+
+    @Test func aFingerJustAboveTheStripAlreadyPicksATile() {
+        let state = state()
+        state.move(to: CGPoint(x: 30, y: 950))
+        #expect(state.hoveredID == "a")
+    }
+
+    @Test func aFingerMidwayBetweenTwoTilesPicksTheLeftOne() {
+        let state = state()
+        state.move(to: CGPoint(x: 110, y: 1050))
+        #expect(state.hoveredID == "a")
+    }
+
+    @Test func aStripWithNoTilesYetIsOverNothing() {
+        let state = DropStripState()
+        state.move(to: CGPoint(x: 100, y: 1050))
+        #expect(state.isActive && state.hoveredID == nil)
+    }
+
+    @Test func endingTheDragClearsTheHover() {
+        let state = state()
+        state.move(to: CGPoint(x: 30, y: 1050))
+        #expect(state.hoveredID == "a")
+        state.end()
+        #expect(!state.isActive)
+        #expect(state.hoveredID == nil)
+    }
+
+    /// Where a point of the card ends up on screen: shrunk and moved as the card is, then turned about its middle.
+    private func screenPoint(of point: CGPoint, scale: CGFloat, offset: CGSize, angle: Double) -> CGPoint {
+        let (x, y) = (scale * point.x + offset.width, scale * point.y + offset.height)
+        return CGPoint(x: x * cos(angle) - y * sin(angle), y: x * sin(angle) + y * cos(angle))
+    }
+
+    @Test func theShrunkenCardStaysUnderTheFingerWhateverTheDragAndLean() {
+        let anchor = CGPoint(x: 70, y: -120)
+        for (drag, degrees) in [(CGSize(width: 0, height: 60), 0.0), (CGSize(width: 35, height: 140), 1.4), (CGSize(width: -90, height: 300), -3.6)] {
+            let angle = degrees * .pi / 180
+            let shift = DropStripState.thumbnailShift(anchor: anchor, drag: drag, angle: angle, scale: 0.4)
+            let shown = screenPoint(of: anchor, scale: 0.4, offset: CGSize(width: drag.width + shift.width, height: drag.height + shift.height), angle: angle)
+            // The finger is where it took hold of the card, moved by the drag.
+            #expect(abs(shown.x - (anchor.x + drag.width)) < 0.001 && abs(shown.y - (anchor.y + drag.height)) < 0.001)
+        }
+    }
+
+    @Test func withoutALeanTheShrunkenCardIsMovedByTheGapItLeavesAtTheGrabbedPoint() {
+        let shift = DropStripState.thumbnailShift(anchor: CGPoint(x: 50, y: -100), drag: CGSize(width: 10, height: 80), angle: 0, scale: 0.4)
+        #expect(abs(shift.width - 30) < 0.001 && abs(shift.height - -60) < 0.001)
+    }
+
+    private let row = CGRect(x: 0, y: 1000, width: 400, height: 120)
+
+    @Test func theStripScrollsTowardsAnEdgeTheFingerNears_FasterTheCloser() {
+        func direction(_ x: CGFloat) -> CGFloat { DropStripState.autoScrollDirection(pointer: CGPoint(x: x, y: 1050), bounds: row, edge: 64) }
+        #expect(direction(-20) == -1)
+        #expect(direction(32) == -0.5)
+        #expect(direction(368) == 0.5)
+        #expect(direction(400) == 1)
+    }
+
+    @Test func theStripStaysPutMidRowOverMoreAndWhileTheFingerIsFarAbove() {
+        func direction(_ x: CGFloat, _ y: CGFloat) -> CGFloat { DropStripState.autoScrollDirection(pointer: CGPoint(x: x, y: y), bounds: row, edge: 64) }
+        #expect(direction(200, 1050) == 0)
+        #expect(direction(450, 1050) == 0)
+        #expect(direction(10, 300) == 0)
+    }
+}

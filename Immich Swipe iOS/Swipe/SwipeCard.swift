@@ -571,17 +571,19 @@ struct IntentStamp: View {
         case .favorite: "FAVORITE"
         case .undo: "UNDO"
         case .details: "Details"
+        case .album: "ALBUM"
         }
     }
 
     /// Android's `indicatorColor()`, with system colours for its theme colours: blue for primary, purple
-    /// for the tertiary it gives Lock.
+    /// for the tertiary it gives Lock, teal for the secondary it gives Album.
     private var color: Color {
         switch action {
         case .keep: .green
         case .delete, .favorite: .red
         case .archive, .undo, .details: .blue
         case .lock: .purple
+        case .album: .teal
         }
     }
 
@@ -616,6 +618,8 @@ struct MetadataPanel: View {
     let asset: Asset
     /// Nil while loading.
     let albumNames: [String]?
+    /// Off in Orphans, where no photo is in an album, so the row has nothing to list.
+    var showsAlbums = true
     let onClose: () -> Void
     /// Sends the new description to the server; throws when it couldn't be saved.
     let saveDescription: (String) async throws -> Void
@@ -658,8 +662,10 @@ struct MetadataPanel: View {
                 MetadataRow(title: "Resolution", systemImage: "aspectratio", value: resolution)
                 Divider().padding(.leading, 36)
                 MetadataRow(title: "Camera", systemImage: "camera", value: camera)
-                Divider().padding(.leading, 36)
-                MetadataRow(title: "Albums", systemImage: "rectangle.stack", value: albums)
+                if showsAlbums {
+                    Divider().padding(.leading, 36)
+                    MetadataRow(title: "Albums", systemImage: "rectangle.stack", value: albums)
+                }
             }
         }
         .padding(.horizontal, 20)

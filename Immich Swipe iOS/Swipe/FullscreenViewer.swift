@@ -29,6 +29,8 @@ struct FullscreenViewer: View {
     @State private var controlsVisible = true
     /// The asset whose details are showing.
     @State private var infoAsset: Asset?
+    /// The photo the album picker is open for, over the viewer, which stays open.
+    @State private var albumAsset: Asset?
     /// While the photo brought back by a swipe down rises in from below, so it shows no badge.
     @State private var isRestoring = false
 
@@ -89,6 +91,9 @@ struct FullscreenViewer: View {
         .sheet(item: $infoAsset) { asset in
             DuplicateInfoSheet(asset: asset, client: model.client)
         }
+        .sheet(item: $albumAsset) { asset in
+            AddToAlbumSheet(model: model, asset: asset)
+        }
         .onChange(of: model.deck.current?.id) {
             isHolding = false
             isZoomed = false
@@ -108,9 +113,9 @@ struct FullscreenViewer: View {
         return min(max(1 - closingPull / Self.fadeDistance, 0), 1)
     }
 
-    /// A pull that swipes, rather than closes or undoes, brings the next photo up as a sideways one does.
+    /// A pull that swipes, rather than closes, undoes or opens a picker, brings the next photo up as a sideways one does.
     private var nextProgress: CGFloat {
-        let pullsToSwipe = prefs.fullscreenSwipeDownUsesAction && prefs.swipeDownAction != .undo
+        let pullsToSwipe = prefs.fullscreenSwipeDownUsesAction && prefs.swipeDownAction != .undo && !prefs.swipeDownAction.isDropTarget
         let pull = pullsToSwipe ? max(abs(dragOffset.width), dragOffset.height) : abs(dragOffset.width)
         return min(pull / Self.nextGrowDistance, 1)
     }
@@ -215,9 +220,15 @@ struct FullscreenViewer: View {
     }
 
     /// A swipe down that runs the card's swipe down action. Undo keeps the viewer open, as on Android: this
-    /// photo drops away and the one brought back rises in from below.
+    /// photo drops away and the one brought back rises in from below. So does Album: the picker opens over the
+    /// photo, which springs back, as there is no strip to drop it on here.
     private func swipeDown() {
         let action = prefs.swipeDownAction
+        if action == .album {
+            albumAsset = model.deck.current
+            snapBack()
+            return
+        }
         guard action == .undo else {
             swipe(action, toward: .bottom)
             return

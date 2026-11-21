@@ -18,6 +18,10 @@ struct SwipeDeckView: View {
     @State private var isConfirmingReset = false
     @State private var isReviewing = false
     @State private var albumAsset: Asset?
+    /// The albums a card pulled down is dropped on, with the finger's place over them.
+    @State private var drop = DropStripState()
+    /// Why a card dropped on an album couldn't be added to it. The card has gone by then, so this says so.
+    @State private var dropFailure: String?
     /// The viewer follows the deck's current photo, so it stays open as photos are kept or deleted in it.
     @State private var isFullscreen = false
 
@@ -139,6 +143,22 @@ struct SwipeDeckView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+        // Over the bottom bar, as on Android, while a card is pulled down to be dropped on an album.
+        .overlay(alignment: .bottom) {
+            ZStack {
+                if drop.isActive {
+                    AlbumDropStrip(state: drop, showsMore: !prefs.showAddToAlbumButton, cover: model.coverRequest(for:))
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.snappy, value: drop.isActive)
+        }
+        .alert("Couldn't Add to Album", isPresented: Binding(get: { dropFailure != nil }, set: { if !$0 { dropFailure = nil } })) {
+            Button("OK") {}
+        } message: {
+            Text(dropFailure ?? "")
+        }
         .animation(.snappy, value: model.transfer)
         .task(id: model.transfer) {
             guard model.transfer == .saved else { return }
@@ -196,7 +216,16 @@ struct SwipeDeckView: View {
                 ContentUnavailableView("No photos here", systemImage: "photo.on.rectangle")
             } else {
                 if let current = model.deck.current {
-                    CardStack(model: model, motion: motion, videoPlayer: videoPlayer, livePhotoPlayer: livePhotoPlayer, actions: cardActions(for: current))
+                    CardStack(
+                        model: model,
+                        motion: motion,
+                        videoPlayer: videoPlayer,
+                        livePhotoPlayer: livePhotoPlayer,
+                        actions: cardActions(for: current),
+                        drop: drop,
+                        onDropBegan: loadDropAlbums,
+                        onDrop: dropOnAlbum
+                    )
                 }
             }
         }
@@ -220,6 +249,36 @@ struct SwipeDeckView: View {
                 ? (asset.fileSize ?? 0).formatted(.byteCount(style: .file))
                 : nil
         )
+    }
+
+    /// The albums reload as a drag starts, so the one just used is first, as in the picker.
+    private func loadDropAlbums() {
+        Task {
+            do {
+                drop.albums = try await model.loadAlbums()
+            } catch {
+                AppLog.e("SwipeViewModel", "Error loading albums for drop strip", error)
+            }
+        }
+    }
+
+    /// A card was let go over a tile. The More tile opens the picker and the card stays; an album takes the
+    /// photo, and the card goes (and is kept, as on Android). Returns whether it went.
+    private func dropOnAlbum(_ id: String) -> Bool {
+        guard let asset = model.deck.current else { return false }
+        if id == DropStripState.moreID {
+            albumAsset = asset
+            return false
+        }
+        guard let album = drop.albums.first(where: { $0.id == id }) else { return false }
+        Task {
+            do {
+                try await model.add(asset, to: album)
+            } catch {
+                dropFailure = AddToAlbumSheet.failureMessage(for: error, albumName: album.albumName)
+            }
+        }
+        return true
     }
 
     /// Opens the current photo in the Immich app, or its web page. If the app isn't installed the web page opens instead.
@@ -251,9 +310,21 @@ private struct CardStack: View {
     let videoPlayer: DeckVideoPlayer
     let livePhotoPlayer: LivePhotoPlayer
     let actions: SwipeCardActions
+    /// The strip of albums the card is dropped on, which the deck view draws.
+    let drop: DropStripState
+    /// A card has been pulled down far enough to be dropped, so the albums to drop it on can be loaded.
+    let onDropBegan: () -> Void
+    /// A card has been released over a tile. True if it was dropped on an album, and so is gone.
+    let onDrop: (String) -> Bool
 
     private let prefs = DeckPreferences()
     @State private var cardSize: CGSize = .zero
+    /// Pulled far enough down with Album on swipe down, the card shrinks to a thumbnail to drop on an album.
+    @State private var isDropping = false
+    /// Where on the card the finger took hold of it, from the card's middle, which the thumbnail keeps under the finger.
+    @State private var dropAnchor: CGPoint = .zero
+    /// The middle of the card at rest, on screen.
+    @State private var stackCenter: CGPoint = .zero
     /// Pinch zoom on the current card, like the Android app's ZoomableBox with resetOnRelease: 0.7×–10×,
     /// anchored under the fingers, a one-finger drag pans once zoomed in, and everything springs back on release.
     @State private var zoom: CGFloat = 1
@@ -320,7 +391,9 @@ private struct CardStack: View {
                 )
                 .id(current.id)
                 .opacity(motion.fade)
-                .offset(motion.offset)
+                .scaleEffect(isDropping ? Self.dropScale : 1)
+                .offset(cardOffset)
+                .animation(.spring(duration: 0.3, bounce: 0.15), value: isDropping)
                 .rotationEffect(tilt)
                 .gesture(drag)
                 .background {
@@ -339,6 +412,7 @@ private struct CardStack: View {
                     panelProgress = 0
                     panelStretch = 0
                     isLongPressing = false
+                    endDrop()
                 }
                 .modifier(CardTaps(
                     allowsDoubleTap: prefs.doubleTapEnabled,
@@ -386,6 +460,10 @@ private struct CardStack: View {
                     if videoPlayer.assetID == current.id {
                         Button(videoPlayer.isPlaying ? "Pause" : "Play") { videoPlayer.togglePlayPause() }
                     }
+                    // Dropping the card on an album takes a drag, so VoiceOver opens the picker instead.
+                    if prefs.swipes.down == .album {
+                        Button("Album") { _ = onDrop(DropStripState.moreID) }
+                    }
                 }
                 .transition(.identity)
 
@@ -394,10 +472,11 @@ private struct CardStack: View {
                 // An overlay on the card's own size, so a long row of corner buttons can't widen the screen.
                 Color.clear
                     .overlay {
+                        // Gone while the card is a thumbnail over the strip: it follows the card but doesn't shrink.
                         CardControls(asset: current, actions: controlActions)
-                            .opacity(controlsHidden ? 0 : 1)
+                            .opacity(controlsHidden || isDropping ? 0 : 1)
                             .allowsHitTesting(!controlsHidden)
-                            .animation(.easeInOut(duration: 0.3), value: controlsHidden)
+                            .animation(.easeInOut(duration: 0.3), value: controlsHidden || isDropping)
                     }
                     .id(current.id)
                     .opacity(motion.fade)
@@ -409,6 +488,7 @@ private struct CardStack: View {
                 MetadataPanel(
                     asset: current,
                     albumNames: albums?.assetID == current.id ? albums?.names : nil,
+                    showsAlbums: model.source != .orphans,
                     onClose: { setPanel(open: false) },
                     saveDescription: { try await model.saveDescription($0, for: current.id) }
                 )
@@ -425,12 +505,13 @@ private struct CardStack: View {
                 .rotationEffect(tilt)
                 .transition(.identity)
                 .task(id: panelProgress > 0 ? current.id : nil) {
-                    guard panelProgress > 0, albums?.assetID != current.id else { return }
+                    guard panelProgress > 0, model.source != .orphans, albums?.assetID != current.id else { return }
                     let names = await model.albumNames(containing: current)
                     if !Task.isCancelled { albums = (current.id, names) }
                 }
             }
         }
+        .onGeometryChange(for: CGPoint.self) { CGPoint(x: $0.frame(in: .global).midX, y: $0.frame(in: .global).midY) } action: { stackCenter = $0 }
     }
 
     /// Springs the panel fully open or shut.
@@ -503,12 +584,33 @@ private struct CardStack: View {
         .degrees(motion.offset.width / max(25, cardSize.width / 15))
     }
 
+    /// How small the card shrinks to while it is dropped on the strip (Android's `DropScale`).
+    private static let dropScale: CGFloat = 0.4
+    /// Pulled this far down, the card shrinks and the strip rises; back above the lower one, it goes away again.
+    /// Android's 120 px and 60 px, converted as the card's other distances are.
+    private static let dropStart: CGFloat = 48
+    private static let dropEnd: CGFloat = 24
+
+    /// Where the card is drawn: where it was dragged to, and while it is a thumbnail, the shift that keeps it
+    /// under the finger.
+    private var cardOffset: CGSize {
+        let shift = dropShift
+        return CGSize(width: motion.offset.width + shift.width, height: motion.offset.height + shift.height)
+    }
+
+    /// Shrinking about the middle, and the lean, would carry the point the finger grabbed away from the finger.
+    /// Moving the card by the gap keeps the thumbnail under it.
+    private var dropShift: CGSize {
+        guard isDropping else { return .zero }
+        return DropStripState.thumbnailShift(anchor: dropAnchor, drag: motion.offset, angle: tilt.radians, scale: Self.dropScale)
+    }
+
     /// 0 at rest, 1 once the top card is 320 points aside (Android's 800 px). A card pulled down to swipe, not
-    /// to undo, or up to swipe, not to show details, brings the next one forward the same way.
+    /// to undo or drop, or up to swipe, not to show details, brings the next one forward the same way.
     private var backCardProgress: CGFloat {
         let offset = motion.offset
         let swipes = prefs.swipes
-        let pulledDown = swipes.down != .undo && !motion.isRestoring && offset.height > abs(offset.width)
+        let pulledDown = swipes.down != .undo && !swipes.down.isDropTarget && !motion.isRestoring && offset.height > abs(offset.width)
         let pulledUp = swipes.up != .details && -offset.height > abs(offset.width)
         return min(1, abs(pulledDown || pulledUp ? offset.height : offset.width) / 320)
     }
@@ -575,6 +677,7 @@ private struct CardStack: View {
                     height = model.deck.canUndo || swipes.down != .undo ? down : down * 0.2
                 }
                 motion.offset = CGSize(width: dx, height: height)
+                if swipes.down.isDropTarget { updateDrop(value) }
             }
             .onEnded { value in
                 isDragging = false
@@ -587,10 +690,43 @@ private struct CardStack: View {
                 }
                 if mode == .panel {
                     releasePanel(velocity: value.velocity.height)
+                } else if isDropping {
+                    finishDrop()
                 } else {
                     motion.release(translation: value.translation, velocity: value.velocity, swipes: prefs.swipes, in: model)
                 }
             }
+    }
+
+    /// Pulled far enough down, the card shrinks to a thumbnail and the strip rises under it. The finger is then
+    /// over a tile, or not, which the strip works out from where it is.
+    private func updateDrop(_ value: DragGesture.Value) {
+        let (dx, dy) = (value.translation.width, value.translation.height)
+        if !isDropping, dy > Self.dropStart, dy > abs(dx) {
+            isDropping = true
+            dropAnchor = CGPoint(x: value.startLocation.x - stackCenter.x, y: value.startLocation.y - stackCenter.y)
+            onDropBegan()
+        } else if isDropping, dy < Self.dropEnd {
+            endDrop()
+        }
+        if isDropping { drop.move(to: value.location) }
+    }
+
+    /// The card goes down with the strip if it was let go over a tile that took it, and springs back if not.
+    private func finishDrop() {
+        let target = drop.hoveredID
+        endDrop()
+        if let target, onDrop(target) {
+            motion.fly(.keep, toward: .bottom, in: model)
+        } else {
+            withAnimation(.bouncy) { motion.offset = .zero }
+        }
+    }
+
+    private func endDrop() {
+        guard isDropping else { return }
+        isDropping = false
+        drop.end()
     }
 
     /// The system cancelled the drag before `onEnded`, as Android's `onDragCancel`: the panel settles to the
@@ -607,6 +743,7 @@ private struct CardStack: View {
         if mode == .panel {
             releasePanel(velocity: 0)
         } else {
+            endDrop()
             withAnimation(.bouncy) { motion.offset = .zero }
         }
     }
@@ -708,7 +845,11 @@ final class CardMotion {
         let isPullDown = y > abs(x) && (y > Self.distanceThreshold || vy > Self.velocityThreshold)
         let isPullUp = swipes.up != .details && -y > abs(x) && (y < -Self.distanceThreshold || vy < -Self.velocityThreshold)
 
-        if isPullDown, swipes.down != .undo {
+        if isPullDown, swipes.down.isDropTarget {
+            // A pull that got far enough has raised the strip and is released by the card; this one never did,
+            // so there is nothing to drop on, and the card goes back, as on Android.
+            withAnimation(.bouncy) { offset = .zero }
+        } else if isPullDown, swipes.down != .undo {
             fly(swipes.down, toward: .bottom, in: model)
         } else if isPullDown, model.deck.canUndo {
             undo(in: model)
@@ -753,14 +894,14 @@ final class CardMotion {
     }
 
     /// Throws the card off screen towards the edge, then carries out the action and brings the next card in
-    /// place. Undo pulls the previous card back instead, and Details only settles the card.
+    /// place. Undo pulls the previous card back instead, and Details and Album only settle the card.
     func fly(_ action: SwipeAction, toward edge: Edge, in model: DeckModel) {
         guard !isFlying, let assetID = model.deck.current?.id else { return }
         switch action {
         case .undo where model.deck.canUndo:
             undo(in: model)
             return
-        case .undo, .details:
+        case .undo, .details, .album:
             withAnimation(.bouncy) { offset = .zero }
             return
         default:

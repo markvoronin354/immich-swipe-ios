@@ -1165,6 +1165,22 @@
         }
       }
     },
+    "ALBUM" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ÁLBUM"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ALBUM"
+          }
+        }
+      }
+    },
     "Albums" : {
       "localizations" : {
         "es" : {
@@ -2216,6 +2232,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Impossible d’ajouter à %@. Il manque la permission %@ à votre clé API."
+          }
+        }
+      }
+    },
+    "Couldn't Add to Album" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "No se pudo añadir al álbum"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Impossible d’ajouter à l’album"
           }
         }
       }
@@ -4188,6 +4220,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Jours minimum : %lld"
+          }
+        }
+      }
+    },
+    "More" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus"
           }
         }
       }

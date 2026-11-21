@@ -390,6 +390,16 @@ struct DeckModelTests {
         #expect(model.deck.current?.id == "e" && model.decidedCount == 0)
     }
 
+    @Test func anAlbumSwipeRecordsNothingAndLeavesTheCardWhereItIs() async {
+        serveThreePages()
+        let model = makeModel(.all)
+        await model.load()
+        let current = model.deck.current?.id
+
+        model.swipe(.album)
+        #expect(model.deck.current?.id == current && model.decidedCount == 0)
+    }
+
     @Test func aSwipeLandsOnThePhotoItStartedOnEvenIfAnotherBecameCurrent() async {
         serveThreePages()
         let model = makeModel(.all)

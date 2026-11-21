@@ -158,12 +158,17 @@ struct AddToAlbumSheet: View {
                 try? await Task.sleep(for: .milliseconds(700))
                 dismiss()
             } catch {
-                if let permission = error.missingPermission {
-                    errorMessage = String(localized: "Couldn't add to \(name). Your API key is missing the \(permission) permission.")
-                } else {
-                    errorMessage = error.localizedDescription
-                }
+                errorMessage = Self.failureMessage(for: error, albumName: name)
             }
+        }
+    }
+
+    /// Why adding to an album failed, for this sheet and for the strip a card is dropped on.
+    static func failureMessage(for error: Error, albumName name: String) -> String {
+        if let permission = error.missingPermission {
+            String(localized: "Couldn't add to \(name). Your API key is missing the \(permission) permission.")
+        } else {
+            error.localizedDescription
         }
     }
 }

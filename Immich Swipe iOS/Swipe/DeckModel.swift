@@ -482,6 +482,10 @@ final class DeckModel {
         case .details:
             // The panel belongs to the card, which opens it itself.
             break
+        case .album:
+            // The picker, and the strip the card is dropped on, belong to the view. Dropping the card on an
+            // album keeps it.
+            break
         case .favorite:
             guard let asset = deck.current else { return }
             // Sets rather than toggles, so swiping a photo that is already a favourite doesn't take it away.
@@ -624,6 +628,11 @@ final class DeckModel {
     private func rememberRecentAlbum(_ id: String) {
         let ids = [id] + recentAlbumIDs.filter { $0 != id }
         defaults.set(ids.prefix(Self.maxRecentAlbums).joined(separator: ","), forKey: Self.recentAlbumIDsKey)
+    }
+
+    /// The cover of an album, for the strip the card is dropped on. Nil for an empty album.
+    func coverRequest(for album: Album) -> URLRequest? {
+        album.albumThumbnailAssetId.map { client.authorizedRequest(for: .thumbnail(assetID: $0)) }
     }
 
     /// Names of the real albums holding the photo, for the metadata panel. Empty if the request fails, as on Android.

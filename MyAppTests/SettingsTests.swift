@@ -206,6 +206,14 @@ struct SwipeMappingTests {
         #expect(SwipeAction.upChoices.contains(.details) && !SwipeAction.upChoices.contains(.undo))
         #expect(SwipeAction.favorite.decision == .keep && SwipeAction.undo.decision == nil)
     }
+
+    @Test func albumIsOnlyOfferedForASwipeDownAndRecordsNothingItself() {
+        #expect(SwipeAction(rawValue: "ALBUM") == .album)
+        #expect(SwipeAction.downChoices.last == .album)
+        #expect(!SwipeAction.sideChoices.contains(.album) && !SwipeAction.upChoices.contains(.album))
+        #expect(SwipeAction.album.decision == nil)
+        #expect(SwipeAction.allCases.filter(\.isDropTarget) == [.album])
+    }
 }
 
 struct SortingBarButtonOrderTests {
