@@ -26,6 +26,7 @@ struct SwipeDeckView: View {
     @State private var failure: DropFailure?
     /// The viewer follows the deck's current photo, so it stays open as photos are kept or deleted in it.
     @State private var isFullscreen = false
+    @FocusState private var deckHasFocus: Bool
 
     init(model: DeckModel) {
         _model = State(initialValue: model)
@@ -123,6 +124,34 @@ struct SwipeDeckView: View {
         }
         #endif
         .sensoryFeedback(.impact(weight: .light), trigger: model.decidedCount)
+        // Arrow keys swipe. On the Mac the bar's hidden shortcut buttons don't get bare arrows, so the screen takes them.
+        .focusable()
+        .focused($deckHasFocus)
+        .focusEffectDisabled()
+        .onAppear { deckHasFocus = true }
+        .onKeyPress(.leftArrow) {
+            motion.fly(prefs.swipes.left, toward: .leading, in: model)
+            return .handled
+        }
+        .onKeyPress(.rightArrow) {
+            motion.fly(prefs.swipes.right, toward: .trailing, in: model)
+            return .handled
+        }
+        // Up and down follow a pull in that direction. There's no drag to drop on a strip, so Album and Rating open their sheets.
+        .onKeyPress(.upArrow) {
+            let action = prefs.swipes.up
+            guard action != .details else { return .ignored }
+            motion.fly(action, toward: .top, in: model)
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            switch prefs.swipes.down {
+            case .album: albumAsset = model.deck.current
+            case .rating: ratingAsset = model.deck.current
+            case let action: motion.fly(action, toward: .bottom, in: model)
+            }
+            return .handled
+        }
         .task { await model.load() }
         .task(id: model.deck.current?.id) {
             prefetchUpcoming()
