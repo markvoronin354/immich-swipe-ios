@@ -182,8 +182,9 @@ struct DuplicatesView: View {
         }
     }
 
-    /// One card in the middle of the space above the bottom bar, snapping card by card. Cards further
-    /// from that spot shrink to 82% and fade to 18%, as on Android.
+    /// One card in the middle of the space above the bottom bar, snapping card by card. Android also shrinks
+    /// cards further from that spot to 82% and fades them to 18%. Here they are not: a `scrollTransition` on
+    /// the cards left the whole screen stuck at its landscape size after turning the phone back to portrait.
     ///
     /// Android snaps a card's top to a padding worked out from an estimated card height, which centres
     /// it. Here the snap centres each card by its measured height, so cards of any height land in the
@@ -198,6 +199,9 @@ struct DuplicatesView: View {
             // Room above the first card and below the last, so they can reach the middle too.
             let topPadding = max((clearHeight - (cardFrames[0]?.height ?? estimatedHeight)) / 2, 32)
             let bottomPadding = max((clearHeight - (cardFrames[model.visibleClusters.count - 1]?.height ?? estimatedHeight)) / 2, 32)
+            // On a wide screen the tiles would make a card taller than the space, and its buttons would slip
+            // under the bottom bar. A tile is 3:4, so capping its width caps its height. Android has no such cap.
+            let maxPictureWidth = max(clearHeight - Self.cardChromeHeight - 32, 120) * 0.75
 
             ScrollView {
                 LazyVStack(spacing: 16) {
@@ -206,6 +210,7 @@ struct DuplicatesView: View {
                             cluster: cluster,
                             model: model,
                             contentWidth: geometry.size.width - 64,
+                            maxPictureWidth: maxPictureWidth,
                             peekingAssetID: peek?.asset.id,
                             onPeek: updatePeek,
                             onOpen: { assetIndex in
@@ -213,12 +218,6 @@ struct DuplicatesView: View {
                                 viewerStart = ViewerStart(clusterIndex: index, assetIndex: assetIndex)
                             }
                         )
-                        .scrollTransition(axis: .vertical) { card, phase in
-                            card
-                                .scaleEffect(1 - 0.18 * abs(phase.value))
-                                .opacity(1 - 0.82 * abs(phase.value))
-                        }
-                        // Measured outside the shrink effect, so it is the card's real place in the list.
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.listSpace)) } action: { frame in
                             cardFrames[index] = frame
                         }
@@ -247,6 +246,9 @@ struct DuplicatesView: View {
 
     /// Nonisolated, as it's read in the geometry closure, which may run off the main actor.
     private nonisolated static let listSpace = "duplicateClusters"
+
+    /// What a card needs besides its pictures: its padding, header, size caption, spacing and buttons.
+    private static let cardChromeHeight: CGFloat = 190
 
     /// Android's wording (`duplicates_autoselect_msg`, `duplicates_autoselect_all_msg`).
     private var autoSelectMessage: LocalizedStringKey {

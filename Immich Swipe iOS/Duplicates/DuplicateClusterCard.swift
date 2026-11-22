@@ -11,6 +11,8 @@ struct DuplicateClusterCard: View {
     let model: DuplicatesModel
     /// Width inside the card's padding, to size the tiles of a sideways row.
     let contentWidth: CGFloat
+    /// The widest a picture may be, so a card never grows taller than the screen has room for.
+    let maxPictureWidth: CGFloat
     /// The asset being pinched, drawn by the screen's overlay instead, so its tile is hidden.
     let peekingAssetID: String?
     let onPeek: (DuplicatePeek) -> Void
@@ -72,12 +74,13 @@ struct DuplicateClusterCard: View {
             HStack(alignment: .top, spacing: 8) {
                 ForEach(Array(cluster.assets.enumerated()), id: \.element.id) { index, asset in
                     tile(asset, index: index)
-                        .frame(maxWidth: .infinity)
                 }
             }
+            // The tiles share the width, and once their pictures hit the cap they stay together in the middle.
+            .frame(maxWidth: .infinity)
         } else {
-            // About two tiles and a peek of the third, never narrower than 135 pt.
-            let tileWidth = max((contentWidth - 8) / 2.15, 135)
+            // About two tiles and a peek of the third, never narrower than 135 pt or wider than a picture may be.
+            let tileWidth = min(max((contentWidth - 8) / 2.15, 135), maxPictureWidth)
             ScrollView(.horizontal) {
                 LazyHStack(alignment: .top, spacing: 8) {
                     ForEach(Array(cluster.assets.enumerated()), id: \.element.id) { index, asset in
@@ -99,6 +102,7 @@ struct DuplicateClusterCard: View {
             isFavorite: model.isFavorite(asset),
             request: model.client.authorizedRequest(for: .preview(assetID: asset.id)),
             isPeeking: peekingAssetID == asset.id,
+            maxPictureWidth: maxPictureWidth,
             onToggle: { model.toggle(asset) },
             onOpen: { onOpen(index) },
             onPeek: onPeek
@@ -143,6 +147,7 @@ private struct DuplicateAssetTile: View {
     let isFavorite: Bool
     let request: URLRequest
     let isPeeking: Bool
+    let maxPictureWidth: CGFloat
     let onToggle: () -> Void
     let onOpen: () -> Void
     let onPeek: (DuplicatePeek) -> Void
@@ -157,6 +162,7 @@ private struct DuplicateAssetTile: View {
     var body: some View {
         VStack(spacing: 4) {
             DuplicateTilePicture(asset: asset, decision: decision, isFavorite: isFavorite, request: request)
+                .frame(maxWidth: maxPictureWidth)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame = $0 }
                 .opacity(isPeeking ? 0 : 1)
                 .contentShape(.rect(cornerRadius: 16, style: .continuous))

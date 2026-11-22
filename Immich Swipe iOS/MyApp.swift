@@ -8,6 +8,9 @@ import SwiftUI
     @AppStorage(Setting.Key.reminderInterval) private var reminderInterval = Setting.Default.reminderInterval
     @AppStorage(Setting.Key.reminderCustomMinDays) private var reminderMinDays = Setting.Default.reminderCustomMinDays
     @AppStorage(Setting.Key.reminderCustomMaxDays) private var reminderMaxDays = Setting.Default.reminderCustomMaxDays
+    #if canImport(UIKit)
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #endif
     @Environment(\.scenePhase) private var scenePhase
     @State private var reminders = ReminderScheduler()
     private let decisions: DecisionStore

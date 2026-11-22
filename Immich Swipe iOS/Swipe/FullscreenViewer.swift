@@ -82,6 +82,7 @@ struct FullscreenViewer: View {
         }
         .environment(\.colorScheme, .dark)
         .presentationBackground(.clear)
+        .allowsLandscape()
         #if os(iOS)
         // Android hides the system bars in the viewer.
         .statusBarHidden()
