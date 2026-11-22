@@ -679,12 +679,15 @@ private struct ViewerAction: View {
 /// Darkens the top 160 pt and bottom 280 pt behind the controls, as on Android (`ViewerScrim`).
 private struct ViewerScrim: View {
     var body: some View {
-        VStack(spacing: 0) {
+        // Pinned to the edges rather than stacked: stacked they need 440 pt, more than a landscape phone is
+        // tall, and the oversized page pushed the controls off the screen.
+        ZStack {
             LinearGradient(colors: [.black.opacity(0.5), .clear], startPoint: .top, endPoint: .bottom)
                 .frame(height: 160)
-            Spacer()
+                .frame(maxHeight: .infinity, alignment: .top)
             LinearGradient(colors: [.clear, .black.opacity(0.6)], startPoint: .top, endPoint: .bottom)
                 .frame(height: 280)
+                .frame(maxHeight: .infinity, alignment: .bottom)
         }
         .clipShape(ConcentricRectangle())
         .ignoresSafeArea()
