@@ -1,4 +1,5 @@
 import Foundation
+import UniformTypeIdentifiers
 
 /// Errors raised by `ImmichClient` itself. Transport failures surface as `URLError`.
 nonisolated enum ImmichError: Error, Equatable, LocalizedError {
@@ -220,6 +221,8 @@ nonisolated struct ImmichClient: Sendable {
         case preview(assetID: String)
         case thumbnail(assetID: String)
         case original(assetID: String)
+        /// The original with the server's saved edits (a rotation) applied.
+        case editedOriginal(assetID: String)
         case videoPlayback(assetID: String)
         case profileImage(userID: String)
     }
@@ -233,6 +236,8 @@ nonisolated struct ImmichClient: Sendable {
             endpoint("assets/\(id)/thumbnail", query: [.init(name: "size", value: "thumbnail"), .init(name: "edited", value: "true")])
         case .original(let id):
             endpoint("assets/\(id)/original")
+        case .editedOriginal(let id):
+            endpoint("assets/\(id)/original", query: [.init(name: "edited", value: "true")])
         case .videoPlayback(let id):
             endpoint("assets/\(id)/video/playback")
         case .profileImage(let id):
@@ -250,9 +255,11 @@ nonisolated struct ImmichClient: Sendable {
     }
 
     /// Downloads the original file into a temporary folder, under its own file name, and returns where it is.
-    /// The caller owns the file and should delete it when done.
+    /// An edited photo comes with its edits applied, as it looks in Immich. The caller owns the file and
+    /// should delete it when done.
     func downloadOriginal(of asset: Asset) async throws -> URL {
-        let (downloaded, response) = try await session.download(for: authorizedRequest(for: .original(assetID: asset.id)), delegate: APIKeyRedirectGuard.shared)
+        let media: Media = asset.isEdited ? .editedOriginal(assetID: asset.id) : .original(assetID: asset.id)
+        let (downloaded, response) = try await session.download(for: authorizedRequest(for: media), delegate: APIKeyRedirectGuard.shared)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             try? FileManager.default.removeItem(at: downloaded)
             throw ImmichError.http(status: http.statusCode, message: nil)
@@ -261,7 +268,15 @@ nonisolated struct ImmichClient: Sendable {
         // One folder per asset, so two photos with the same file name can't overwrite each other.
         let folder = FileManager.default.temporaryDirectory.appending(path: "immich-downloads/\(asset.id)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let destination = folder.appending(path: Self.safeFileName(asset.originalFileName, fallback: asset.id))
+        var name = Self.safeFileName(asset.originalFileName, fallback: asset.id)
+        // The server renders edits to its own format, which may not be the original's (a HEIC comes back as a JPEG).
+        if asset.isEdited, let mime = response.mimeType, let type = UTType(mimeType: mime),
+           type.conforms(to: .image) || type.conforms(to: .movie),
+           let ext = type.preferredFilenameExtension,
+           !(UTType(filenameExtension: (name as NSString).pathExtension)?.conforms(to: type) ?? false) {
+            name = (name as NSString).deletingPathExtension + "." + ext
+        }
+        let destination = folder.appending(path: name)
         try? FileManager.default.removeItem(at: destination)
         try FileManager.default.moveItem(at: downloaded, to: destination)
         return destination

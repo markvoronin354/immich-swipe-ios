@@ -99,6 +99,18 @@ struct DownloadAndFullResolutionTests {
         #expect(request.path == "/api/assets/photo/original")
     }
 
+    @Test func anEditedPhotoDownloadsFromTheSameRouteUnderItsOwnName() async throws {
+        serve()
+        let json = assetJSON("photo", date: "2024", name: "IMG_0001.JPG").replacingOccurrences(of: #""isEdited":false"#, with: #""isEdited":true"#)
+        let asset = try JSONDecoder().decode(Asset.self, from: Data(json.utf8))
+        #expect(asset.isEdited)
+        let file = try await makeClient().downloadOriginal(of: asset)
+        defer { try? FileManager.default.removeItem(at: file.deletingLastPathComponent()) }
+
+        #expect(file.lastPathComponent == "IMG_0001.JPG")
+        #expect(String(decoding: try Data(contentsOf: file), as: UTF8.self) == "PHOTO-BYTES")
+    }
+
     @Test func aFailedDownloadThrowsAndLeavesNothingBehind() async throws {
         serve(originalStatus: 404)
         let asset = try JSONDecoder().decode(Asset.self, from: Data(assetJSON("photo", date: "2024", name: "IMG_0001.JPG").utf8))

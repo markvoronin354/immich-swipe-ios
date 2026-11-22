@@ -861,8 +861,10 @@ final class DeckModel {
         client.authorizedRequest(for: .thumbnail(assetID: asset.id))
     }
 
+    /// The full-resolution image. An edited photo's original is the file as uploaded, so ask for it with
+    /// the server's edits applied or it would draw unrotated over the rotated preview.
     func originalRequest(for asset: Asset) -> URLRequest {
-        client.authorizedRequest(for: .original(assetID: asset.id))
+        client.authorizedRequest(for: asset.isEdited ? .editedOriginal(assetID: asset.id) : .original(assetID: asset.id))
     }
 
     func previewRequest(for asset: Asset) -> URLRequest {

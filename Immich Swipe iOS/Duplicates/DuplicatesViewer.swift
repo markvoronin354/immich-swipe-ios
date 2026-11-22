@@ -460,7 +460,7 @@ private struct DuplicateViewerMedia: View {
                         aspectRatio = size.width / size.height
                     }
                     if !isVideo {
-                        RemoteImage(request: client.authorizedRequest(for: .original(assetID: asset.id)), maxPixelSize: 4096, isOverlay: true, isLoading: $isLoadingOriginal)
+                        RemoteImage(request: client.authorizedRequest(for: asset.isEdited ? .editedOriginal(assetID: asset.id) : .original(assetID: asset.id)), maxPixelSize: 4096, isOverlay: true, isLoading: $isLoadingOriginal)
                     }
                     if let player {
                         PlayerSurface(player: player)

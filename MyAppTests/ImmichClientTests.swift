@@ -205,6 +205,7 @@ struct ImmichClientTests {
     @Test func mediaURLs() {
         #expect(client.url(for: .preview(assetID: "a1")).absoluteString == "https://photos.example.com/api/assets/a1/thumbnail?size=preview&edited=true")
         #expect(client.url(for: .original(assetID: "a1")).absoluteString == "https://photos.example.com/api/assets/a1/original")
+        #expect(client.url(for: .editedOriginal(assetID: "a1")).absoluteString == "https://photos.example.com/api/assets/a1/original?edited=true")
         #expect(client.authorizedRequest(for: .videoPlayback(assetID: "a1")).value(forHTTPHeaderField: "x-api-key") == "KEY")
     }
 }
