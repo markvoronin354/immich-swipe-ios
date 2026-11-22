@@ -317,7 +317,7 @@ struct SwipeDeckView: View {
     private func cardActions(for asset: Asset) -> SwipeCardActions {
         SwipeCardActions(
             layout: prefs.layout,
-            rotate: { model.rotateCurrent() },
+            rotate: { rotateCurrent() },
             openInImmich: { openInImmich(prefs.immichOpenMode) },
             openInImmichElsewhere: { openInImmich(prefs.immichOpenMode.other) },
             fullscreen: { if model.deck.current != nil { isFullscreen = true } },
@@ -385,6 +385,17 @@ struct SwipeDeckView: View {
     }
 
     /// Sets the rating from a drop or from the stars in the details panel.
+    /// Rotates the card, first telling the user once per photo that an edited one won't keep the rotation.
+    private func rotateCurrent() {
+        if let asset = model.deck.current, asset.isEdited, model.rotation(of: asset) == 0 {
+            failure = DropFailure(
+                title: "Rotation Won't Be Saved",
+                message: String(localized: "This photo was already edited in Immich. You can turn it here to look at it, but the rotation won't be sent to the server, so its existing edits aren't lost.")
+            )
+        }
+        model.rotateCurrent()
+    }
+
     private func rate(_ asset: Asset, stars: Int) {
         Task {
             do {

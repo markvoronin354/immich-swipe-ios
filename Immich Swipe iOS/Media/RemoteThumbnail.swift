@@ -10,9 +10,13 @@ struct RemoteThumbnail: View {
     var revision = 0
     /// For a video: where to take a frame from when the server has no thumbnail.
     var videoFallback: URLRequest?
+    /// The photo's local rotation in degrees, turned inside the thumbnail's shape.
+    var rotation = 0
 
     @Environment(\.displayScale) private var displayScale
     @State private var image: CGImage?
+    /// The angle drawn: `rotation` wraps from 270° to 0°, so this keeps counting up to only turn clockwise.
+    @State private var turned: Double?
 
     private var radius: CGFloat { cornerRadius ?? size * 0.18 }
 
@@ -29,6 +33,10 @@ struct RemoteThumbnail: View {
                     Image(decorative: image, scale: displayScale)
                         .resizable()
                         .scaledToFill()
+                        .rotationEffect(.degrees(turned ?? Double(rotation)))
+                        .animation(.snappy, value: rotation)
+                        // `turned` follows `rotation` a render later, so it needs its own animation.
+                        .animation(.snappy, value: turned)
                 } else {
                     Image(systemName: "photo.on.rectangle")
                         .foregroundStyle(.secondary)
@@ -36,6 +44,9 @@ struct RemoteThumbnail: View {
             }
             .frame(width: size, height: size)
             .clipShape(.rect(cornerRadius: radius))
+            .onChange(of: rotation) { old, new in
+                turned = (turned ?? Double(old)) + Double((new - old + 360) % 360)
+            }
             .task(id: ReloadKey(url: request?.url, revision: revision)) {
                 image = nil
                 guard let request else { return }

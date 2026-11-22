@@ -112,6 +112,9 @@ private struct CardMedia: View {
     let rotation: Int
     var isLoadingOriginal: Binding<Bool>?
     var animates = false
+    /// The angle drawn. `rotation` wraps from 270° back to 0°, which would spin the photo backwards, so
+    /// this keeps counting up and only ever turns clockwise.
+    @State private var turned: Double?
 
     var body: some View {
         GeometryReader { geometry in
@@ -129,9 +132,14 @@ private struct CardMedia: View {
                 width: sideways ? geometry.size.height : geometry.size.width,
                 height: sideways ? geometry.size.width : geometry.size.height
             )
-            .rotationEffect(.degrees(Double(rotation)))
+            .rotationEffect(.degrees(turned ?? Double(rotation)))
             .frame(width: geometry.size.width, height: geometry.size.height)
             .animation(.snappy, value: rotation)
+            // `turned` follows `rotation` a render later, so it needs its own animation.
+            .animation(.snappy, value: turned)
+            .onChange(of: rotation) { old, new in
+                turned = (turned ?? Double(old)) + Double((new - old + 360) % 360)
+            }
         }
     }
 }

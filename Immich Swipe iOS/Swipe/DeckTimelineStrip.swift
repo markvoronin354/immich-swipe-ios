@@ -24,7 +24,8 @@ struct DeckTimelineStrip: View {
                             isLivePhoto: asset.isLivePhoto,
                             isFavorite: model.isFavorite(asset),
                             isArchived: asset.isArchived,
-                            isLocked: asset.isLocked
+                            isLocked: asset.isLocked,
+                            rotation: model.rotation(of: asset)
                         )
                         .onTapGesture { model.move(toAssetID: asset.id) }
                         .id(asset.id)
@@ -63,12 +64,13 @@ private struct TimelineThumb: View {
     let isFavorite: Bool
     let isArchived: Bool
     let isLocked: Bool
+    let rotation: Int
 
     var body: some View {
         // Already archived or locked on the server, without a matching decision this session.
         let showArchive = isArchived && decision != .archive
         let showLock = isLocked && decision != .lock
-        RemoteThumbnail(request: request, size: 58, revision: revision, videoFallback: videoFallback)
+        RemoteThumbnail(request: request, size: 58, revision: revision, videoFallback: videoFallback, rotation: rotation)
             .overlay(alignment: .bottomLeading) {
                 if isVideo {
                     Image(systemName: "play.fill")

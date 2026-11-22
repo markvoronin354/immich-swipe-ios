@@ -5844,6 +5844,22 @@
         }
       }
     },
+    "Rotation Won't Be Saved" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "La rotación no se guardará"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "La rotation ne sera pas enregistrée"
+          }
+        }
+      }
+    },
     "Save" : {
       "localizations" : {
         "es" : {
@@ -7004,6 +7020,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Vos décisions de tri locales et vos statistiques de synchronisation seront définitivement effacées. Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "This photo was already edited in Immich. You can turn it here to look at it, but the rotation won't be sent to the server, so its existing edits aren't lost." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Esta foto ya se editó en Immich. Puedes girarla aquí para verla, pero la rotación no se enviará al servidor, para que no se pierdan sus ediciones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Cette photo a déjà été modifiée dans Immich. Vous pouvez la faire pivoter ici pour la regarder, mais la rotation ne sera pas envoyée au serveur, afin de ne pas perdre ses modifications."
           }
         }
       }
