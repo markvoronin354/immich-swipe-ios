@@ -202,6 +202,7 @@ nonisolated enum Setting {
         static let doubleTapAction = "double_tap_action"
         static let showTimeline = "show_timeline"
         static let includeArchived = "include_archived"
+        static let syncLocalDeletion = "sync_local_deletion"
         static let playbackBehavior = "audio_focus"
         static let swipeLeftAction = "swipe_left_action"
         static let swipeRightAction = "swipe_right_action"
@@ -260,6 +261,8 @@ nonisolated enum Setting {
         static let showTimeline = true
         /// On by default, as on Android: decks and counts include photos archived in Immich.
         static let includeArchived = true
+        /// Off, as on Android: deleting from Immich leaves the device's Photos library alone.
+        static let syncLocalDeletion = false
         static let playbackBehavior = PlaybackBehavior.pauseOthers
         static let swipeLeftAction = SwipeAction.delete
         static let swipeRightAction = SwipeAction.keep

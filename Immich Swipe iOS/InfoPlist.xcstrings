@@ -80,19 +80,43 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Immich Swipe saves photos and videos you download from your Immich server to your Photos library. It never reads your library."
+            "value" : "Immich Swipe saves photos and videos you download from your Immich server to your Photos library."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Immich Swipe guarda en la fototeca de Fotos las fotos y vídeos que descargas de tu servidor Immich. Nunca lee tu fototeca."
+            "value" : "Immich Swipe guarda en la fototeca de Fotos las fotos y vídeos que descargas de tu servidor Immich."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Immich Swipe enregistre dans votre photothèque Photos les photos et vidéos que vous téléchargez depuis votre serveur Immich. Immich Swipe ne lit jamais votre photothèque."
+            "value" : "Immich Swipe enregistre dans votre photothèque Photos les photos et vidéos que vous téléchargez depuis votre serveur Immich."
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Privacy - Photo Library Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "When \"Sync deletion with device\" is on, Immich Swipe looks for the photos you delete from Immich in your Photos library, so it can offer to delete them from this device too."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Si «Sincronizar eliminación con el dispositivo» está activado, Immich Swipe busca en la fototeca de Fotos las fotos que eliminas de Immich para ofrecerte eliminarlas también de este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Lorsque « Synchroniser la suppression avec l’appareil » est activé, Immich Swipe recherche dans votre photothèque Photos les photos que vous supprimez d’Immich, afin de vous proposer de les supprimer aussi de cet appareil."
           }
         }
       }

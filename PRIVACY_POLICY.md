@@ -1,6 +1,6 @@
 # Privacy Policy for Immich Swipe (iOS)
 
-**Last Updated:** November 21, 2026
+**Last Updated:** November 22, 2026
 
 ## 1. Overview
 
@@ -43,7 +43,12 @@ with the developer or any third party.** The only server it talks to is the Immi
 ## 3. Permissions
 
 * **Photos (add only):** Asked for only when you save a photo or video from your Immich server to your Photos
-  library. The app can add items but cannot read your library.
+  library. This lets the app add items but not read your library.
+* **Photos (full access):** Optional. Asked for only when you turn on **Sync deletion with device** in Settings.
+  After you delete photos from Immich, the app looks for the same photos in your Photos library, matching them by
+  file name and size, and asks iOS to delete them. iOS always asks you to confirm and moves them
+  to Recently Deleted. With iCloud Photos, they are also deleted from your other devices. Nothing from your library
+  is sent anywhere, including your Immich server.
 * **Local Network:** Used to reach your Immich server when it is on your home network.
 * **Notifications:** Optional. Used only for the sorting reminders you turn on in Settings. They are scheduled on
   your device; no push service is used.

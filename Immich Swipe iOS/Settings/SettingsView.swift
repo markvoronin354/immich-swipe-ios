@@ -10,6 +10,7 @@ struct SettingsView: View {
 
     @AppStorage(Setting.Key.theme) private var theme = Setting.Default.theme
     @AppStorage(Setting.Key.includeArchived) private var includeArchived = Setting.Default.includeArchived
+    @AppStorage(Setting.Key.syncLocalDeletion) private var syncLocalDeletion = Setting.Default.syncLocalDeletion
     @AppStorage(Setting.Key.playbackBehavior) private var playbackBehavior = Setting.Default.playbackBehavior
     @AppStorage(Setting.Key.reminderEnabled) private var reminderEnabled = Setting.Default.reminderEnabled
     @AppStorage(Setting.Key.reminderInterval) private var reminderInterval = Setting.Default.reminderInterval
@@ -24,6 +25,8 @@ struct SettingsView: View {
     @State private var isConfirmingSignOut = false
     @State private var isConfirmingRemoveAll = false
     @State private var accountToRemove: Account?
+    @State private var isShowingPhotosDenied = false
+    @Environment(\.openURL) private var openURL
 
     init(model: SettingsModel) {
         _model = State(initialValue: model)
@@ -48,6 +51,16 @@ struct SettingsView: View {
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { model.importBackup(from: $0) }
         .fileExporter(isPresented: $isExporting, document: model.exportDocument, contentType: .json, defaultFilename: model.exportFileName) {
             model.finishExport($0)
+        }
+        // iOS asks for Photos access only once, so after a refusal the switch can only send the user to
+        // the app's page in iOS Settings.
+        .alert("Immich Swipe", isPresented: $isShowingPhotosDenied) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+            }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Permission denied. Local sync disabled. To use it, allow full access to Photos in Settings › Privacy & Security › Photos.")
         }
         .alert("Immich Swipe", isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) {
             Button("OK") { model.message = nil }
@@ -88,6 +101,9 @@ struct SettingsView: View {
             } label: {
                 SettingsRow(title: "Swipe card action buttons", subtitle: "Customize visibility and position of overlay buttons", systemImage: "circle.grid.2x2")
             }
+            Toggle(isOn: syncLocalDeletionToggle) {
+                SettingsRow(title: "Sync deletion with device", subtitle: "When you delete a photo from Immich, also attempt to delete the local file from your device storage to prevent re-uploading. With iCloud Photos, this also deletes it from your other devices.", systemImage: "iphone.slash")
+            }
             Toggle(isOn: $includeArchived) {
                 SettingsRow(title: "Include external archives", subtitle: "View and sort photos that have been archived in Immich (outside of Immich Swipe)", systemImage: "archivebox")
             }
@@ -101,6 +117,28 @@ struct SettingsView: View {
                 .labelsHidden()
             }
         }
+    }
+
+    /// As on Android, the switch only stays on if the app may read the Photos library. Limited access counts as
+    /// a refusal, since most photos couldn't be found.
+    private var syncLocalDeletionToggle: Binding<Bool> {
+        Binding(
+            get: { syncLocalDeletion },
+            set: { wantsOn in
+                guard wantsOn else {
+                    syncLocalDeletion = false
+                    return
+                }
+                Task {
+                    if await LocalPhotoDeletion.requestAccess() {
+                        syncLocalDeletion = true
+                    } else {
+                        syncLocalDeletion = false
+                        isShowingPhotosDenied = true
+                    }
+                }
+            }
+        )
     }
 
     // MARK: Reminder

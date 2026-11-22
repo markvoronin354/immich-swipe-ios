@@ -3,6 +3,7 @@ import SwiftUI
 /// Album list: special collections first, then albums grouped by how far through them the user is.
 struct HomeView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(Navigator.self) private var navigator
     let account: Account
     @State private var model: HomeModel
     @State private var query = ""
@@ -74,12 +75,15 @@ struct HomeView: View {
                 completedAlbums: sections.completed.count
             )
         }
-        // One-time notice, like Android's. Its text points to "Sync deletion with device", which
-        // iOS doesn't have, so the message explains what happens to the copy on the phone instead.
+        // One-time notice, like Android's, pointing to "Sync deletion with device".
         .alert("Storage Sync", isPresented: Binding(get: { !backupWarningShown }, set: { if !$0 { backupWarningShown = true } })) {
+            Button("Go to Settings") {
+                backupWarningShown = true
+                navigator.openSettings()
+            }
             Button("Confirm") { backupWarningShown = true }
         } message: {
-            Text("Deleting a photo here removes it from your Immich server only. The copy on this device stays, so the Immich app may back it up again.\n\nTo prevent that, also delete it from the Photos app.")
+            Text("To prevent Immich from automatically re-uploading photos you delete, you can enable \"Sync deletion with device\" in Settings.\n\nThis will attempt to remove the local copy from your phone whenever you delete a photo from the server.")
         }
         .refreshable { await model.load() }
         .task { if !model.hasLoaded { await model.load() } }

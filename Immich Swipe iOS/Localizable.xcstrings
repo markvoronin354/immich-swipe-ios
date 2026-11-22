@@ -1360,6 +1360,22 @@
         }
       }
     },
+    "App Tutorials" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutoriales de la aplicación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutoriels de l'application"
+          }
+        }
+      }
+    },
     "Appearance" : {
       "localizations" : {
         "es" : {
@@ -2784,6 +2800,7 @@
       }
     },
     "Deleting a photo here removes it from your Immich server only. The copy on this device stays, so the Immich app may back it up again.\n\nTo prevent that, also delete it from the Photos app." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -2939,6 +2956,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Téléchargement"
+          }
+        }
+      }
+    },
+    "Duplicate Groups" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupos de duplicados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groupes de doublons"
           }
         }
       }
@@ -3285,6 +3318,22 @@
         }
       }
     },
+    "Free Up Server Space" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liberar espacio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Libérer de l'espace"
+          }
+        }
+      }
+    },
     "Frequency" : {
       "localizations" : {
         "es" : {
@@ -3409,6 +3458,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Statistiques globales"
+          }
+        }
+      }
+    },
+    "Go to Settings" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ir a Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Aller aux Réglages"
           }
         }
       }
@@ -4243,6 +4308,22 @@
         }
       }
     },
+    "Mark Keep or Delete" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar o Eliminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder ou Supprimer"
+          }
+        }
+      }
+    },
     "Maximum days: %lld" : {
       "localizations" : {
         "es" : {
@@ -4271,6 +4352,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Jours minimum : %lld"
+          }
+        }
+      }
+    },
+    "Monitor your sorting progress and counts at a glance. Tap the progress bar anytime to open the summary and sync changes to Immich!" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa tu progreso. Toca la barra de progreso en cualquier momento para ver el resumen y sincronizar con Immich."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivez votre avancement en direct. Appuyez sur la barre de progression pour ouvrir le résumé et synchroniser vos choix avec Immich !"
           }
         }
       }
@@ -4431,6 +4528,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Plus récents d’abord"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivant"
           }
         }
       }
@@ -4755,6 +4868,22 @@
         }
       }
     },
+    "Once duplicate photos are marked for deletion, tap the progress bar anytime to open the summary and delete them from Immich!" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una vez marcadas las fotos para eliminar, ¡toca la barra de progreso en cualquier momento para ver el resumen y eliminarlas de Immich!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une fois les doublons marqués pour suppression, appuyez sur la barre de progression à tout moment pour ouvrir le résumé et les supprimer d'Immich !"
+          }
+        }
+      }
+    },
     "Only appears on videos." : {
       "localizations" : {
         "es" : {
@@ -4867,6 +4996,22 @@
         }
       }
     },
+    "Open Settings" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Abrir Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Ouvrir Réglages"
+          }
+        }
+      }
+    },
     "Opens your account" : {
       "localizations" : {
         "es" : {
@@ -4943,6 +5088,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Couper les autres"
+          }
+        }
+      }
+    },
+    "Permission denied. Local sync disabled. To use it, allow full access to Photos in Settings › Privacy & Security › Photos." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Permiso denegado. La sincronización local está desactivada. Para usarla, permite el acceso total a Fotos en Ajustes › Privacidad y seguridad › Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Autorisation refusée. La synchronisation locale est désactivée. Pour l’utiliser, autorisez l’accès complet à Photos dans Réglages › Confidentialité et sécurité › Photos."
           }
         }
       }
@@ -5139,6 +5300,38 @@
         }
       }
     },
+    "Progress Tracking" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguimiento del progreso"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivi de progression"
+          }
+        }
+      }
+    },
+    "Quick Action Bar" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barra de acciones rápidas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barre d'actions rapides"
+          }
+        }
+      }
+    },
     "Rarely" : {
       "localizations" : {
         "es" : {
@@ -5199,6 +5392,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NOTE"
+          }
+        }
+      }
+    },
+    "Re-launch guides for Swipe & Duplicates" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar los recorridos interactivos para Deslizar y Duplicados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relancer les visites guidées pour le Tri et les Doublons"
           }
         }
       }
@@ -5923,6 +6132,22 @@
         }
       }
     },
+    "Similar photos and videos are grouped into clusters. Compare resolution, file size, and details to decide which ones to clean up." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las fotos similares se agrupan en grupos. Compara resolución, tamaño y detalles para elegir cuáles limpiar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les médias similaires sont regroupés par clusters. Comparez la résolution, la taille et les détails pour choisir quoi nettoyer."
+          }
+        }
+      }
+    },
     "Size" : {
       "localizations" : {
         "es" : {
@@ -5935,6 +6160,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Taille"
+          }
+        }
+      }
+    },
+    "Skip" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer"
           }
         }
       }
@@ -6239,6 +6480,22 @@
         }
       }
     },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paso %1$lld de %2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étape %1$lld sur %2$lld"
+          }
+        }
+      }
+    },
     "Storage" : {
       "localizations" : {
         "es" : {
@@ -6367,6 +6624,22 @@
         }
       }
     },
+    "Swipe Gestures & Details" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestos y Detalles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestes & Détails"
+          }
+        }
+      }
+    },
     "Swipe left" : {
       "localizations" : {
         "es" : {
@@ -6399,6 +6672,38 @@
         }
       }
     },
+    "Swipe RIGHT to %@, swipe LEFT to %@, swipe DOWN to %@, or drag UP to view full photo EXIF details!" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Desliza a la DERECHA (%1$@), a la IZQUIERDA (%2$@) o hacia ABAJO (%3$@), o arrastra hacia ARRIBA para ver los detalles EXIF!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glissez à DROITE (%1$@), à GAUCHE (%2$@) ou vers le BAS (%3$@), ou vers le HAUT pour afficher les détails EXIF de la photo !"
+          }
+        }
+      }
+    },
+    "Swipe RIGHT to %@, swipe LEFT to %@, swipe DOWN to %@, or swipe UP to %@!" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Desliza a la DERECHA (%1$@), a la IZQUIERDA (%2$@), hacia ABAJO (%3$@) o hacia ARRIBA (%4$@)!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glissez à DROITE (%1$@), à GAUCHE (%2$@), vers le BAS (%3$@) ou vers le HAUT (%4$@) !"
+          }
+        }
+      }
+    },
     "Swipe right to keep and left to delete." : {
       "localizations" : {
         "es" : {
@@ -6427,6 +6732,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Swipe vers le haut"
+          }
+        }
+      }
+    },
+    "Sync deletion with device" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Sincronizar eliminación con el dispositivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Synchroniser la suppression avec l’appareil"
           }
         }
       }
@@ -6475,6 +6796,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Journaux système"
+          }
+        }
+      }
+    },
+    "Tap any photo card to toggle between Keep and Delete choices. Long-press any photo for a full-screen comparison view!" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca cualquier foto para alternar entre Conservar y Eliminar. ¡Mantén presionado para una vista de comparación en pantalla completa!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyez sur une photo pour alterner entre Garder et Supprimer. Maintien long pour une comparaison en plein écran !"
           }
         }
       }
@@ -6789,6 +7126,22 @@
         }
       }
     },
+    "To prevent Immich from automatically re-uploading photos you delete, you can enable \"Sync deletion with device\" in Settings.\n\nThis will attempt to remove the local copy from your phone whenever you delete a photo from the server." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Para evitar que Immich vuelva a subir automáticamente las fotos que eliminas, puedes activar «Sincronizar eliminación con el dispositivo» en Ajustes.\n\nEsto intentará eliminar la copia local de tu teléfono cada vez que elimines una foto del servidor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Pour éviter qu’Immich ne sauvegarde à nouveau automatiquement les photos que vous supprimez, vous pouvez activer « Synchroniser la suppression avec l’appareil » dans Réglages.\n\nCela tentera de supprimer la copie locale de votre téléphone chaque fois que vous supprimez une photo du serveur."
+          }
+        }
+      }
+    },
     "Toolbar" : {
       "localizations" : {
         "es" : {
@@ -6897,6 +7250,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Réessayer"
+          }
+        }
+      }
+    },
+    "Tutorials reset! Open Swipe or Duplicates to view." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Tutoriales reiniciados! Abre Deslizar o Duplicados para verlos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutoriels réinitialisés ! Ouvrez le Tri ou les Doublons pour les afficher."
           }
         }
       }
@@ -7041,6 +7410,22 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Statistiques d’usage"
+          }
+        }
+      }
+    },
+    "Use bottom buttons to Undo, Archive, Favorite, Add to Album, or change Sort Order." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa los botones inferiores para Deshacer, Archivar, Marcar favorito, Añadir a álbum o cambiar el Orden de clasificación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisez les boutons du bas pour Annuler, Archiver, Mettre en favori, Ajouter à un album ou changer l'Ordre de tri."
           }
         }
       }
@@ -7237,6 +7622,22 @@
         }
       }
     },
+    "When you delete a photo from Immich, also attempt to delete the local file from your device storage to prevent re-uploading. With iCloud Photos, this also deletes it from your other devices." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Al eliminar una foto de Immich, también intenta eliminar el archivo local del almacenamiento de tu dispositivo para evitar que se vuelva a subir. Con Fotos en iCloud, también se elimina de tus otros dispositivos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Lorsque vous supprimez une photo d’Immich, tente également de supprimer le fichier local du stockage de votre appareil pour éviter qu’il ne soit sauvegardé à nouveau. Avec Photos iCloud, il est aussi supprimé de vos autres appareils."
+          }
+        }
+      }
+    },
     "Your API key is missing these permissions: %@. Add them to the key in Immich, then tap Try Again." : {
       "localizations" : {
         "es" : {
@@ -7265,310 +7666,6 @@
           "stringUnit" : {
             "state" : "machine_translated",
             "value" : "Il manque ces permissions à votre clé API : %@. Les fonctions qui en ont besoin ne marcheront pas tant que vous ne les aurez pas ajoutées à la clé dans Immich."
-          }
-        }
-      }
-    },
-    "Skip" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Omitir"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passer"
-          }
-        }
-      }
-    },
-    "Next" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siguiente"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suivant"
-          }
-        }
-      }
-    },
-    "Step %lld of %lld" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paso %1$lld de %2$lld"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Étape %1$lld sur %2$lld"
-          }
-        }
-      }
-    },
-    "App Tutorials" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tutoriales de la aplicación"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tutoriels de l'application"
-          }
-        }
-      }
-    },
-    "Re-launch guides for Swipe & Duplicates" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reiniciar los recorridos interactivos para Deslizar y Duplicados"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relancer les visites guidées pour le Tri et les Doublons"
-          }
-        }
-      }
-    },
-    "Tutorials reset! Open Swipe or Duplicates to view." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡Tutoriales reiniciados! Abre Deslizar o Duplicados para verlos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tutoriels réinitialisés ! Ouvrez le Tri ou les Doublons pour les afficher."
-          }
-        }
-      }
-    },
-    "Swipe Gestures & Details" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gestos y Detalles"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gestes & Détails"
-          }
-        }
-      }
-    },
-    "Swipe RIGHT to %@, swipe LEFT to %@, swipe DOWN to %@, or drag UP to view full photo EXIF details!" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡Desliza a la DERECHA (%1$@), a la IZQUIERDA (%2$@) o hacia ABAJO (%3$@), o arrastra hacia ARRIBA para ver los detalles EXIF!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glissez à DROITE (%1$@), à GAUCHE (%2$@) ou vers le BAS (%3$@), ou vers le HAUT pour afficher les détails EXIF de la photo !"
-          }
-        }
-      }
-    },
-    "Swipe RIGHT to %@, swipe LEFT to %@, swipe DOWN to %@, or swipe UP to %@!" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡Desliza a la DERECHA (%1$@), a la IZQUIERDA (%2$@), hacia ABAJO (%3$@) o hacia ARRIBA (%4$@)!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glissez à DROITE (%1$@), à GAUCHE (%2$@), vers le BAS (%3$@) ou vers le HAUT (%4$@) !"
-          }
-        }
-      }
-    },
-    "Progress Tracking" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seguimiento del progreso"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suivi de progression"
-          }
-        }
-      }
-    },
-    "Monitor your sorting progress and counts at a glance. Tap the progress bar anytime to open the summary and sync changes to Immich!" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revisa tu progreso. Toca la barra de progreso en cualquier momento para ver el resumen y sincronizar con Immich."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suivez votre avancement en direct. Appuyez sur la barre de progression pour ouvrir le résumé et synchroniser vos choix avec Immich !"
-          }
-        }
-      }
-    },
-    "Quick Action Bar" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Barra de acciones rápidas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Barre d'actions rapides"
-          }
-        }
-      }
-    },
-    "Use bottom buttons to Undo, Archive, Favorite, Add to Album, or change Sort Order." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usa los botones inferiores para Deshacer, Archivar, Marcar favorito, Añadir a álbum o cambiar el Orden de clasificación."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utilisez les boutons du bas pour Annuler, Archiver, Mettre en favori, Ajouter à un album ou changer l'Ordre de tri."
-          }
-        }
-      }
-    },
-    "Duplicate Groups" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grupos de duplicados"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Groupes de doublons"
-          }
-        }
-      }
-    },
-    "Similar photos and videos are grouped into clusters. Compare resolution, file size, and details to decide which ones to clean up." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las fotos similares se agrupan en grupos. Compara resolución, tamaño y detalles para elegir cuáles limpiar."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les médias similaires sont regroupés par clusters. Comparez la résolution, la taille et les détails pour choisir quoi nettoyer."
-          }
-        }
-      }
-    },
-    "Mark Keep or Delete" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conservar o Eliminar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Garder ou Supprimer"
-          }
-        }
-      }
-    },
-    "Tap any photo card to toggle between Keep and Delete choices. Long-press any photo for a full-screen comparison view!" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca cualquier foto para alternar entre Conservar y Eliminar. ¡Mantén presionado para una vista de comparación en pantalla completa!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appuyez sur une photo pour alterner entre Garder et Supprimer. Maintien long pour une comparaison en plein écran !"
-          }
-        }
-      }
-    },
-    "Free Up Server Space" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Liberar espacio"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Libérer de l'espace"
-          }
-        }
-      }
-    },
-    "Once duplicate photos are marked for deletion, tap the progress bar anytime to open the summary and delete them from Immich!" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Una vez marcadas las fotos para eliminar, ¡toca la barra de progreso en cualquier momento para ver el resumen y eliminarlas de Immich!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Une fois les doublons marqués pour suppression, appuyez sur la barre de progression à tout moment pour ouvrir le résumé et les supprimer d'Immich !"
           }
         }
       }

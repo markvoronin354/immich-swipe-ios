@@ -725,10 +725,25 @@ final class DeckModel {
         lastOutcome = nil
         let background = BackgroundTime("Apply changes")
         defer { background.end() }
+        let plan = self.plan
         let outcome = await ApplyChanges(client: client, decisions: decisions, userID: userID).run(plan)
+        // As on Android, the photos are looked up while the apply is still running, and iOS asks to delete
+        // them once it's done.
+        var localIDs: [String] = []
+        if defaults.object(forKey: Setting.Key.syncLocalDeletion) as? Bool ?? Setting.Default.syncLocalDeletion {
+            let deleted = Set(outcome.deletedIDs)
+            localIDs = await LocalPhotoDeletion.localIdentifiers(matching: plan.delete.filter { deleted.contains($0.id) })
+        }
         integrate(outcome)
         lastOutcome = outcome
         isApplying = false
+        if !localIDs.isEmpty {
+            do {
+                try await LocalPhotoDeletion.delete(localIdentifiers: localIDs)
+            } catch {
+                AppLog.w("SwipeViewModel", "Deleting \(localIDs.count) photos from the device didn't happen: \(error.localizedDescription)")
+            }
+        }
     }
 
     private func integrate(_ outcome: ApplyOutcome) {
