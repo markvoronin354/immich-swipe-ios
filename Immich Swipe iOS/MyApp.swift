@@ -15,6 +15,7 @@ import SwiftUI
     init() {
         AppLog.startSession()
         AppLog.i("App", "Application started")
+        TutorialFlags.processInstall()
         decisions = Self.makeDecisionStore()
     }
 

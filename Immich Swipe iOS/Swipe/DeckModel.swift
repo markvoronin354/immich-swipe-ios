@@ -23,6 +23,9 @@ final class DeckModel {
     private(set) var syncedCount = 0
     /// Set when saving to the local database fails, so the user knows a decision may not stick.
     private(set) var saveError: String?
+    /// Set by the screen while its tutorial is due or showing. Paging then waits after the first photos land, so
+    /// the deck isn't reshuffled behind the tutorial, as on Android (spec §4.4).
+    var isPagingHeld = false
 
     private(set) var sortOrder: DeckSortOrder
 
@@ -144,6 +147,7 @@ final class DeckModel {
         if !cached.isEmpty {
             isLoadingMore = true
             await receive(cached, fromServer: false)
+            try await waitWhilePagingHeld()
         }
 
         // 2. The statistics total is more reliable than the search total, so the larger one wins.
@@ -224,6 +228,7 @@ final class DeckModel {
                 async let following = client.searchAssets(next)
                 if Self.showsPagesAsTheyLand(sortOrder) {
                     await receiveHeld(and: items)
+                    try await waitWhilePagingHeld()
                 } else {
                     for asset in items where heldIDs.insert(asset.id).inserted {
                         held.append(asset)
@@ -246,6 +251,14 @@ final class DeckModel {
             AppLog.e("AssetRepo", "Error page sync: \(error.localizedDescription)")
             await receiveHeld(and: [])
             throw error
+        }
+    }
+
+    /// Waits out a tutorial, but only while the deck has a card for it to point at. With none it never starts,
+    /// and paging would wait forever.
+    private func waitWhilePagingHeld() async throws {
+        while isPagingHeld, deck.current != nil {
+            try await Task.sleep(for: .milliseconds(200))
         }
     }
 

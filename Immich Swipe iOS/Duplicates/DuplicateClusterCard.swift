@@ -21,13 +21,16 @@ struct DuplicateClusterCard: View {
         let decided = cluster.assets.count { model.decision(for: $0) != nil }
         let isSorted = decided == cluster.assets.count
 
+        // The tutorial lights the group and its photos nearest the middle of the screen.
         VStack(spacing: 14) {
             header(decided: decided, isSorted: isSorted)
             assets
+                .tutorialTarget("photos#\(cluster.id)")
             buttons
         }
         .padding(16)
         .background(.background.secondary, in: .rect(cornerRadius: 28, style: .continuous))
+        .tutorialTarget("cluster#\(cluster.id)")
     }
 
     /// "3 items" over "1 of 3 sorted" (or a green "Sorted"), and the fullscreen button. Android's Best

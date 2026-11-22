@@ -235,3 +235,146 @@ struct SortingBarButtonOrderTests {
         #expect(moved == [.album, .lock, .archive, .favorite])
     }
 }
+
+@MainActor
+struct TutorialFlagsTests {
+    let defaults = UserDefaults(suiteName: "tutorial-flag-tests-\(UUID().uuidString)")!
+
+    private func saveAccount() throws {
+        let account = Account(userID: "u1", serverURL: URL(string: "https://immich.example")!, name: "Ada", email: "ada@example.com", avatarColor: nil, lastActive: .now)
+        defaults.set(try JSONEncoder().encode([account]), forKey: SessionStore.accountsKey)
+    }
+
+    @Test func keysAndDefaultsMatchAndroid() {
+        #expect(Setting.Key.hasCompletedSwipeTutorial == "has_completed_swipe_tutorial")
+        #expect(Setting.Key.hasCompletedDuplicatesTutorial == "has_completed_duplicates_tutorial")
+        #expect(Setting.Key.initialInstallProcessed == "initial_install_processed")
+        #expect(Setting.Default.hasCompletedSwipeTutorial == false)
+        #expect(Setting.Default.hasCompletedDuplicatesTutorial == false)
+    }
+
+    @Test func aFreshInstallSeesBothTutorials() {
+        TutorialFlags.processInstall(defaults: defaults)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedSwipeTutorial) == false)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedDuplicatesTutorial) == false)
+        #expect(defaults.bool(forKey: Setting.Key.initialInstallProcessed))
+    }
+
+    @Test func anInstallThatAlreadyHasAnAccountSkipsBoth() throws {
+        try saveAccount()
+        TutorialFlags.processInstall(defaults: defaults)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedSwipeTutorial))
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedDuplicatesTutorial))
+    }
+
+    @Test func anAppWithNoAccountsLeftCountsAsFresh() throws {
+        defaults.set(try JSONEncoder().encode([Account]()), forKey: SessionStore.accountsKey)
+        TutorialFlags.processInstall(defaults: defaults)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedSwipeTutorial) == false)
+    }
+
+    @Test func onlyTheFirstLaunchDecides() throws {
+        TutorialFlags.processInstall(defaults: defaults)
+        try saveAccount()
+        TutorialFlags.processInstall(defaults: defaults)
+        // Signing in later doesn't switch the tutorials off.
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedSwipeTutorial) == false)
+    }
+
+    @Test func aFlagThatAlreadyHasAValueIsLeftAlone() throws {
+        try saveAccount()
+        defaults.set(false, forKey: Setting.Key.hasCompletedSwipeTutorial)
+        TutorialFlags.processInstall(defaults: defaults)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedSwipeTutorial) == false)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedDuplicatesTutorial))
+    }
+
+    @Test func resetBringsBothTutorialsBack() {
+        defaults.set(true, forKey: Setting.Key.hasCompletedSwipeTutorial)
+        defaults.set(true, forKey: Setting.Key.hasCompletedDuplicatesTutorial)
+        TutorialFlags.reset(defaults: defaults)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedSwipeTutorial) == false)
+        #expect(defaults.bool(forKey: Setting.Key.hasCompletedDuplicatesTutorial) == false)
+    }
+}
+
+@MainActor
+struct TutorialControllerTests {
+    private func steps(_ count: Int) -> [TutorialStep] {
+        (1...count).map { TutorialStep(id: "step\($0)", title: "Title", message: "Message") }
+    }
+
+    @Test func walksThroughTheStepsAndFinishesOnTheLastOne() {
+        let controller = TutorialController()
+        var completions = 0
+        controller.start(steps(3)) { completions += 1 }
+        #expect(controller.isActive)
+        #expect(controller.step?.id == "step1")
+
+        controller.back()
+        #expect(controller.index == 0)
+        controller.next()
+        controller.next()
+        #expect(controller.step?.id == "step3")
+        #expect(controller.isLastStep)
+        #expect(completions == 0)
+
+        controller.next()
+        #expect(!controller.isActive)
+        #expect(controller.step == nil)
+        #expect(completions == 1)
+        #expect(controller.finishedCount == 1)
+    }
+
+    @Test func skippingEndsItOnceAndIsNotACelebration() {
+        let controller = TutorialController()
+        var completions = 0
+        controller.start(steps(3)) { completions += 1 }
+        controller.next()
+        controller.end()
+        controller.end()
+        #expect(!controller.isActive)
+        #expect(completions == 1)
+        #expect(controller.finishedCount == 0)
+    }
+
+    @Test func startIgnoresNoStepsAndATutorialThatIsAlreadyShowing() {
+        let controller = TutorialController()
+        controller.start([]) {}
+        #expect(!controller.isActive)
+
+        controller.start(steps(2)) {}
+        controller.next()
+        controller.start(steps(3)) {}
+        #expect(controller.index == 1)
+        #expect(controller.steps.count == 2)
+    }
+
+    @Test func aTargetFlushWithTheOverlaysEdgeKeepsItsPaddingOnEverySide() {
+        // The pill sits at the very top of the overlay, which starts under the navigation bar.
+        let step = TutorialStep(id: "header", title: "Title", message: "Message", padding: 4, cornerRadius: nil)
+        let pill = CGRect(x: 16, y: 0, width: 360, height: 44)
+        #expect(step.litRect(around: pill, in: CGSize(width: 393, height: 700)) == CGRect(x: 12, y: -4, width: 368, height: 52))
+    }
+
+    @Test func aTargetWithNoPaddingIsLitExactly() {
+        let step = TutorialStep(id: "deck", title: "Title", message: "Message", padding: 0)
+        let deck = CGRect(x: 16, y: 180, width: 361, height: 440)
+        #expect(step.litRect(around: deck, in: CGSize(width: 393, height: 700)) == deck)
+    }
+
+    @Test func aTargetOutsideTheOverlayLightsNothing() {
+        let step = TutorialStep(id: "gone", title: "Title", message: "Message")
+        #expect(step.litRect(around: CGRect(x: 0, y: 900, width: 50, height: 50), in: CGSize(width: 393, height: 700)) == nil)
+    }
+
+    @Test func aReplayStartsAgainFromTheFirstStep() {
+        let controller = TutorialController()
+        controller.start(steps(2)) {}
+        controller.next()
+        controller.next()
+        controller.start(steps(2)) {}
+        #expect(controller.isActive)
+        #expect(controller.index == 0)
+    }
+}

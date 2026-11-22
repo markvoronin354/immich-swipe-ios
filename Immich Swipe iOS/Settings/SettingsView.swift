@@ -244,6 +244,14 @@ struct SettingsView: View {
     private var about: some View {
         Section("About & Legal") {
             LabeledContent("Version", value: Self.versionText)
+            // Android's "App Tutorials" row, which says so with a toast.
+            Button {
+                TutorialFlags.reset()
+                model.message = String(localized: "Tutorials reset! Open Swipe or Duplicates to view.")
+            } label: {
+                SettingsRow(title: "App Tutorials", subtitle: "Re-launch guides for Swipe & Duplicates", systemImage: "hand.point.up.left")
+            }
+            .buttonStyle(.plain)
             Link(destination: URL(string: "https://github.com/markvoronin354/immich-swipe-ios")!) {
                 SettingsRow(title: "Source code", subtitle: "View the open source repository on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
             }

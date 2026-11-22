@@ -27,12 +27,21 @@ struct SwipeDeckView: View {
     /// The viewer follows the deck's current photo, so it stays open as photos are kept or deleted in it.
     @State private var isFullscreen = false
     @FocusState private var deckHasFocus: Bool
+    @State private var tutorial = TutorialController()
+    @AppStorage(Setting.Key.hasCompletedSwipeTutorial) private var hasCompletedTutorial = Setting.Default.hasCompletedSwipeTutorial
+    /// A video that was playing when the tutorial came up, to carry on when it goes.
+    @State private var pausedVideoForTutorial = false
+    /// Swipes the card by itself during the tutorial's first step.
+    @State private var demo = GestureDemo()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(model: DeckModel) {
         _model = State(initialValue: model)
     }
 
-    var body: some View {
+    /// The screen up to its tutorial and keyboard handling. `body` adds the toasts and alerts; the two halves
+    /// are split because the compiler can't type-check one chain this long in reasonable time.
+    private var screen: some View {
         VStack(spacing: 12) {
             ProgressPill(
                 remaining: model.remainingCount,
@@ -43,6 +52,7 @@ struct SwipeDeckView: View {
             ) {
                 isReviewing = true
             }
+            .tutorialTarget("header")
             .padding(.horizontal)
 
             if !model.deck.assets.isEmpty {
@@ -68,6 +78,8 @@ struct SwipeDeckView: View {
 
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay { GhostFinger(demo: demo, motion: motion) }
+                .tutorialTarget("deck")
                 .padding(.horizontal)
 
             DeckBottomBar(
@@ -75,9 +87,11 @@ struct SwipeDeckView: View {
                 motion: motion,
                 onAlbum: { albumAsset = model.deck.current }
             )
+            .tutorialTarget("actions")
             .padding(.horizontal)
         }
         .padding(.bottom, 8)
+        .tutorialOverlay(tutorial)
         // Slides the card up or down along with the strip, whichever way the chevron was tapped.
         .animation(.snappy, value: prefs.showTimeline)
         .navigationTitle(model.title)
@@ -88,12 +102,13 @@ struct SwipeDeckView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Reset Decisions", systemImage: "arrow.clockwise") { isConfirmingReset = true }
                     .tint(.red)
-                    .disabled(model.decidedCount == 0)
+                    .disabled(model.decidedCount == 0 || tutorial.isActive)
             }
             ToolbarSpacer(.fixed, placement: .primaryAction)
             // No glass behind the avatar: it is already a round picture.
             ToolbarItem(placement: .primaryAction) {
                 ProfileButton()
+                    .disabled(tutorial.isActive)
             }
             .sharedBackgroundVisibility(.hidden)
         }
@@ -152,20 +167,48 @@ struct SwipeDeckView: View {
             }
             return .handled
         }
-        .task { await model.load() }
+        .task {
+            // Photos paged in behind the tutorial would reshuffle the deck under it.
+            model.isPagingHeld = !hasCompletedTutorial
+            await model.load()
+        }
         .task(id: model.deck.current?.id) {
             prefetchUpcoming()
             updateVideo()
             await model.loadCurrentDetails()
         }
+        .task(id: !hasCompletedTutorial && model.deck.current != nil) {
+            guard !hasCompletedTutorial, model.deck.current != nil else { return }
+            // Let the screen finish sliding in, and the first card settle, before the dimming starts.
+            do { try await Task.sleep(for: .milliseconds(600)) } catch { return }
+            tutorial.start(TutorialStep.swipeDeck(swipes: prefs.swipes)) { hasCompletedTutorial = true }
+        }
+        .onChange(of: tutorial.isActive) { _, isActive in
+            if isActive {
+                pausedVideoForTutorial = videoPlayer.isPlaying
+                if pausedVideoForTutorial { videoPlayer.pause() }
+            } else {
+                if pausedVideoForTutorial { videoPlayer.resume() }
+                pausedVideoForTutorial = false
+                model.isPagingHeld = false
+                // The tutorial took the keyboard so the arrow keys wouldn't swipe the card behind it.
+                deckHasFocus = true
+            }
+        }
         .onDisappear {
             videoPlayer.stop()
             livePhotoPlayer.stop()
+            // Leaving the screen counts as finishing, as on Android.
+            tutorial.end()
         }
         #if os(iOS)
         // Swiping a card right to keep could start the system "swipe back" instead. The back button still works.
         .background { BackSwipeBlocker() }
         #endif
+    }
+
+    var body: some View {
+        screen
         .overlay(alignment: .top) {
             if model.transfer == .saved {
                 Label("Saved to Photos", systemImage: "checkmark.circle.fill")
@@ -205,6 +248,11 @@ struct SwipeDeckView: View {
             Text(transferError ?? "")
         }
         .sensoryFeedback(.success, trigger: model.transfer) { _, new in new == .saved }
+        // The tutorial's first step: the card swipes itself, a direction at a time. Not with Reduce Motion on.
+        .task(id: tutorial.step?.id == "gestures" && !reduceMotion) {
+            guard tutorial.step?.id == "gestures", !reduceMotion else { return }
+            await demo.run(on: motion, swipes: prefs.swipes, canUndo: model.deck.canUndo)
+        }
     }
 
     private var transferError: String? {

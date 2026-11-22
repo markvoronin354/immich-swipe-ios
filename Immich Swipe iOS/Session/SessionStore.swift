@@ -62,7 +62,7 @@ final class SessionStore {
 
     private let defaults: UserDefaults
     private let session: URLSession
-    private static let accountsKey = "accounts"
+    static let accountsKey = "accounts"
     private static let activeUserKey = "activeUserID"
 
     init(defaults: UserDefaults = .standard, session: URLSession = .shared) {

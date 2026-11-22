@@ -3,8 +3,6 @@ import SwiftUI
 /// The duplicates screen, laid out like Android's (`DuplicatesScreen.kt`): a progress pill and counts,
 /// the groups one card at a time in a snapping list, and Sort and Select at the bottom. Tapping the pill
 /// deletes the assets marked Delete, after a confirmation.
-///
-/// Android's tutorial for this screen is not ported: the iOS app has no tutorial system yet.
 struct DuplicatesView: View {
     @State private var model: DuplicatesModel
     @State private var peek: DuplicatePeek?
@@ -19,6 +17,8 @@ struct DuplicatesView: View {
     @State private var showsNoDeletions = false
     /// The auto-select waiting on "Apply to which groups?".
     @State private var pendingAutoSelect: DuplicatesModel.AutoSelectMode?
+    @State private var tutorial = TutorialController()
+    @AppStorage(Setting.Key.hasCompletedDuplicatesTutorial) private var hasCompletedTutorial = Setting.Default.hasCompletedDuplicatesTutorial
 
     struct ViewerStart: Identifiable {
         let clusterIndex: Int
@@ -32,6 +32,7 @@ struct DuplicatesView: View {
 
     var body: some View {
         content
+            .tutorialOverlay(tutorial)
             .navigationTitle("Duplicates")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -40,12 +41,13 @@ struct DuplicatesView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Reset Decisions", systemImage: "arrow.clockwise") { isConfirmingReset = true }
                         .tint(.red)
-                        .disabled(model.keepCount + model.deleteCount == 0)
+                        .disabled(model.keepCount + model.deleteCount == 0 || tutorial.isActive)
                 }
                 ToolbarSpacer(.fixed, placement: .primaryAction)
                 // No glass behind the avatar: it is already a round picture.
                 ToolbarItem(placement: .primaryAction) {
                     ProfileButton()
+                        .disabled(tutorial.isActive)
                 }
                 .sharedBackgroundVisibility(.hidden)
             }
@@ -106,6 +108,14 @@ struct DuplicatesView: View {
             .sensoryFeedback(.impact(weight: .light), trigger: model.keepCount + model.deleteCount)
             // Only the first time: closing the viewer brings the screen back without reloading it.
             .task { if model.isLoading { await model.load() } }
+            .task(id: !hasCompletedTutorial && !model.isLoading && !model.visibleClusters.isEmpty) {
+                guard !hasCompletedTutorial, !model.isLoading, !model.visibleClusters.isEmpty else { return }
+                // Let the screen finish sliding in before the dimming starts.
+                do { try await Task.sleep(for: .milliseconds(700)) } catch { return }
+                tutorial.start(TutorialStep.duplicates) { hasCompletedTutorial = true }
+            }
+            // Leaving the screen counts as finishing, as on Android.
+            .onDisappear { tutorial.end() }
     }
 
     @ViewBuilder
@@ -142,6 +152,7 @@ struct DuplicatesView: View {
                         showsNoDeletions = true
                     }
                 }
+                .tutorialTarget("delete")
                 .padding(.horizontal)
 
                 clusterList

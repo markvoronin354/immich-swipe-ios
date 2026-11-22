@@ -215,6 +215,10 @@ nonisolated enum Setting {
         static let reminderCustomMaxDays = "reminder_custom_max_days"
 
         static let backupWarningShown = "backup_warning_shown"
+        static let hasCompletedSwipeTutorial = "has_completed_swipe_tutorial"
+        static let hasCompletedDuplicatesTutorial = "has_completed_duplicates_tutorial"
+        /// Internal: set once the tutorial flags have been given their first value (see `TutorialFlags`).
+        static let initialInstallProcessed = "initial_install_processed"
     }
 
     enum Default {
@@ -270,6 +274,8 @@ nonisolated enum Setting {
         static let reminderCustomMaxDays = 7
 
         static let backupWarningShown = false
+        static let hasCompletedSwipeTutorial = false
+        static let hasCompletedDuplicatesTutorial = false
     }
 }
 
