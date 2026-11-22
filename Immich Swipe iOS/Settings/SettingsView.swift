@@ -279,6 +279,7 @@ struct SettingsView: View {
 
     // MARK: About
 
+    @ViewBuilder
     private var about: some View {
         Section("About & Legal") {
             LabeledContent("Version", value: Self.versionText)
@@ -298,6 +299,14 @@ struct SettingsView: View {
             }
             Link(destination: URL(string: "https://github.com/markvoronin354/immich-swipe-ios/blob/HEAD/PRIVACY_POLICY.md")!) {
                 SettingsRow(title: "Privacy policy", subtitle: "Read the privacy policy regarding data and permissions", systemImage: "hand.raised")
+            }
+        }
+        // Android's centred "Buy me a coffee" button between About and Account.
+        Section {
+            Link(destination: URL(string: "https://ko-fi.com/markvoronin354")!) {
+                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
             }
         }
     }

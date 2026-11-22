@@ -1884,6 +1884,22 @@
         }
       }
     },
+    "Buy me a coffee" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Buy me a coffee"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "Buy me a coffee"
+          }
+        }
+      }
+    },
     "Cache cleared." : {
       "localizations" : {
         "es" : {
